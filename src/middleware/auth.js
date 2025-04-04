@@ -1,25 +1,38 @@
+// src/middleware/auth.js
 import jwt from 'jsonwebtoken';
 
-export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (token == null) return res.sendStatus(401);
-
+export const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({
+      status: "ERROR",
+      message: "Authentification requise"
+    });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      return res.status(403).json({
+        status: "ERROR",
+        message: "Token invalide ou expiré"
+      });
+    }
+    
     req.user = user;
     next();
   });
 };
 
-export const checkRole = (roles) => {
-  return (req, res, next) => {
-    if (!req.user) return res.sendStatus(401);
-    if (roles.includes(req.user.role)) {
-      next();
-    } else {
-      res.status(403).json({ message: "Accès refusé" });
-    }
-  };
+export const isClient = (req, res, next) => {
+  if (req.user.role !== 'CLIENT') {
+    return res.status(403).json({
+      status: "ERROR",
+      message: "Accès refusé. Rôle client requis."
+    });
+  }
+  
+  next();
 };
