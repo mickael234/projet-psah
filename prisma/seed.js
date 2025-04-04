@@ -23,6 +23,45 @@ async function main() {
     });
   }
 
+  const room1 = await prisma.room.create({
+    data: {
+      id: 11,
+      number:"102",
+      type: "Standard",
+      pricePerNight: 99.00,
+      status: "available",
+      description: "Brief example description"
+    }
+
+  })
+
+  const media = await prisma.media.create({
+    data : {
+      id: 78,
+      roomId: 11,
+      type: "image",
+      url: "some url",
+      title: "Image 1",
+      description: "Description media 1"
+    }
+  })
+
+  const amenity = await prisma.amenity.create({
+    data : {
+      id: 22,
+      name: "Air conditioning"
+    }
+  })
+
+  const roomAmenity = await prisma.roomAmenities.create({
+    data : {
+      roomId: 11,
+      amenityId: 22
+    }
+  })
+
+  console.log("Room and amenities initialized.")
+
   console.log('Rôles initialisés');
 }
 

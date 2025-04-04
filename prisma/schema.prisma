@@ -8,19 +8,69 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  fullName     String
-  email        String   @unique
-  password     String
-  phoneNumber  String?
-  role         Role     @relation(fields: [roleId], references: [id])
-  roleId       Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  fullName    String
+  email       String   @unique
+  password    String
+  phoneNumber String?
+  role        Role     @relation(fields: [roleId], references: [id])
+  roleId      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Role {
   id    Int    @id @default(autoincrement())
   name  String @unique
   users User[]
+}
+
+model Room {
+  id            Int             @id @default(autoincrement())
+  number        String
+  type          String
+  pricePerNight Decimal         @db.Decimal(10, 2)
+  status        RoomStatus
+  description   String
+  media         Media[]
+  amenities     RoomAmenities[]
+}
+
+model Media {
+  id          Int    @id @default(autoincrement())
+  room        Room   @relation(fields: [roomId], references: [id])
+  roomId      Int
+  type        MediaType 
+  url         String
+  title       String
+  description String
+}
+
+model Amenity {
+  id            Int             @id @default(autoincrement())
+  name          String
+  roomAmenities RoomAmenities[]
+}
+
+model RoomAmenities {
+  roomId    Int
+  amenityId Int
+
+  room    Room    @relation(fields: [roomId], references: [id])
+  amenity Amenity @relation(fields: [amenityId], references: [id])
+
+  @@id([roomId, amenityId])
+}
+
+enum RoomStatus {
+  available
+  occupied
+  maintenance
+}
+
+enum MediaType {
+  image
+  video
+  tour360
+  ar_preview
 }
