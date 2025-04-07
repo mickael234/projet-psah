@@ -18,14 +18,17 @@ class RoomController {
                 res.status(404).json({
                     status: "NOT FOUND",
                     message: "Aucune chambre n'a été trouvé"})
-            } else {
-                res.status(200).json({
-                    status: "OK",
-                    data : {
-                        room
-                    }
-                })
-            }
+            } 
+
+            room.pricePerNight = parseFloat(Number(room.pricePerNight).toFixed(2));
+
+            res.status(200).json({
+                status: "OK",
+                data : {
+                    room
+                }
+            })
+            
             
 
         } catch (error){
