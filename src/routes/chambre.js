@@ -42,7 +42,7 @@ router.get('/disponibles', async (req, res) => {
 
     res.json(chambres);
   } catch (error) {
-    console.error('❌ Erreur Prisma :', error);
+    console.error(' Erreur Prisma :', error);
     res.status(500).json({ error: 'Erreur lors de la récupération des chambres.' });
   }
 });
