@@ -15,8 +15,8 @@ class RoomController {
             const room = await Room.findById(id);
 
             if(!room){
-                res.status(400).json({
-                    status: "ERROR",
+                res.status(404).json({
+                    status: "NOT FOUND",
                     message: "Aucune chambre n'a été trouvé"})
             } else {
                 res.status(200).json({
