@@ -1,56 +1,49 @@
-import express from 'express'
-import dotenv from 'dotenv'
-import cors from 'cors'
-import swaggerJsdoc from 'swagger-jsdoc'
-import swaggerUi from 'swagger-ui-express'
-import path from 'path'
-import authRoutes from './routes/authRoutes.js'
-import profileRoutes from './routes/profileRoutes.js'
-import authRouteDoc from './docs/swagger.js'
-import profileRouteDoc from './docs/profileRouteDoc.js'
+// src/server.js
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config()
+import chambreRoutes from './routes/chambre.js'; // ✅ Import par défaut
 
-const app = express()
+dotenv.config();
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Gérer __dirname avec ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Routes
+app.use('/chambres', chambreRoutes);
+
+// Swagger
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'API de Gestion Hôtelière',
+      title: 'API Hôtel',
       version: '1.0.0',
-      description: 'API pour le système de gestion hôtelière',
+      description: 'Documentation de l’API pour le projet PSAH',
     },
-    servers: [
-      {
-        url: `http://localhost:${process.env.PORT || 3000}`,
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
-        }
-      }
-    }
+    servers: [{ url: `http://localhost:${PORT}` }]
   },
-  apis: ['./src/docs/*.js'],
-}
+  apis: ['./src/routes/*.js']
+};
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions)
-swaggerSpec.paths = { ...swaggerSpec.paths, ...authRouteDoc, ...profileRouteDoc }
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use(cors())
-app.use(express.json())
-
-// Servir les fichiers statiques (pour les photos de profil)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
-
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-app.use('/api/auth', authRoutes)
-app.use('/api/profile', profileRoutes)
-
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`))
+// Serveur
+app.listen(PORT, () => {
+  console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
+});
