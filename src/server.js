@@ -5,6 +5,7 @@ import swaggerJsdoc from 'swagger-jsdoc'
 import swaggerUi from 'swagger-ui-express'
 import authRoutes from './routes/authRoutes.js'
 import authRouteDoc from './docs/swagger.js'
+import roomRouter from './routes/roomRoutes.js'
 
 dotenv.config()
 
@@ -35,6 +36,7 @@ app.use(express.json())
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api/auth', authRoutes)
+app.use('/rooms', roomRouter)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`))

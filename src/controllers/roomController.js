@@ -1,4 +1,4 @@
-import Room from "../models/roomModel"
+import Room from "../models/roomModel.js"
 
 class RoomController {
     static async getRoomDetails(req, res){
@@ -13,12 +13,20 @@ class RoomController {
             }
 
             const room = await Room.findById(id);
-            res.status(200).json({
-                status: "OK",
-                data : {
-                    room
-                }
-            })
+
+            if(!room){
+                res.status(400).json({
+                    status: "ERROR",
+                    message: "Aucune chambre n'a été trouvé"})
+            } else {
+                res.status(200).json({
+                    status: "OK",
+                    data : {
+                        room
+                    }
+                })
+            }
+            
 
         } catch (error){
             console.error("Une erreur est survenue : " + error);
