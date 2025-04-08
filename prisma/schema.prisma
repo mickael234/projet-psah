@@ -17,6 +17,7 @@ model User {
   roleId      Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  client  Client?
 }
 
 model Role {
@@ -73,4 +74,49 @@ enum MediaType {
   video
   tour360
   ar_preview
+}
+
+model Client {
+  id_client Int @id @default(autoincrement())
+
+  utilisateur User @relation(fields: [id_utilisateur], references: [id])
+  id_utilisateur Int @unique
+
+  prenom String
+  nom String
+  telephone String?
+  statut_membre String
+  consentement_marketing Boolean @default(false)
+  supprime_le DateTime? @default(now())
+  reservations Reservation[]
+}
+
+model Reservation {
+  id_reservation Int @id @default(autoincrement())
+
+  client Client @relation(fields: [id_client], references: [id_client])
+  id_client Int 
+
+  date_reservation DateTime @default(now())
+  etat EtatReservation
+  prix_total Decimal @db.Decimal(10, 2)
+  etat_paiement EtatPaiement
+  source_reservation String?
+  id_reservation_externe String?
+  supprime_le DateTime?
+}
+
+enum EtatReservation {
+  EN_ATTENTE
+  CONFIRMEE
+  ANNULEE
+  ENREGISTREE
+  DEPART
+}
+
+enum EtatPaiement {
+  EN_ATTENTE
+  COMPLETE
+  ECHOUE
+  REMBOURSE
 }

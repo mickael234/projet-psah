@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js'
 import { authRouteDoc } from './docs/swagger.js'
 import { roomRouteDoc } from './docs/swagger.js'
 import roomRouter from './routes/roomRoutes.js'
+import reservationRouter from './routes/reservationRoutes.js'
 
 dotenv.config()
 
@@ -38,6 +39,7 @@ app.use(express.json())
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api/auth', authRoutes)
 app.use('/rooms', roomRouter)
+app.use('/reservations', reservationRouter)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`))
