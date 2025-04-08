@@ -4,7 +4,8 @@ import cors from 'cors'
 import swaggerJsdoc from 'swagger-jsdoc'
 import swaggerUi from 'swagger-ui-express'
 import authRoutes from './routes/authRoutes.js'
-import authRouteDoc from './docs/swagger.js'
+import { authRouteDoc } from './docs/swagger.js'
+import { roomRouteDoc } from './docs/swagger.js'
 import roomRouter from './routes/roomRoutes.js'
 
 dotenv.config()
@@ -29,7 +30,7 @@ const swaggerOptions = {
 }
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions)
-swaggerSpec.paths = { ...swaggerSpec.paths, ...authRouteDoc }
+swaggerSpec.paths = { ...swaggerSpec.paths, ...authRouteDoc, ...roomRouteDoc }
 
 app.use(cors())
 app.use(express.json())
