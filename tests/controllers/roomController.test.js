@@ -1,3 +1,4 @@
+import { json } from "express";
 import RoomController from "../../src/controllers/roomController";
 import Room from "../../src/models/roomModel";
 
@@ -65,6 +66,34 @@ describe("Room Controller", ()=> {
         await RoomController.getRoomDetails(req, res);
         
         expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({message: "Aucune chambre n'a été trouvé", status: "NOT FOUND"});
+        expect(res.json).toHaveBeenCalledWith({ status: "NOT FOUND", message: "Aucune chambre n'a été trouvé"});
+    })
+
+    it("should return a status of 400 BAD REQUEST if the room id is invalid", async ()=> {
+      const req = {params : {id: "example"}};
+      const res = {
+        status : jest.fn().mockReturnThis(),
+        json : jest.fn()
+      }
+
+      await RoomController.getRoomDetails(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({status: "BAD REQUEST", message: "L'id de la chambre n'est valide."})
+    })
+
+    it("should return of 500 INTERNAL SERVER ERROR when database throws an error", async () => {
+      Room.findById.mockRejectedValue(new Error("Database connection failed"));
+  
+      const req = {params : {id: "1"}} ;
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json : jest.fn()
+      };
+
+      await RoomController.getRoomDetails(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({status: "INTERNAL SERVER ERROR", message: "Une erreur interne est survenue."});
     })
 })

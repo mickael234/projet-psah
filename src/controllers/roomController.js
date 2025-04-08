@@ -7,7 +7,7 @@ class RoomController {
 
             if(isNaN(id)){
                 return res.status(400).json({
-                    status: "ERROR",
+                    status: "BAD REQUEST",
                     message: "L'id de la chambre n'est valide."
                 })
             }
@@ -15,7 +15,7 @@ class RoomController {
             const room = await Room.findById(id);
 
             if(!room){
-                res.status(404).json({
+                return res.status(404).json({
                     status: "NOT FOUND",
                     message: "Aucune chambre n'a été trouvé"})
             } 
@@ -34,7 +34,7 @@ class RoomController {
         } catch (error){
             console.error("Une erreur est survenue : " + error);
             res.status(500).json({
-                status: "ERROR",
+                status: "INTERNAL SERVER ERROR",
                 message: "Une erreur interne est survenue."
             })
         }
