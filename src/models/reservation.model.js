@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 class ReservationModel {
@@ -132,6 +132,70 @@ class ReservationModel {
       }
     });
   }
+
+  static async findAllPresentReservations(clientId) {
+    const today = new Date();
+    return prisma.reservation.findMany({
+        where: {
+            id_client: clientId,
+            OR: [
+                { 
+                    etat: { in: ['en_attente', 'confirmee', 'enregistree'] },
+                    chambres: {
+                        some: {
+                            date_depart: { gte: today }
+                        }
+                    }
+                },
+                {
+                    etat: 'enregistree',
+                    chambres: {
+                        some: {
+                            date_arrivee: { lte: today },
+                            date_depart: { gte: today }
+                        }
+                    }
+                }
+            ]
+        },
+        include: {
+            client: true,
+            chambres: {
+                include: {
+                    chambre: true
+                }
+            }
+        }
+    });
 }
 
-module.exports = ReservationModel;
+static async findAllPastReservations(clientId) {
+    const today = new Date();
+    return prisma.reservation.findMany({
+        where: {
+            id_client: clientId,
+            OR: [
+                { etat: { in: ['depart', 'annulee'] } },
+                {
+                    etat: { in: ['en_attente', 'confirmee', 'enregistree'] },
+                    chambres: {
+                        every: {
+                            date_depart: { lt: today }
+                        }
+                    }
+                }
+            ]
+        },
+        include: {
+            client: true,
+            chambres: {
+                include: {
+                    chambre: true
+                }
+            }
+        }
+    });
+}
+}
+
+export default ReservationModel;

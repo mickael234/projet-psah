@@ -1,4 +1,4 @@
-import Reservation from "../models/reservationModel.js";
+import ReservationModel from "../models/reservation.model.js";
 
 class ReservationController {
     static async getAllUserPastReservations(req, res){
@@ -12,8 +12,8 @@ class ReservationController {
                 })
             }
 
-            const pastReservations = await Reservation.findAllPastReservations(clientId);
-            if(!pastReservations){
+            const reservations = await ReservationModel.findAllPastReservations(clientId);
+            if(!reservations){
                 return res.status(404).json({
                     status: "NOT FOUND",
                     message: "Aucune réservation passée n'a été trouvé"})
@@ -22,7 +22,7 @@ class ReservationController {
             res.status(200).json({
                 status: "OK",
                 data : {
-                    pastReservations
+                    reservations
                 }
             })
 
@@ -47,8 +47,8 @@ class ReservationController {
                 })
             }
 
-            const presentReservations = await Reservation.findAllPresentReservations(clientId);
-            if(!presentReservations){
+            const reservations = await ReservationModel.findAllPresentReservations(clientId);
+            if(!reservations){
                 return res.status(404).json({
                     status: "NOT FOUND",
                     message: "Aucune réservation actuelle n'a été trouvé"})
@@ -57,7 +57,7 @@ class ReservationController {
             res.status(200).json({
                 status: "OK",
                 data : {
-                    presentReservations
+                    reservations
                 }
             })
 
