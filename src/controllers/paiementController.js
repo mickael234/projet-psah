@@ -279,11 +279,11 @@ class PaiementController {
         data: { etat_paiement: etatPaiement },
       })
 
-      // Vérifier si l'utilisateur existe avant d'ajouter une entrée dans le journal
+      // Vérification si l'utilisateur existe avant d'ajouter une entrée dans le journal
       let userId = 1 // Valeur par défaut
 
       if (req.user && req.user.userId) {
-        // Vérifier si l'utilisateur existe dans la base de données
+        // Vérification si l'utilisateur existe dans la base de données
         const utilisateur = await prisma.utilisateur.findUnique({
           where: { id_utilisateur: req.user.userId },
         })
@@ -293,7 +293,7 @@ class PaiementController {
         }
       }
 
-      // Ajouter une entrée dans le journal des modifications
+      // Ajout d'une entrée dans le journal des modifications
       await prisma.journalModifications.create({
         data: {
           id_utilisateur: userId, // Utilisez l'ID vérifié
