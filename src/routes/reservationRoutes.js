@@ -3,7 +3,7 @@ import ReservationController from "../controllers/reservationController.js"
 
 const reservationRouter = express.Router();
 
-reservationRouter.get("/:clientId", ReservationController.getAllUserBookings);
-reservationRouter.get("/past/:clientId", ReservationController.getAllUserPastReservations)
+reservationRouter.get("/actuelles/:clientId", ReservationController.getAllUserPresentReservations);
+reservationRouter.get("/passees/:clientId", ReservationController.getAllUserPastReservations)
 
 export default reservationRouter;

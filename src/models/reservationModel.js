@@ -1,16 +1,7 @@
 import prisma from "../config/prisma.js";
 
 class Reservation {
-    static async findAllClientReservations(clientId){
-        return prisma.reservation.findMany({
-            where : {
-                id_client: clientId
-            }
-        })
-    }
-
     static async findAllPresentReservations(clientId){
-        const today = new Date();
         return prisma.reservation.findMany({
             where: {
                 id_client: clientId,
@@ -20,18 +11,10 @@ class Reservation {
     }
 
     static async findAllPastReservations(clientId){
-        const today = new Date();
         return prisma.reservation.findMany({
             where: {
                 id_client: clientId,
-                OR: [
-                  { etat: { in: ['DEPART', 'ANNULEE'] } },
-                  {
-                    AND: [
-                      { etat: { in: ['CONFIRMEE', 'ENREGISTREE'] } },
-                    ]
-                  }
-                ]
+                etat: { in: ['DEPART', 'ANNULEE'] },
             },
         })
     }

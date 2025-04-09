@@ -35,6 +35,7 @@ model Room {
   description   String
   media         Media[]
   amenities     RoomAmenities[]
+  reservationChambres ReservationChambre[]
 }
 
 model Media {
@@ -104,6 +105,22 @@ model Reservation {
   source_reservation String?
   id_reservation_externe String?
   supprime_le DateTime?
+
+  reservationChambres ReservationChambre[]
+}
+
+model ReservationChambre{
+  id_reservation Int
+  id_chambre Int
+  date_arrivee DateTime
+  date_depart DateTime
+
+  reservation Reservation @relation(fields: [id_reservation], references: [id_reservation])
+  chambre Room @relation(fields: [id_chambre], references: [id])
+
+  @@id([id_reservation, id_chambre])
+  @@index([date_arrivee])
+  @@index([date_depart])
 }
 
 enum EtatReservation {
