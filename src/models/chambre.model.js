@@ -1,5 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
+
 
 class ChambreModel {
   /**
@@ -240,4 +241,4 @@ class ChambreModel {
   }
 }
 
-module.exports = ChambreModel;
+export default ChambreModel;

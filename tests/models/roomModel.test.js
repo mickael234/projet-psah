@@ -1,54 +1,62 @@
-import Room from '../../src/models/roomModel';
-import { room as _room } from '../../__mocks__/prisma.mock.js';
+import ChambreModel from '../../src/models/chambre.model.js';
+import { chambre as _room } from '../../__mocks__/prisma.mock.js';
 
 describe('Room Model', () => {
   it('should return room by ID with media and amenities', async () => {
     const mockRoom = {
-      id: 1,
-      number: "102",
-      type: "Standard",
-      pricePerNight: 99.00,
-      status: "available",
-      description: "Brief example description",
-      media: [
-        { 
-          id: 1, 
-          roomId: 1, 
-          type: "image", 
-          url: "someUrl.jpg", 
-          title: "Image 1", 
-          description: "An image for room 102"
-        }
-      ],
-      amenities: [
-        {
-          roomId: 1,
-          amenityId: 22,
-          amenity: { 
-            id: 22, 
-            name: 'Wi-Fi' 
-          } 
-        }
-      ],
+        id_chambre: 1,
+        numero_chambre: "101",
+        type_chambre: "Simple",
+        prix_par_nuit: "75",
+        etat: "disponible",
+        description: "Chambre simple avec un lit simple et vue sur le jardin.",
+        equipements: [
+            {
+                id_chambre: 1,
+                id_equipement: 1,
+                equipement: {
+                    id_equipement: 1,
+                    nom: "WiFi"
+                }
+            },
+            {
+                id_chambre: 1,
+                id_equipement: 2,
+                equipement: {
+                    id_equipement: 2,
+                    nom: "TV"
+                }
+            }
+        ],
+        medias: [
+            {
+                id_media: 1,
+                id_chambre: 1,
+                type_media: "image",
+                url: "http://example.com/chambre1_image.jpg",
+                titre: "Vue de la chambre",
+                description: "Une belle vue de la chambre 1"
+            }
+        ]
     };
 
 
     _room.findUnique.mockResolvedValue(mockRoom);
 
-    const room = await Room.findById(1);
+    const room = await ChambreModel.getWithRelations(1);
 
     expect(room).toEqual(mockRoom);
 
     expect(_room.findUnique).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id_chambre: 1 },
       include: {
-        media: true,
-        amenities: {
+        equipements: {
           include: {
-            amenity: true,
-          },
+            equipement: true
+          }
         },
-      },
+        medias: true
+      }
     });
 
   });

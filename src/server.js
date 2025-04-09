@@ -6,10 +6,10 @@ import swaggerUi from 'swagger-ui-express'
 import path from 'path'
 import authRoutes from './routes/authRoutes.js'
 import { roomRouteDoc } from './docs/swagger.js'
-import roomRouter from './routes/roomRoutes.js'
+import chambreRouter from './routes/chambreRoutes.js'
 import reservationRouter from './routes/reservationRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
-import authRouteDoc from './docs/swagger.js'
+import {authRouteDoc} from './docs/swagger.js'
 import profileRouteDoc from './docs/profileRouteDoc.js'
 
 dotenv.config()
@@ -53,8 +53,8 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api/auth', authRoutes)
-app.use('/rooms', roomRouter)
-app.use('/reservations', reservationRouter)
+app.use('/api/chambres', chambreRouter)
+app.use('/api/reservations', reservationRouter)
 app.use('/api/profile', profileRoutes)
 
 const PORT = process.env.PORT || 3000

@@ -1,6 +1,6 @@
-import Room from "../models/roomModel.js"
+import ChambreModel from "../models/chambre.model.js";
 
-class RoomController {
+class ChambreController {
     static async getRoomDetails(req, res){
         try {
             const id = Number(req.params.id);
@@ -12,24 +12,21 @@ class RoomController {
                 })
             }
 
-            const room = await Room.findById(id);
+            const chambre = await ChambreModel.getWithRelations(id);
 
-            if(!room){
+            if(!chambre){
                 return res.status(404).json({
                     status: "NOT FOUND",
                     message: "Aucune chambre n'a été trouvé"})
             } 
 
-            room.pricePerNight = parseFloat(Number(room.pricePerNight).toFixed(2));
-
             res.status(200).json({
                 status: "OK",
                 data : {
-                    room
+                    chambre
                 }
             })
-            
-            
+
 
         } catch (error){
             console.error("Une erreur est survenue : " + error);
@@ -41,4 +38,4 @@ class RoomController {
     }
 }
 
-export default RoomController;
+export default ChambreController;
