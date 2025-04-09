@@ -1,6 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const bcrypt = require('bcrypt');
+import { PrismaClient } from "@prisma/client"
+const prisma = new PrismaClient()
+import bcrypt from "bcrypt"
 
 class UtilisateurModel {
   /**
@@ -8,16 +8,17 @@ class UtilisateurModel {
    * @param {Object} userData - Données de l'utilisateur
    * @returns {Promise<Object>} - L'utilisateur créé
    */
-  async create(userData) {
+  static async create(userData) {
+    // Changé de 'async create' à 'static async create'
     // Hachage du mot de passe
-    const hashedPassword = await bcrypt.hash(userData.mot_de_passe, 10);
-    
+    const hashedPassword = await bcrypt.hash(userData.mot_de_passe, 10)
+
     return prisma.utilisateur.create({
       data: {
         ...userData,
-        mot_de_passe: hashedPassword
-      }
-    });
+        mot_de_passe: hashedPassword,
+      },
+    })
   }
 
   /**
@@ -30,10 +31,11 @@ class UtilisateurModel {
       where: { id_utilisateur: id },
       include: {
         client: true,
-        personnel: true
-      }
-    });
+        personnel: true,
+      },
+    })
   }
+
 
   /**
    * Récupère un utilisateur avec ses relations
@@ -150,4 +152,4 @@ class UtilisateurModel {
   }
 }
 
-module.exports = UtilisateurModel;
+export default UtilisateurModel;

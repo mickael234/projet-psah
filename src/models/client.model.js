@@ -1,6 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const utilisateurModel = require('./utilisateur.model');
+import { PrismaClient } from "@prisma/client"
+import utilisateurModel from "./utilisateur.model.js"
+import { RoleMapper } from "../utils/roleMapper.js"
+
+const prisma = new PrismaClient() // Une seule instance de PrismaClient [^1]
 
 class ClientModel {
   /**
@@ -8,15 +10,15 @@ class ClientModel {
    * @param {number} id - ID du client
    * @returns {Promise<Object>} - Le client avec ses relations
    */
-  static getWithRelations(id) {
+  async getWithRelations(id) {
     return prisma.client.findUnique({
       where: { id_client: id },
       include: {
         utilisateur: true,
         reservations: true,
-        fidelite: true
-      }
-    });
+        fidelite: true,
+      },
+    })
   }
 
   /**
@@ -24,11 +26,12 @@ class ClientModel {
    * @param {number} userId - ID de l'utilisateur
    * @returns {Promise<Object>} - Le client trouvé
    */
-  static findByUserId(userId) {
+  async findByUserId(userId) {
     return prisma.client.findUnique({
-      where: { id_utilisateur: userId }
-    });
+      where: { id_utilisateur: userId },
+    })
   }
+
   /**
    * Crée un nouveau client avec un compte utilisateur
    * @param {Object} clientData - Données du client
@@ -37,21 +40,22 @@ class ClientModel {
    */
   async create(clientData, userData) {
     // Créer l'utilisateur d'abord
-    userData.role = 'client';
-    const utilisateur = await utilisateurModel.create(userData);
-    
+    // Utiliser le service RoleMapper pour convertir le rôle
+    userData.role = RoleMapper.toBaseRole(userData.role || "CLIENT")
+
+    const utilisateur = await utilisateurModel.create(userData)
+
     // Puis créer le client associé
     return prisma.client.create({
       data: {
         ...clientData,
-        id_utilisateur: utilisateur.id_utilisateur
+        id_utilisateur: utilisateur.id_utilisateur,
       },
       include: {
-        utilisateur: true
-      }
-    });
+        utilisateur: true,
+      },
+    })
   }
-
   /**
    * Récupère un client par son ID
    * @param {number} id - ID du client
@@ -63,9 +67,9 @@ class ClientModel {
       include: {
         utilisateur: true,
         reservations: true,
-        fidelite: true
-      }
-    });
+        fidelite: true,
+      },
+    })
   }
 
   /**
@@ -77,13 +81,13 @@ class ClientModel {
     return prisma.client.findMany({
       where: {
         ...filters,
-        supprime_le: null // Exclure les clients supprimés
+        supprime_le: null, // Exclure les clients supprimés
       },
       include: {
         utilisateur: true,
-        fidelite: true
-      }
-    });
+        fidelite: true,
+      },
+    })
   }
 
   /**
@@ -95,8 +99,8 @@ class ClientModel {
   async update(id, clientData) {
     return prisma.client.update({
       where: { id_client: id },
-      data: clientData
-    });
+      data: clientData,
+    })
   }
 
   /**
@@ -105,15 +109,15 @@ class ClientModel {
    * @returns {Promise<Object>} - Le client supprimé
    */
   async delete(id) {
-    const client = await this.findById(id);
-    
+    const client = await this.findById(id)
+
     // Supprimer logiquement le client et son utilisateur
     await prisma.client.update({
       where: { id_client: id },
-      data: { supprime_le: new Date() }
-    });
-    
-    return utilisateurModel.delete(client.id_utilisateur);
+      data: { supprime_le: new Date() },
+    })
+
+    return utilisateurModel.delete(client.id_utilisateur)
   }
 
   /**
@@ -123,24 +127,24 @@ class ClientModel {
    */
   async getReservations(id) {
     return prisma.reservation.findMany({
-      where: { 
+      where: {
         id_client: id,
-        supprime_le: null
+        supprime_le: null,
       },
       include: {
         chambres: {
           include: {
-            chambre: true
-          }
+            chambre: true,
+          },
         },
         services: {
           include: {
-            service: true
-          }
+            service: true,
+          },
         },
-        paiements: true
-      }
-    });
+        paiements: true,
+      },
+    })
   }
 
   /**
@@ -155,11 +159,11 @@ class ClientModel {
         transactions: true,
         echanges: {
           include: {
-            recompense: true
-          }
-        }
-      }
-    });
+            recompense: true,
+          },
+        },
+      },
+    })
   }
 
   /**
@@ -171,21 +175,22 @@ class ClientModel {
     return prisma.client.findMany({
       where: {
         OR: [
-          { prenom: { contains: query, mode: 'insensitive' } },
-          { nom: { contains: query, mode: 'insensitive' } },
-          { 
+          { prenom: { contains: query, mode: "insensitive" } },
+          { nom: { contains: query, mode: "insensitive" } },
+          {
             utilisateur: {
-              email: { contains: query, mode: 'insensitive' }
-            }
-          }
+              email: { contains: query, mode: "insensitive" },
+            },
+          },
         ],
-        supprime_le: null
+        supprime_le: null,
       },
       include: {
-        utilisateur: true
-      }
-    });
+        utilisateur: true,
+      },
+    })
   }
 }
 
-module.exports = ClientModel;
+export default ClientModel
+

@@ -1,17 +1,30 @@
-import express from 'express'
-import dotenv from 'dotenv'
-import cors from 'cors'
-import swaggerJsdoc from 'swagger-jsdoc'
-import swaggerUi from 'swagger-ui-express'
-import path from 'path'
-import authRoutes from './routes/authRoutes.js'
-import profileRoutes from './routes/profileRoutes.js'
-import authRouteDoc from './docs/swagger.js'
-import profileRouteDoc from './docs/profileRouteDoc.js'
+// src/server.js
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import authRoutes from './routes/authRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import hebergementRoutes from './routes/hebergementRoutes.js';
+import reservationRoutes from './routes/reservationRoutes.js';
+import paiementRoutes from './routes/paiementRoutes.js';
+import authRouteDoc from './docs/swagger.js';
+import profileRouteDoc from './docs/profileRouteDoc.js';
+import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
+import reservationRouteDoc from './docs/reservationRouteDoc.js';
+import paiementRouteDoc from './docs/paiementRouteDoc.js';
+import clientRoutes from './routes/clientRoutes.js';
 
-dotenv.config()
+dotenv.config();
 
-const app = express()
+const app = express();
+
+// Obtenir le répertoire actuel avec ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const swaggerOptions = {
   definition: {
@@ -37,20 +50,32 @@ const swaggerOptions = {
     }
   },
   apis: ['./src/docs/*.js'],
-}
+};
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions)
-swaggerSpec.paths = { ...swaggerSpec.paths, ...authRouteDoc, ...profileRouteDoc }
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+swaggerSpec.paths = { 
+  ...swaggerSpec.paths, 
+  ...authRouteDoc, 
+  ...profileRouteDoc,
+  ...hebergementRouteDoc,
+  ...reservationRouteDoc,
+  ...paiementRouteDoc
+};
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
-// Servir les fichiers statiques (pour les photos de profil)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+// Servir les fichiers statiques (pour les photos de profil et les médias)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-app.use('/api/auth', authRoutes)
-app.use('/api/profile', profileRoutes)
-
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`))
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/hebergements', hebergementRoutes);
+app.use('/api/reservations', reservationRoutes);
+app.use('/api/paiements', paiementRoutes);
+// Routes
+app.use('/api/clients', clientRoutes);
+app.use('/api/reservations', reservationRoutes);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
