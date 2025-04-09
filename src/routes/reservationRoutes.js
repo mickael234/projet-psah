@@ -13,7 +13,6 @@ const reservationRouter = express.Router();
  * @returns {object} 403 - Accès interdit si l'utilisateur n'est pas autorisé
  * @returns {object} 404 - Aucune réservation trouvée
  * @returns {object} 500 - Erreur serveur
- * @middleware authenticateJWT - Vérifie que le token JWT est valide
  * @middleware clientAuth - Vérifie que l'utilisateur a le droit d'accéder aux données du client
  */
 reservationRouter.get(
@@ -31,7 +30,6 @@ reservationRouter.get(
  * @returns {object} 403 - Accès interdit si l'utilisateur n'est pas autorisé
  * @returns {object} 404 - Aucune réservation trouvée
  * @returns {object} 500 - Erreur serveur
- * @middleware authenticateJWT - Vérifie que le token JWT est valide
  * @middleware clientAuth - Vérifie que l'utilisateur a le droit d'accéder aux données du client
  */
 reservationRouter.get(

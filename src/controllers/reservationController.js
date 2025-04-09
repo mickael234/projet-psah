@@ -17,7 +17,7 @@ class ReservationController {
 
             const reservations =
                 await ReservationModel.findAllPastReservations(clientId);
-            if (!reservations) {
+            if (!reservations || reservations.length === 0) {
                 return res.status(404).json({
                     status: 'NOT FOUND',
                     message: "Aucune réservation passée n'a été trouvé"
@@ -51,7 +51,7 @@ class ReservationController {
 
             const reservations =
                 await ReservationModel.findAllPresentReservations(clientId);
-            if (!reservations) {
+            if (!reservations || reservations.length === 0) {
                 return res.status(404).json({
                     status: 'NOT FOUND',
                     message: "Aucune réservation actuelle n'a été trouvé"
