@@ -25,9 +25,14 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.2",
     "pg": "^8.13.3",
+    "prisma": "^6.4.1",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.9",
