@@ -1,11 +1,11 @@
-import prisma from '../config/prisma.js'
+import prisma from '../config/prisma.js';
 
 class Role {
-  static async findByName(name) {
-    return prisma.role.findUnique({
-      where: { name }
-    })
-  }
+    static async findByName(name) {
+        return prisma.role.findUnique({
+            where: { name }
+        });
+    }
 }
 
-export default Role
+export default Role;
