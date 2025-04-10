@@ -18,7 +18,16 @@ router.put('/:id', authenticateJWT, HebergementController.updateHebergement);
 router.delete('/:id', authenticateJWT, HebergementController.deleteHebergement);
 
 // Routes pour les médias
-router.post('/:id/media', authenticateJWT, upload.single('media'), HebergementController.addMedia);
-router.delete('/:id/media/:mediaId', authenticateJWT, HebergementController.removeMedia);
+router.post(
+    '/:id/media',
+    authenticateJWT,
+    upload.single('media'),
+    HebergementController.addMedia
+);
+router.delete(
+    '/:id/media/:mediaId',
+    authenticateJWT,
+    HebergementController.removeMedia
+);
 
 export default router;

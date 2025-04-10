@@ -11,7 +11,7 @@ import profileRoutes from './routes/profileRoutes.js';
 import hebergementRoutes from './routes/hebergementRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import paiementRoutes from './routes/paiementRoutes.js';
-import authRouteDoc from './docs/swagger.js';
+import { authRouteDoc } from './docs/swagger.js';
 import profileRouteDoc from './docs/profileRouteDoc.js';
 import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
@@ -27,39 +27,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'API de Gestion Hôtelière',
-      version: '1.0.0',
-      description: 'API pour le système de gestion hôtelière',
-    },
-    servers: [
-      {
-        url: `http://localhost:${process.env.PORT || 3000}`,
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API de Gestion Hôtelière',
+            version: '1.0.0',
+            description: 'API pour le système de gestion hôtelière'
+        },
+        servers: [
+            {
+                url: `http://localhost:${process.env.PORT || 3000}`
+            }
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT'
+                }
+            }
         }
-      }
-    }
-  },
-  apis: ['./src/docs/*.js'],
+    },
+    apis: ['./src/docs/*.js']
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-swaggerSpec.paths = { 
-  ...swaggerSpec.paths, 
-  ...authRouteDoc, 
-  ...profileRouteDoc,
-  ...hebergementRouteDoc,
-  ...reservationRouteDoc,
-  ...paiementRouteDoc
+swaggerSpec.paths = {
+    ...swaggerSpec.paths,
+    ...authRouteDoc,
+    ...profileRouteDoc,
+    ...hebergementRouteDoc,
+    ...reservationRouteDoc,
+    ...paiementRouteDoc
 };
 
 app.use(cors());
