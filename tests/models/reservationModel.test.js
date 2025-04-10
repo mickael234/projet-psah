@@ -1,7 +1,9 @@
 import ReservationModel from '../../src/models/reservation.model';
-import { Reservation } from '../../__mocks__/prisma.mock.js';
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * Création d'un mock PrismaClient 
+ */
 jest.mock('@prisma/client', () => {
     const mockPrisma = {
         reservation: {
@@ -14,17 +16,29 @@ jest.mock('@prisma/client', () => {
 describe('Reservation Model', () => {
     let prismaMock;
 
+    /**
+     * Initialisation de la date du système pour avoir une date fixe et prévisible
+     */
+
     beforeAll(() => {
         const mockDate = new Date('2025-04-10T00:00:00.000Z');
         jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
         prismaMock = new PrismaClient();
     });
+
+    /**
+     * Restauration de la date du système
+     */
     
     afterAll(() => {
         jest.restoreAllMocks();
     });
 
     const today = new Date('2025-04-10T00:00:00.000Z');
+
+    /**
+     * Test : Récupération de toutes les réservations actuelles par l'id du client
+     */
 
     it("devrait récupérer toutes les réservations actuelles d'un client", async () => {
         const mockReservations = [
@@ -103,6 +117,10 @@ describe('Reservation Model', () => {
             }
         });
     });
+
+    /**
+     * Test : Récupération de toutes les réservations passées par l'id du client
+     */
 
     it("devrait récupérer toutes les réservations passées d'un client", async () => {
         const mockReservations = [
