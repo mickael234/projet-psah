@@ -1,65 +1,81 @@
+// src/server.js
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
-import { roomRouteDoc } from './docs/swagger.js';
-import chambreRouter from './routes/chambreRoutes.js';
-import reservationRouter from './routes/reservationRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
-import { authRouteDoc } from './docs/swagger.js';
+import hebergementRoutes from './routes/hebergementRoutes.js';
+import reservationRoutes from './routes/reservationRoutes.js';
+import paiementRoutes from './routes/paiementRoutes.js';
+import authRouteDoc from './docs/swagger.js';
 import profileRouteDoc from './docs/profileRouteDoc.js';
+import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
+import reservationRouteDoc from './docs/reservationRouteDoc.js';
+import paiementRouteDoc from './docs/paiementRouteDoc.js';
+import clientRoutes from './routes/clientRoutes.js';
 
 dotenv.config();
 
 const app = express();
 
+// Obtenir le répertoire actuel avec ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const swaggerOptions = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'API de Gestion Hôtelière',
-            version: '1.0.0',
-            description: 'API pour le système de gestion hôtelière'
-        },
-        servers: [
-            {
-                url: `http://localhost:${process.env.PORT || 3000}`
-            }
-        ],
-        components: {
-            securitySchemes: {
-                bearerAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT'
-                }
-            }
-        }
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API de Gestion Hôtelière',
+      version: '1.0.0',
+      description: 'API pour le système de gestion hôtelière',
     },
-    apis: ['./src/docs/*.js']
+    servers: [
+      {
+        url: `http://localhost:${process.env.PORT || 3000}`,
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    }
+  },
+  apis: ['./src/docs/*.js'],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-swaggerSpec.paths = {
-    ...swaggerSpec.paths,
-    ...authRouteDoc,
-    ...profileRouteDoc
+swaggerSpec.paths = { 
+  ...swaggerSpec.paths, 
+  ...authRouteDoc, 
+  ...profileRouteDoc,
+  ...hebergementRouteDoc,
+  ...reservationRouteDoc,
+  ...paiementRouteDoc
 };
 
 app.use(cors());
 app.use(express.json());
 
-// Servir les fichiers statiques (pour les photos de profil)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Servir les fichiers statiques (pour les photos de profil et les médias)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRoutes);
-app.use('/api/chambres', chambreRouter);
-app.use('/api/reservations', reservationRouter);
 app.use('/api/profile', profileRoutes);
-
+app.use('/api/hebergements', hebergementRoutes);
+app.use('/api/reservations', reservationRoutes);
+app.use('/api/paiements', paiementRoutes);
+// Routes
+app.use('/api/clients', clientRoutes);
+app.use('/api/reservations', reservationRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));

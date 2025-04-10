@@ -1,6 +1,7 @@
 import express from 'express';
 import ReservationController from '../controllers/reservationController.js';
 import { clientAuth } from '../controllers/reservationController.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
 const reservationRouter = express.Router();
 
@@ -37,5 +38,19 @@ reservationRouter.get(
     clientAuth,
     ReservationController.getAllUserPastReservations
 );
+
+
+
+const router = express.Router();
+
+// Routes publiques
+router.get('/', ReservationController.getAllReservations);
+router.get('/:id', ReservationController.getReservationById);
+
+// Routes protégées (nécessitent une authentification)
+router.post('/', authenticateJWT, ReservationController.createReservation);
+router.put('/:id', authenticateJWT, ReservationController.updateReservation);
+router.delete('/:id', authenticateJWT, ReservationController.deleteReservation);
+router.post('/:id/cancel', authenticateJWT, ReservationController.cancelReservation);
 
 export default reservationRouter;

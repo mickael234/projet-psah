@@ -98,6 +98,7 @@ model Utilisateur {
   notifications     Notification[]
   journaux_chatbot  JournalChatbot[]
   activites         ActiviteUtilisateur[]
+  journal_modifications JournalModifications[] // Ajoutez cette ligne
 
   @@index([email])
 }
@@ -137,6 +138,8 @@ model Chambre {
   prix_par_nuit    Decimal     @db.Decimal(10, 2)
   etat             EtatChambre
   description      String?
+  modifie_par      Int?        // Ajoutez ce champ
+  date_modification DateTime?  // Optionnel : pour suivre quand la modification a été faite
   
   equipements      ChambresEquipements[]
   reservations     ReservationsChambre[]
@@ -144,6 +147,17 @@ model Chambre {
   historique_prix  HistoriquePrix[]
 }
 
+model JournalModifications {
+  id_journal       Int      @id @default(autoincrement())
+  id_utilisateur   Int
+  type_ressource   String   // par ex. 'chambre', 'reservation', etc.
+  id_ressource     Int
+  action           String   // par ex. 'create', 'update', 'delete'
+  details          Json?    // détails de la modification (avant/après)
+  date             DateTime @default(now())
+  
+  utilisateur      Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+}
 model Equipement {
   id_equipement    Int                   @id @default(autoincrement())
   nom              String
@@ -227,11 +241,13 @@ model Paiement {
   reference_transaction  String?
   numero_echeance        Int?
   total_echeances        Int?
+  notes                  String?       // Nouveau champ pour les notes
   
   reservation            Reservation   @relation(fields: [id_reservation], references: [id_reservation])
 
   @@index([id_reservation])
 }
+
 
 model Avis {
   id_avis           Int         @id @default(autoincrement())

@@ -13,11 +13,7 @@ router.use(isClient);
 // Routes pour la gestion du profil
 router.get('/', ProfileController.getProfile);
 router.put('/', ProfileController.updateProfile);
-router.post(
-    '/photo',
-    upload.single('photo'),
-    ProfileController.updateProfilePhoto
-);
+router.post('/photo', upload.single('photo'), ProfileController.updateProfilePhoto);
 router.put('/billing', ProfileController.updateBillingInfo);
 
 // Routes pour l'authentification à deux facteurs
