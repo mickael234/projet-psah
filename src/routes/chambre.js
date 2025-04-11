@@ -1,49 +1,105 @@
-// src/routes/chambre.js
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
-
 const router = express.Router();
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-router.get('/disponibles', async (req, res) => {
-  const { date_arrivee, date_depart, nb_personnes, prix_max } = req.query;
-
-  if (!date_arrivee || !date_depart || !nb_personnes || !prix_max) {
-    return res.status(400).json({ error: 'Tous les paramètres sont requis.' });
-  }
-
+/**
+ * @swagger
+ * /api/chambres/recherche:
+ *   post:
+ *     summary: Recherche des chambres disponibles selon les critères
+ *     tags: [Chambres]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - date_arrivee
+ *               - date_depart
+ *               - prix_max
+ *             properties:
+ *               date_arrivee:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-05-01"
+ *               date_depart:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-05-05"
+ *               prix_max:
+ *                 type: number
+ *                 example: 150
+ *               nb_personnes:
+ *                 type: integer
+ *                 example: 2
+ *               equipements:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["Wi-Fi", "Télévision"]
+ *     responses:
+ *       200:
+ *         description: Liste des chambres disponibles
+ *       400:
+ *         description: Champs requis manquants
+ *       500:
+ *         description: Erreur serveur
+ */
+router.post('/recherche', async (req, res) => {
   try {
-    const chambres = await prisma.chambre.findMany({
+    const { date_arrivee, date_depart, prix_max, nb_personnes, equipements = [] } = req.body;
+
+    // Vérification des champs obligatoires
+    if (!date_arrivee || !date_depart || !prix_max) {
+      return res.status(400).json({ message: 'Champs requis manquants.' });
+    }
+
+    // Requête principale avec Prisma
+    let chambres = await prisma.chambre.findMany({
       where: {
-        prix_par_nuit: {
-          lte: parseFloat(prix_max),
-        },
-        etat: 'disponible',
+        prix_par_nuit: { lte: prix_max },
         reservations: {
           none: {
-            date_arrivee: {
-              lte: new Date(date_depart),
-            },
-            date_depart: {
-              gte: new Date(date_arrivee),
+            OR: [
+              {
+                date_arrivee: { lt: new Date(date_depart) },
+                date_depart: { gt: new Date(date_arrivee) },
+              },
+            ],
+          },
+        },
+        equipements: equipements.length > 0
+          ? {
+              some: {
+                equipement: {
+                  nom: { in: equipements },
+                },
+              },
             }
-          }
-        }
+          : undefined,
       },
       include: {
-        medias: true,
         equipements: {
           include: {
-            equipement: true
-          }
-        }
-      }
+            equipement: true,
+          },
+        },
+      },
     });
 
-    res.json(chambres);
+    // Filtrage par nombre de personnes si demandé
+    if (nb_personnes) {
+      chambres = chambres.filter(chambre =>
+        chambre.description?.toLowerCase().includes(`${nb_personnes} personne`)
+      );
+    }
+
+    res.status(200).json(chambres);
   } catch (error) {
-    console.error(' Erreur Prisma :', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération des chambres.' });
+    console.error('Erreur POST /chambres/recherche :', error);
+    res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
 
