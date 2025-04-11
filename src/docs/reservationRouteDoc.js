@@ -509,8 +509,9 @@ const reservationRouteDoc = {
         }
       },
     }
-  },
-  '/api/reservations/passees/{clientId}': {
+  }
+}, 
+'/api/reservations/passees/{clientId}': {
   get: {
     summary: 'Récupérer les réservations passées d\'un client',
     tags: ['Réservations'],
@@ -633,8 +634,6 @@ const reservationRouteDoc = {
       }
     }
   }
-}
-
 }
   };
   

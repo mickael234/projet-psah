@@ -11,12 +11,14 @@ import profileRoutes from './routes/profileRoutes.js';
 import hebergementRoutes from './routes/hebergementRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import paiementRoutes from './routes/paiementRoutes.js';
-import { authRouteDoc } from './docs/swagger.js';
+import authRouteDoc from './docs/swagger.js';
 import profileRouteDoc from './docs/profileRouteDoc.js';
 import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
 import clientRoutes from './routes/clientRoutes.js';
+import chambreRoutes from './routes/chambreRoutes.js';
+import chambreRouteDoc from './docs/chambreRouteDoc.js';
 
 dotenv.config();
 
@@ -59,7 +61,8 @@ swaggerSpec.paths = {
     ...profileRouteDoc,
     ...hebergementRouteDoc,
     ...reservationRouteDoc,
-    ...paiementRouteDoc
+    ...paiementRouteDoc,
+    ...chambreRouteDoc
 };
 
 app.use(cors());
@@ -73,6 +76,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/hebergements', hebergementRoutes);
 app.use('/api/paiements', paiementRoutes);
+app.use('/api/chambres', chambreRoutes);
 // Routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);
