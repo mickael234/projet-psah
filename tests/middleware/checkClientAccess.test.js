@@ -1,10 +1,10 @@
 import { checkClientAccess } from '../../src/middleware/auth.js';
-import prisma from '../../src/prismaClient.js';
+import prisma from '../../src/config/prisma.js';
 
 /**
  * Importation et mock de la même instance de Prisma utilisé par le middleware checkClientAcces
  */
-jest.mock('../../src/prismaClient.js', () => ({
+jest.mock('../../src/config/prisma.js', () => ({
     __esModule: true,
     default: {
         utilisateur: {

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { RoleMapper } from '../utils/roleMapper.js';
-import prisma from '../prismaClient.js';
+import prisma from '../config/prisma.js';
 
 /**
  * Middleware d'authentification JWT
@@ -146,8 +146,9 @@ export const checkClientAccess = async (req, res, next) => {
             });
         }
 
-        // Si l'utilisateur est un super administrateur ou un administrateur général, l'accès est autorisé
-        if (role === 'SUPER_ADMIN' || role === 'ADMIN_GENERAL') {
+        // Si l'utilisateur est un super administrateur ou un administrateur général ou un réceptionniste, l'accès est autorisé
+        if (RoleMapper.toBaseRole(role) === 'administrateur' || 
+            RoleMapper.toBaseRole(role) === 'personnel') {
             return next();
         }
 
