@@ -7,7 +7,9 @@ import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import chambreRoutes from './routes/chambre.js'; // ✅ Import par défaut
+// Import des routes
+import chambreRoutes from './routes/chambre.js';
+import authRoutes from './routes/authRoutes.js'; // 🔹 Auth (register/login)
 
 dotenv.config();
 
@@ -23,8 +25,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
-app.use('/chambres', chambreRoutes);
+// ✅ Routes API
+app.use('/api/auth', authRoutes);            // 🔐 Authentification
+app.use('/api/chambres', chambreRoutes);     // 🛏️ Chambres
 
 // Swagger
 const swaggerOptions = {
@@ -43,7 +46,10 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Serveur
+// ✅ Route de test
+app.get('/', (req, res) => res.send('API Hôtel en ligne 🚀'));
+
+// Lancer le serveur
 app.listen(PORT, () => {
   console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
 });
