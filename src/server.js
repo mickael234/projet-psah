@@ -72,10 +72,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/hebergements', hebergementRoutes);
-app.use('/api/reservations', reservationRoutes);
 app.use('/api/paiements', paiementRoutes);
 // Routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
+
+export default app;

@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { RoleMapper } from '../utils/roleMapper.js';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from '../prismaClient.js';
 
 /**
  * Middleware d'authentification JWT
@@ -173,7 +172,7 @@ export const checkClientAccess = async (req, res, next) => {
 
         if (!client) {
             return res.status(404).json({
-                status: 'ERROR',
+                status: 'NOT FOUND',
                 message: 'Client non trouvé'
             });
         }

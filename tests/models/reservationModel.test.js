@@ -2,7 +2,7 @@ import ReservationModel from '../../src/models/reservation.model';
 import { PrismaClient } from '@prisma/client';
 
 /**
- * Création d'un mock PrismaClient 
+ * Création d'un mock PrismaClient
  */
 jest.mock('@prisma/client', () => {
     const mockPrisma = {
@@ -29,7 +29,7 @@ describe('Reservation Model', () => {
     /**
      * Restauration de la date du système
      */
-    
+
     afterAll(() => {
         jest.restoreAllMocks();
     });

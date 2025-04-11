@@ -364,7 +364,278 @@ const reservationRouteDoc = {
           }
         }
       }
+    },
+    '/api/reservations/actuelles/{clientId}': {
+  get: {
+    summary: 'Récupérer les réservations actuelles d\'un client',
+    tags: ['Réservations'],
+    parameters: [
+      {
+        in: 'path',
+        name: 'clientId',
+        required: true,
+        schema: { type: 'integer' },
+        description: 'ID du client pour récupérer ses réservations actuelles',
+      },
+    ],
+    responses: {
+      200: {
+        description: 'Réservations récupérées avec succès',
+        content: {
+          'application/json': {
+            example: {
+              status: 'OK',
+              data: {
+                reservations: [
+                  {
+                    id_reservation: 1,
+                    id_client: 1,
+                    date_reservation: '2025-04-09T10:46:15.295Z',
+                    etat: 'confirmee',
+                    prix_total: '100',
+                    etat_paiement: 'en_attente',
+                    source_reservation: 'site_web',
+                    id_reservation_externe: null,
+                    supprime_le: null,
+                    client: {
+                      id_client: 1,
+                      id_utilisateur: 1,
+                      prenom: 'John',
+                      nom: 'Doe',
+                      telephone: '1234567890',
+                      statut_membre: 'membre',
+                      consentement_marketing: false,
+                      supprime_le: null
+                    },
+                    chambres: [
+                      {
+                        id_reservation: 1,
+                        id_chambre: 1,
+                        date_arrivee: '2025-05-01T00:00:00.000Z',
+                        date_depart: '2025-05-07T00:00:00.000Z',
+                        chambre: {
+                          id_chambre: 1,
+                          numero_chambre: '101',
+                          type_chambre: 'Simple',
+                          prix_par_nuit: '75',
+                          etat: 'disponible',
+                          description: 'Chambre simple avec un lit simple et vue sur le jardin.'
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      400: {
+        description: 'Id invalide',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        status: {
+                            type: 'string',
+                            example: 'BAD REQUEST'
+                        },
+                        message: {
+                            type: 'string',
+                            example:
+                                "L'id du client n'est pas valide."
+                        }
+                    }
+                }
+            }
+        }
+      },
+      403: {
+        description: 'Accès non autorisé',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                status: { type: 'string', example: 'FORBIDDEN' },
+                message: { type: 'string', example: "Accès non autorisé" }
+              }
+            }
+          }
+        }
+      },
+      404: {
+        description: 'Aucune réservation actuelle ou client trouvé',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        status: {
+                            type: 'string',
+                            example: 'NOT FOUND'
+                        },
+                        message: {
+                            type: 'string',
+                            example:
+                                "Aucune réservation actuelle n'a été trouvée"
+                        }
+                    }
+                }
+            }
+        }
+      },
+
+      500: {
+        description: 'Erreur serveur',
+        content: {
+            'application/json': {
+                schema: {
+                    type: 'object',
+                    properties: {
+                        status: {
+                            type: 'string',
+                            example: 'INTERNAL SERVER ERROR'
+                        },
+                        message: {
+                            type: 'string',
+                            example:
+                                'Une erreur interne est survenue.'
+                        }
+                    }
+                }
+            }
+        }
+      },
     }
+  },
+  '/api/reservations/passees/{clientId}': {
+  get: {
+    summary: 'Récupérer les réservations passées d\'un client',
+    tags: ['Réservations'],
+    parameters: [
+      {
+        in: 'path',
+        name: 'clientId',
+        required: true,
+        schema: { type: 'integer' },
+        description: 'ID du client pour récupérer ses réservations passées',
+      },
+    ],
+    responses: {
+      200: {
+        description: 'Réservations passées récupérées avec succès',
+        content: {
+          'application/json': {
+            example: {
+              status: 'OK',
+              data: {
+                reservations: [
+                  {
+                    id_reservation: 1,
+                    id_client: 1,
+                    date_reservation: '2025-01-01T10:46:15.295Z',
+                    etat: 'depart',
+                    prix_total: '100',
+                    etat_paiement: 'depart',
+                    source_reservation: 'site_web',
+                    id_reservation_externe: null,
+                    supprime_le: null,
+                    client: {
+                      id_client: 1,
+                      id_utilisateur: 1,
+                      prenom: 'John',
+                      nom: 'Doe',
+                      telephone: '1234567890',
+                      statut_membre: 'membre',
+                      consentement_marketing: false,
+                      supprime_le: null
+                    },
+                    chambres: [
+                      {
+                        id_reservation: 1,
+                        id_chambre: 1,
+                        date_arrivee: '2025-04-01T00:00:00.000Z',
+                        date_depart: '2025-04-05T00:00:00.000Z',
+                        chambre: {
+                          id_chambre: 1,
+                          numero_chambre: '101',
+                          type_chambre: 'Simple',
+                          prix_par_nuit: '75',
+                          etat: 'disponible',
+                          description: 'Chambre simple avec un lit simple et vue sur le jardin.'
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      400: {
+        description: 'Id invalide',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                status: { type: 'string', example: 'BAD REQUEST' },
+                message: { type: 'string', example: "L'id du client n'est pas valide." }
+              }
+            }
+          }
+        }
+      },
+      403: {
+        description: 'Accès non autorisé',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                status: { type: 'string', example: 'FORBIDDEN' },
+                message: { type: 'string', example: "Accès non autorisé" }
+              }
+            }
+          }
+        }
+      },
+      404: {
+        description: 'Aucune réservation passée ou client trouvé',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                status: { type: 'string', example: 'NOT FOUND' },
+                message: { type: 'string', example: "Aucune réservation passée n'a été trouvée" }
+              }
+            }
+          }
+        }
+      },
+      500: {
+        description: 'Erreur serveur',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                status: { type: 'string', example: 'INTERNAL SERVER ERROR' },
+                message: { type: 'string', example: 'Une erreur interne est survenue.' }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+}
   };
   
   export default reservationRouteDoc;
