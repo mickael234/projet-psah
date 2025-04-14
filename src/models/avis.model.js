@@ -1,44 +1,76 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
 
 class AvisModel {
 
     /**
-     * Récupère tous les avis
+     * Récupérer tous les avis de tous les clients
      * @returns {Promise<Array>} - Liste des avis
      */
-    static findAll(){
+    static async findAll(){
         return prisma.avis.findMany()
     }
 
 
     /**
-     * Récupère l'avis d'une réservation
+     * Récupérer l'avis d'un client d'une réservation
      * @param {number} idReservation - ID de la réservation
      * @returns {Promise<Object>} - L'avis trouvé
      */
-    static findByReservation(idReservation) {
+    static async findByReservation(idReservation) {
         return prisma.avis.findUnique({
             where: { id_reservation: idReservation }
         });
     }
 
     /**
-     * Récupère les avis des tous les clients d'une réservation
-     * @param {number} idReservation - ID de la réservation
-     * @returns {Promise<Array>} - Liste des avis dans une réservation
+     * Récupérer un avis par son ID
+     * @param {number} id - ID de l'avis
+     * @returns {Promise<Object>} - L'avis trouvé
      */
-    static findAllByReservation(idReservation){
-        return prisma.avis.findMany({
-            where: { id_reservation: idReservation }
+    static async findById(id){
+        return prisma.avis.findUnique({
+            where : {
+                id_avis: id
+            }
         })
     }
 
     /**
-     * Calcule la note moyenne des avis
+ * Récupérer les avis de tous les clients pour une chambre spécifique
+ * @param {number} idChambre - ID de la chambre
+ * @returns {Promise<Array>} - Liste des avis associés à cette chambre
+ */
+    static async findAllByChambre(idChambre) {
+        return prisma.avis.findMany({
+            where: {
+                reservation: {
+                    chambres: {
+                        some: {
+                            id_chambre: idChambre
+                        }
+                    }
+                }
+            },
+            include: {
+                reservation: {
+                    include: {
+                        client: {
+                            include: {
+                                utilisateur: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+
+    /**
+     * Calculer la note moyenne des avis
      * @returns {Promise<number>} - Note moyenne
      */
-    static getAverageRating() {
+    static async getAverageRating() {
         return prisma.avis
             .aggregate({
                 _avg: {
@@ -49,11 +81,11 @@ class AvisModel {
     }
 
     /**
-     * Récupère les avis par note
+     * Récupérer les avis par note
      * @param {number} note - Note recherchée
      * @returns {Promise<Array>} - Liste des avis
      */
-    static findByRating(note) {
+    static async findByRating(note) {
         return prisma.avis.findMany({
             where: { note },
             include: {
@@ -67,24 +99,43 @@ class AvisModel {
     }
 
     /**
-     * Crée un nouvel avis
-     * @param {Object} avisData - Avis à créer
-     * @return {Promise<AvisModel>} - Avis crée
+     * Créer un nouvel avis
+     * @param {Object} nouvelAvis - Avis à créer
+     * @returns {Promise<Object>} - Avis crée
      */
-    static create(avisData){
+    static async create(avis){
         return prisma.avis.create({
             data: {
-                avisData 
+                nouvelAvis
             }
         })
     }
 
     /**
-     * Supprime un avis
+     * Répondre à un avis
+     * @param {number} idAvis - Id de l'avis auquel on veut répondre
+     * @param {Promise<Object>} reponse - Réponse du personnel
+     * @returns {Promise<Object>} - Avis avec la réponse du personnel
+     */
+    static async update(idAvis, reponse){
+        return prisma.avis.update({
+            where : {
+                id_avis: idAvis
+            },
+            data : {
+                commentaire : reponse
+            }
+        })
+    }
+
+
+    /**
+     * Supprimer un avis
      * @param {number} idAvis - Id de l'avis à supprimer
+     * @returns {Promise<Object>} - Avis supprimé
      */
 
-    static delete(idAvis){
+    static async delete(idAvis){
         return prisma.avis.delete({
             where : {
                 id_avis: idAvis
