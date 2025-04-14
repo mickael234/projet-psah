@@ -251,3 +251,5 @@ class AvisController{
         }
     }
 }
+
+export default AvisController;

@@ -54,9 +54,22 @@ class AvisModel {
             include: {
                 reservation: {
                     include: {
+                        chambres: {
+                            select: {
+                                id_chambre: true
+                            }
+                        },
                         client: {
-                            include: {
-                                utilisateur: true
+                            select: {
+                                prenom: true,
+                                nom: true,
+                                utilisateur: {
+                                    select: {
+                                        id_utilisateur: true,
+                                        nom_utilisateur: true,
+                                        role: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -64,6 +77,7 @@ class AvisModel {
             }
         });
     }
+    
 
 
     /**
@@ -103,11 +117,9 @@ class AvisModel {
      * @param {Object} nouvelAvis - Avis à créer
      * @returns {Promise<Object>} - Avis crée
      */
-    static async create(avis){
+    static async create(nouvelAvis){
         return prisma.avis.create({
-            data: {
-                nouvelAvis
-            }
+            data: nouvelAvis
         })
     }
 
@@ -144,4 +156,4 @@ class AvisModel {
     }
 }
 
-module.exports = AvisModel;
+export default AvisModel;
