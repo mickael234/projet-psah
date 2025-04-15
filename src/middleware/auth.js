@@ -178,7 +178,7 @@ export const checkClientAccess = async (req, res, next) => {
             });
         }
 
-        // Si l'ID de l'utilisateur connecté ne correspond pas à l'ID de l'utilisateur du client, accès refusé
+        // Si l'ID de l'utilisateur connecté ne correspond pas à l'ID du client, accès refusé
         if (client.id_utilisateur !== utilisateur.id_utilisateur) {
             return res.status(403).json({
                 status: 'FORBIDDEN',
@@ -186,7 +186,7 @@ export const checkClientAccess = async (req, res, next) => {
             });
         }
 
-        // Passer au middleware suivant si l'accès est autorisé
+        // Passer au endpoint si l'accès est autorisé
         next();
     } catch (error) {
         console.error('Erreur dans checkClientAccess : ', error);
@@ -194,6 +194,78 @@ export const checkClientAccess = async (req, res, next) => {
             status: 'INTERNAL SERVER ERROR',
             message:
                 "Une erreur interne est survenue lors de la vérification des droits d'accès."
+        });
+    }
+};
+
+
+/**
+ * Middleware pour vérifier l'accès d'un client à ses propres informations.
+ * Vérifie si l'utilisateur connecté est le client demandé ou un administrateur ayant des privilèges suffisants.
+ *
+ * @param {Object} req - Requête contenant les informations de l'utilisateur connecté et les paramètres de la requête.
+ * @param {Object} res - Réponse pour renvoyer les données ou les erreurs.
+ * @param {Function} next - Fonction pour passer au middleware suivant si l'accès est autorisé.
+ * @returns {void}
+ */
+
+export const verifyClientAccessToReservation = async (req, res, next) => {
+    const role = req.user.role;
+    const userEmail = req.user?.email;
+    const reservationId = parseInt(req.params.idReservation);
+
+    // Si l'utilisateur est un super administrateur ou un administrateur général ou un réceptionniste, l'accès est autorisé
+    if (RoleMapper.toBaseRole(role) === 'administrateur' || RoleMapper.toBaseRole(role) === 'personnel') {
+        return next();
+    }
+
+    try {
+        // Récupère l'utilisateur depuis la table `Utilisateur` avec la relation vers `Client`
+        const utilisateur = await prisma.utilisateur.findUnique({
+            where: { email: userEmail },
+            include: { client: true },
+        });
+
+        // Vérifie que l'utilisateur est bien associé à un client
+        if (!utilisateur?.client) {
+            return res.status(403).json({
+                status: "ACCÈS REFUSÉ",
+                message: "Aucun client associé à cet utilisateur."
+            });
+        }
+
+        // Récupère la réservation visée dans la requête
+        const reservation = await prisma.reservation.findUnique({
+            where: { id_reservation: reservationId },
+            select: { id_client: true }
+        });
+
+        // Vérifie que la réservation existe
+        if (!reservation) {
+            return res.status(404).json({
+                status: "RESSOURCE NON TROUVÉE",
+                message: "Réservation introuvable."
+            });
+        }
+
+        // Vérifie que la réservation appartient bien au client connecté
+        if (reservation.id_client !== utilisateur.client.id_client) {
+            return res.status(403).json({
+                status: "ACCÈS REFUSÉ",
+                message: "Vous n'avez pas accès à cette réservation."
+            });
+        }
+
+        // Attache les infos du client à la requête pour usage ultérieur
+        req.client = utilisateur.client;
+
+        // Passer au endpoint si l'accès est autorisé
+        next();
+    } catch (error) {
+        console.error('Erreur middleware accès client/réservation :', error);
+        res.status(500).json({
+            status: "ERREUR SERVEUR",
+            message: "Erreur lors de la vérification de l'accès à la réservation."
         });
     }
 };

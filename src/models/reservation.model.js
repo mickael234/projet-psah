@@ -3,6 +3,17 @@ const prisma = new PrismaClient();
 
 class ReservationModel {
     /**
+     * Récupère une réservation par son ID
+     * @param {number} id - ID de la réservation
+     * @returns {Promise<Object>} - La réservation trouvée
+     */
+
+    static async findById(id){
+        return prisma.reservation.findUnique({
+            where : {id_reservation : id}
+        })
+    }
+    /**
      * Récupère une réservation avec ses relations
      * @param {number} id - ID de la réservation
      * @returns {Promise<Object>} - La réservation avec ses relations

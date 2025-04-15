@@ -98,7 +98,7 @@ describe("Avis Controller", () => {
          * Test : Retourne 400 BAD REQUEST si l'id de réservation est invalide
          */
         it("devrait retourner une erreur 400 si l'id de réservation est invalide", async () => {
-            const req = { idReservation: "abc" };
+            const req = {params :{ idReservation: "abc" }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -128,7 +128,7 @@ describe("Avis Controller", () => {
 
             AvisModel.findByReservation.mockResolvedValue(mockAvis);
 
-            const req = { idReservation: 42 };
+            const req = {params :{ idReservation: 42 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -152,7 +152,7 @@ describe("Avis Controller", () => {
         it("devrait retourner une erreur 404 si aucun avis pour cette réservation", async () => {
             AvisModel.findByReservation.mockResolvedValue(null);
 
-            const req = { idReservation: 1000 };
+            const req = {params: { idReservation: 1000 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -174,7 +174,7 @@ describe("Avis Controller", () => {
         it("devrait retourner une erreur 500 en cas d'erreur serveur", async () => {
             AvisModel.findByReservation.mockRejectedValue(new Error("Erreur DB"));
 
-            const req = { idReservation: 3 };
+            const req = {params :{ idReservation: 3 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -195,7 +195,7 @@ describe("Avis Controller", () => {
          * Test : Retourne 400 BAD REQUEST si l'id de chambre est invalide
          */
         it("devrait retourner une erreur 400 si l'id de la chambre est invalide", async () => {
-            const req = { idChambre: "abc" };
+            const req = {params :{ idChambre: "abc" }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -218,7 +218,7 @@ describe("Avis Controller", () => {
             const mockAvis = [{ id_avis: 1, note: 5 }];
             AvisModel.findAllByChambre.mockResolvedValue(mockAvis);
 
-            const req = { idChambre: 12 };
+            const req = {params : { idChambre: 12 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -239,7 +239,7 @@ describe("Avis Controller", () => {
         it("devrait retourner une erreur 404 si aucun avis trouvé", async () => {
             AvisModel.findAllByChambre.mockResolvedValue([]);
 
-            const req = { idChambre: 99 };
+            const req = {params :{ idChambre: 99 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -305,7 +305,7 @@ describe("Avis Controller", () => {
          * Test : Retourne 400 BAD REQUEST si la note est invalide
          */
         it("devrait retourner une erreur 400 si la note est invalide", async () => {
-            const req = { note: 6 };
+            const req = {params: { note: 6 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -336,7 +336,7 @@ describe("Avis Controller", () => {
 
             AvisModel.findByRating.mockResolvedValue(avis);
 
-            const req = { note: 4 };
+            const req = {params : { note: 4 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -357,7 +357,7 @@ describe("Avis Controller", () => {
         it("devrait retourner une erreur 404 si aucun avis avec cette note", async () => {
             AvisModel.findByRating.mockResolvedValue([]);
 
-            const req = { note: 2 };
+            const req = {params :{ note: 2 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -379,11 +379,15 @@ describe("Avis Controller", () => {
          */
         it("devrait retourner une erreur 400 si l'avis est invalide (note ou commentaire insuffisant)", async () => {
             const req = {
-                nouvelAvis: {
-                    note: "abc",
-                    commentaire: "Ok"
-                }
+                body : {
+                    id_avis: 1,
+                    id_reservation: 12,
+                    note: 6,
+                    commentaire: "Séjour parfait, chambre propre et calme.",
+                    date_avis: new Date("2024-10-15T10:24:00Z")
+                } 
             };
+
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -404,12 +408,15 @@ describe("Avis Controller", () => {
 
         it("devrait retourner une erreur 409 si un avis existe déjà pour la réservation", async () => {
             const req = {
+                body : {
                 nouvelAvis: {
-                    id_reservation: 42,
+                    id_avis: 1,
+                    id_reservation: 12,
                     note: 4,
-                    commentaire: "Bon séjour"
+                    commentaire: "Séjour parfait, chambre propre et calme.",
+                    date_avis: new Date("2024-10-15T10:24:00Z")
                 }
-            };
+            } };
             AvisModel.findByReservation.mockResolvedValue({ id_avis: 1 });
 
             const res = {
@@ -433,13 +440,14 @@ describe("Avis Controller", () => {
             const nouvelAvis = {
                 id_reservation: 42,
                 note: 4,
-                commentaire: "Bon séjour"
+                commentaire: "Séjour parfait, chambre propre et calme.",
+                date_avis: new Date("2024-10-15T10:24:00Z")
             };
             const avisCree = { ...nouvelAvis, id_avis: 99 };
             AvisModel.findByReservation.mockResolvedValue(null);
             AvisModel.create.mockResolvedValue(avisCree);
 
-            const req = { nouvelAvis };
+            const req = {body : { nouvelAvis }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -549,7 +557,7 @@ describe("Avis Controller", () => {
          * Test : Retourne 404 BAD REQUEST si l'id de l'avis est invalide
          */
         it("devrait retourner 404 si l'id de l'avis est invalide", async () => {
-            const req = { idAvis: "abc" };
+            const req = {params :{ idAvis: "abc" }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -573,7 +581,7 @@ describe("Avis Controller", () => {
             const avisSupprime = { id_avis: 1, deleted: true };
             AvisModel.delete.mockResolvedValue(avisSupprime);
 
-            const req = { idAvis: 1 };
+            const req = {params : { idAvis: 1 }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()

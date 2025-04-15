@@ -1,4 +1,5 @@
-import AvisModel from "../models/avis.model";
+import AvisModel from "../models/avis.model.js";
+import ReservationModel from "../models/reservation.model.js";
 
 class AvisController{
 
@@ -45,15 +46,22 @@ class AvisController{
     static async getByReservation(req, res){
         try {
 
-            const id = req.idReservation;
+            const id = Number(req.params.idReservation);
 
-            if(isNaN(id) || !id){
+            if(isNaN(id) || !id || id <= 0){
                 return res.status(400).json({
                     status: 'MAUVAISE DEMANDE',
                     message: "L'id de la réservation est invalide"
                 });
             }
-
+            
+            const reservationExistante = await ReservationModel.getWithRelations(id); 
+            if(!reservationExistante){
+                return res.status(404).json({
+                    status: 'RESSOURCE NON TROUVEE',
+                    message: "L'id de la réservation est invalide."
+                });
+            }
             const avisReservation = await AvisModel.findByReservation(id);
 
             if(!avisReservation){
@@ -88,7 +96,7 @@ class AvisController{
 
     static async getAvisByChambre (req, res){
         try {
-            const id = req.idChambre;
+            const id = Number(req.params.idChambre);
 
             if(isNaN(id) || !id){
                 return res.status(400).json({
@@ -154,7 +162,7 @@ class AvisController{
  */
     static async getByNote(req, res){
         try {
-            const note = req.note;
+            const note = Number(req.params.note);
 
             if(note > 5 || note < 1 || isNaN(note) || !note){
                 return res.status(400).json({
@@ -194,14 +202,29 @@ class AvisController{
  */
     static async createAvis(req, res){
         try {
-            const nouvelAvis = req.nouvelAvis;
+            const nouvelAvis = req.body;
 
             if (!nouvelAvis || isNaN(nouvelAvis.note) || !nouvelAvis.commentaire || nouvelAvis.commentaire.length < 5) {
                 return res.status(400).json({
                     status: 'MAUVAISE DEMANDE',
                     message: "L'avis n'est pas valide (note ou commentaire insuffisant)."
                 });
-            }    
+            }
+            
+            if(!nouvelAvis.id_reservation || isNaN(nouvelAvis.id_reservation)){
+                return res.status(400).json({
+                    status: 'MAUVAISE DEMANDE',
+                    message: "L'id de la réservation n'est pas valide."
+                })
+            }
+            
+            const reservationExistante = await ReservationModel.getWithRelations(nouvelAvis.id_reservation);
+            if(!reservationExistante){
+                return res.status(404).json({
+                    status: 'RESSOURCE NON TROUVEE',
+                    message: "La réservation spécifiée n'existe pas."
+                });
+            }
 
             const avisExistant = await AvisModel.findByReservation(nouvelAvis.id_reservation);
             if(avisExistant){
@@ -234,9 +257,10 @@ class AvisController{
  */
     static async answerToAvis(req, res){
         try {
-            const avisExistant = await AvisModel.findById(req.params.idAvis);
+            const idAvis = Number(req.params.idAvis)
+            const avisExistant = await AvisModel.findById(idAvis);
             const reponsePersonnel = req.body.reponse;
-            const rolePersonnel = req.user.role.name
+            const rolePersonnel = req.user.role
 
             if(!avisExistant){
                 return res.status(404).json({
@@ -255,7 +279,7 @@ class AvisController{
             // Le commentaire du client est gardé mais le commentaire du personnel est ajouté ou remplacé
             const nouveauCommentaire = `${avisExistant.commentaire?.split('\n\n---\nRéponse du personnel')[0] ?? avisExistant.commentaire ?? ''}\n\n---\nRéponse du personnel : ${reponsePersonnel}\n(Répondu par ${rolePersonnel})`;
 
-            const avisAvecReponse = await AvisModel.update(req.params.idAvis, nouveauCommentaire);
+            const avisAvecReponse = await AvisModel.update(idAvis, nouveauCommentaire);
 
             return res.status(200).json({
                 status: "OK",
@@ -282,7 +306,7 @@ class AvisController{
 
     static async deleteAvis (req, res){
         try {
-            const id = req.idAvis;
+            const id = Number(req.params.idAvis);
 
             if(isNaN(id) || !id){
                 return res.status(404).json({
