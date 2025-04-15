@@ -1,7 +1,9 @@
 import AvisController from "../../src/controllers/avisController.js";
+import ReservationModel from "../../src/models/reservation.model.js";
 import AvisModel from "../../src/models/avis.model.js";
 
 jest.mock("../../src/models/avis.model.js");
+jest.mock("../../src/models/reservation.model.js");
 
 describe("Avis Controller", () => {
 
@@ -118,6 +120,12 @@ describe("Avis Controller", () => {
          */
 
         it("devrait retourner l'avis d'une réservation avec un status 200", async () => {
+            const req = {params :{ idReservation: "42" }};
+            const res = {
+                status: jest.fn().mockReturnThis(),
+                json: jest.fn()
+            };
+
             const mockAvis = {
                 id_avis: 3,
                 id_reservation: 42,
@@ -126,16 +134,49 @@ describe("Avis Controller", () => {
                 date_avis: new Date("2024-11-01T15:00:00Z")
             };
 
-            AvisModel.findByReservation.mockResolvedValue(mockAvis);
+            await AvisModel.findByReservation.mockResolvedValue(mockAvis);
 
-            const req = {params :{ idReservation: 42 }};
-            const res = {
-                status: jest.fn().mockReturnThis(),
-                json: jest.fn()
-            };
+            await ReservationModel.getWithRelations.mockResolvedValue({
+                id_reservation: 42,
+                id_client: 1,
+                date_reservation: new Date("2023-04-09T10:46:15.295Z"),
+                etat: "confirmee",
+                prix_total: 100,
+                etat_paiement: "en_attente",
+                source_reservation: "site_web",
+                id_reservation_externe: null,
+                supprime_le: null,
+                client: {
+                  id_client: 1,
+                  id_utilisateur: 1,
+                  prenom: "John",
+                  nom: "Doe",
+                  telephone: "1234567890",
+                  statut_membre: "membre",
+                  consentement_marketing: false,
+                  supprime_le: null
+                },
+                chambres: [
+                  {
+                    id_reservation: 1,
+                    id_chambre: 1,
+                    date_arrivee: new Date("2025-05-01T00:00:00.000Z"),
+                    date_depart: new Date("2025-05-07T00:00:00.000Z"),
+                    chambre: {
+                      id_chambre: 1,
+                      numero_chambre: "101",
+                      type_chambre: "Simple",
+                      prix_par_nuit: 75,
+                      etat: "disponible",
+                      description: "Chambre simple avec un lit simple et vue sur le jardin."
+                    }
+                  }
+                ]
+              });
 
             await AvisController.getByReservation(req, res);
 
+            expect(ReservationModel.getWithRelations).toHaveBeenCalledWith(42);
             expect(AvisModel.findByReservation).toHaveBeenCalledWith(42);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
@@ -152,7 +193,7 @@ describe("Avis Controller", () => {
         it("devrait retourner une erreur 404 si aucun avis pour cette réservation", async () => {
             AvisModel.findByReservation.mockResolvedValue(null);
 
-            const req = {params: { idReservation: 1000 }};
+            const req = {params: { idReservation: "1000" }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -172,14 +213,14 @@ describe("Avis Controller", () => {
          */
 
         it("devrait retourner une erreur 500 en cas d'erreur serveur", async () => {
-            AvisModel.findByReservation.mockRejectedValue(new Error("Erreur DB"));
 
-            const req = {params :{ idReservation: 3 }};
+            const req = {params :{ idReservation: "42" }};
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
             };
 
+            ReservationModel.getWithRelations.mockRejectedValue(new Error("Erreur DB"));
             await AvisController.getByReservation(req, res);
 
             expect(res.status).toHaveBeenCalledWith(500);
@@ -368,7 +409,7 @@ describe("Avis Controller", () => {
             expect(res.status).toHaveBeenCalledWith(404);
             expect(res.json).toHaveBeenCalledWith({
                 status: 'RESSOURCE NON TROUVEE',
-                message: "Aucun avis n'a été trouvé pour avec cette note"
+                message: "Aucun avis n'a été trouvé pour cette note"
             });
         });
     }),
@@ -407,17 +448,63 @@ describe("Avis Controller", () => {
          */
 
         it("devrait retourner une erreur 409 si un avis existe déjà pour la réservation", async () => {
+            const mockReservation = {
+                id_reservation: 1,
+                id_client: 1,
+                date_reservation: new Date("2023-04-09T10:46:15.295Z"),
+                etat: "confirmee",
+                prix_total: 100,
+                etat_paiement: "en_attente",
+                source_reservation: "site_web",
+                id_reservation_externe: null,
+                supprime_le: null,
+                client: {
+                  id_client: 1,
+                  id_utilisateur: 1,
+                  prenom: "John",
+                  nom: "Doe",
+                  telephone: "1234567890",
+                  statut_membre: "membre",
+                  consentement_marketing: false,
+                  supprime_le: null
+                },
+                chambres: [
+                  {
+                    id_reservation: 1,
+                    id_chambre: 1,
+                    date_arrivee: new Date("2023-05-01T00:00:00.000Z"),
+                    date_depart: new Date("2023-05-07T00:00:00.000Z"),
+                    chambre: {
+                      id_chambre: 1,
+                      numero_chambre: "101",
+                      type_chambre: "Simple",
+                      prix_par_nuit: 75,
+                      etat: "disponible",
+                      description: "Chambre simple avec un lit simple et vue sur le jardin."
+                    }
+                  }
+                ]
+              }
+
+              ReservationModel.getWithRelations.mockResolvedValue(mockReservation);
+
+            const mockAvis = {
+                id_avis: 1,
+                id_reservation: 12,
+                note: 6,
+                commentaire: "Séjour parfait, chambre propre et calme.",
+                date_avis: new Date("2024-10-15T10:24:00Z")
+            }
+            AvisModel.findByReservation.mockResolvedValue(mockAvis);
+
             const req = {
                 body : {
-                nouvelAvis: {
-                    id_avis: 1,
                     id_reservation: 12,
                     note: 4,
                     commentaire: "Séjour parfait, chambre propre et calme.",
-                    date_avis: new Date("2024-10-15T10:24:00Z")
                 }
-            } };
-            AvisModel.findByReservation.mockResolvedValue({ id_avis: 1 });
+            };
+
 
             const res = {
                 status: jest.fn().mockReturnThis(),
@@ -437,17 +524,60 @@ describe("Avis Controller", () => {
          * Test : Crée un avis et retourne un statut 201 CREATED
          */
         it("devrait créer un nouvel avis et retourner un status 201", async () => {
+
+            const mockReservation = {
+                id_reservation: 1,
+                id_client: 1,
+                date_reservation: new Date("2023-04-09T10:46:15.295Z"),
+                etat: "confirmee",
+                prix_total: 100,
+                etat_paiement: "en_attente",
+                source_reservation: "site_web",
+                id_reservation_externe: null,
+                supprime_le: null,
+                client: {
+                  id_client: 1,
+                  id_utilisateur: 1,
+                  prenom: "John",
+                  nom: "Doe",
+                  telephone: "1234567890",
+                  statut_membre: "membre",
+                  consentement_marketing: false,
+                  supprime_le: null
+                },
+                chambres: [
+                  {
+                    id_reservation: 1,
+                    id_chambre: 1,
+                    date_arrivee: new Date("2023-05-01T00:00:00.000Z"),
+                    date_depart: new Date("2023-05-07T00:00:00.000Z"),
+                    chambre: {
+                      id_chambre: 1,
+                      numero_chambre: "101",
+                      type_chambre: "Simple",
+                      prix_par_nuit: 75,
+                      etat: "disponible",
+                      description: "Chambre simple avec un lit simple et vue sur le jardin."
+                    }
+                  }
+                ]
+              }
+
+              ReservationModel.getWithRelations.mockResolvedValue(mockReservation);
+              AvisModel.findByReservation.mockResolvedValue(null);
+
+
             const nouvelAvis = {
                 id_reservation: 42,
                 note: 4,
                 commentaire: "Séjour parfait, chambre propre et calme.",
                 date_avis: new Date("2024-10-15T10:24:00Z")
             };
-            const avisCree = { ...nouvelAvis, id_avis: 99 };
-            AvisModel.findByReservation.mockResolvedValue(null);
+            const avisCree = { ...nouvelAvis, id_avis: 99, date_avis: new Date("2024-10-15T10:24:00Z") };
+           
             AvisModel.create.mockResolvedValue(avisCree);
 
-            const req = {body : { nouvelAvis }};
+            const req = {body :  nouvelAvis };
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -474,7 +604,7 @@ describe("Avis Controller", () => {
             const req =  {
                 params: { idAvis: 1 },
                 body: { reponse: "Merci à vous" },
-                user: { role: { name: "admin" } }
+                user: { role: "admin" }
             };
             const res = {
                 status: jest.fn().mockReturnThis(),
@@ -523,20 +653,29 @@ describe("Avis Controller", () => {
         it("devrait retourner 200 avec le commentaire mis à jour", async () => {
             const avis = {
                 id_avis: 1,
-                commentaire: "Bon séjour"
+                id_reservation: 42,
+                note: 4,
+                commentaire: "Bon séjour",
+                date_avis: new Date("2024-10-15T10:24:00Z")
             };
             const reponse = "Merci pour votre retour";
-            const commentaireFinal = `Bon séjour\n\n---\nRéponse du personnel : ${reponse}\n(Répondu par admin)`;
-            const avisAvecReponse = { ...avis, commentaire: commentaireFinal };
+            const rolePersonnel = "admin";
+
+            const commentaireFinal = `Bon séjour\n\n---\nRéponse du personnel : ${reponse}\n(Répondu par ${rolePersonnel})`;
+            const avisAvecReponse = { 
+                ...avis, 
+                commentaire: commentaireFinal 
+            };
 
             AvisModel.findById.mockResolvedValue(avis);
             AvisModel.update.mockResolvedValue(avisAvecReponse);
 
-            const req =  {
-                params: { idAvis: 1 }, 
+            const req = {
+                params: { idAvis: "1" }, 
                 body: { reponse },
-                user: { role: { name: "admin" } }
+                user: { role: rolePersonnel }
             };
+            
             const res = {
                 status: jest.fn().mockReturnThis(),
                 json: jest.fn()
@@ -578,7 +717,13 @@ describe("Avis Controller", () => {
          */
 
         it("devrait supprimer l'avis et retourner un status 200", async () => {
-            const avisSupprime = { id_avis: 1, deleted: true };
+            const avisSupprime = { 
+                id_avis: 1,
+                id_reservation: 42,
+                note: 4,
+                commentaire: "Séjour parfait, chambre propre et calme.",
+                date_avis: new Date("2024-10-15T10:24:00Z") 
+            };
             AvisModel.delete.mockResolvedValue(avisSupprime);
 
             const req = {params : { idAvis: 1 }};
@@ -592,7 +737,7 @@ describe("Avis Controller", () => {
             expect(AvisModel.delete).toHaveBeenCalledWith(1);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                status: "OK",
+                status: "SUPPRIME",
                 data: avisSupprime
             });
         });

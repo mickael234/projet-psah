@@ -200,7 +200,7 @@ export const checkClientAccess = async (req, res, next) => {
 
 
 /**
- * Middleware pour vérifier l'accès d'un client à ses propres informations.
+ * Middleware pour vérifier l'accès d'un client à ses propres avis.
  * Vérifie si l'utilisateur connecté est le client demandé ou un administrateur ayant des privilèges suffisants.
  *
  * @param {Object} req - Requête contenant les informations de l'utilisateur connecté et les paramètres de la requête.

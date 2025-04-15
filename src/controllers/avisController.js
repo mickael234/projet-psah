@@ -175,7 +175,7 @@ class AvisController{
             if(avisParNote.length === 0 || !avisParNote){
                 return res.status(404).json({
                     status: 'RESSOURCE NON TROUVEE',
-                    message: "Aucun avis n'a été trouvé pour avec cette note"
+                    message: "Aucun avis n'a été trouvé pour cette note"
                 });
             }
 
@@ -204,7 +204,7 @@ class AvisController{
         try {
             const nouvelAvis = req.body;
 
-            if (!nouvelAvis || isNaN(nouvelAvis.note) || !nouvelAvis.commentaire || nouvelAvis.commentaire.length < 5) {
+            if (!nouvelAvis || isNaN(nouvelAvis.note) || nouvelAvis.note < 0 || nouvelAvis.note > 5 || !nouvelAvis.commentaire || nouvelAvis.commentaire.length < 5) {
                 return res.status(400).json({
                     status: 'MAUVAISE DEMANDE',
                     message: "L'avis n'est pas valide (note ou commentaire insuffisant)."
@@ -219,10 +219,24 @@ class AvisController{
             }
             
             const reservationExistante = await ReservationModel.getWithRelations(nouvelAvis.id_reservation);
+
             if(!reservationExistante){
                 return res.status(404).json({
                     status: 'RESSOURCE NON TROUVEE',
                     message: "La réservation spécifiée n'existe pas."
+                });
+            }
+
+            const datesDepart = reservationExistante.chambres.map(chambre => new Date(chambre.date_depart));
+            const dateDepartMax = new Date(Math.max(...datesDepart.map(d => d.getTime())));
+            
+            const maintenant = new Date();
+            
+
+            if (maintenant < dateDepartMax) {
+                return res.status(400).json({
+                    status: 'MAUVAISE DEMANDE',
+                    message: "Vous ne pouvez laisser un avis qu'après la date de départ de votre séjour."
                 });
             }
 
@@ -314,11 +328,19 @@ class AvisController{
                     message: "L'id de l'avis est invalide"
                 });
             }
+
+            const avisExistant = await AvisModel.findById(id);
+            if(!avisExistant){
+                return res.status(404).json({
+                    status: 'RESSOURCE NON TROUVEE',
+                    message: "Impossible de supprimer cet avis, aucun avis n'a été trouvé."
+                });
+            }
     
             const avisSupprime = await AvisModel.delete(id);
     
             return res.status(200).json({
-                status: "OK",
+                status: "SUPPRIME",
                 data : avisSupprime
             })
             
