@@ -9,7 +9,8 @@ import { fileURLToPath } from 'url';
 
 // Import des routes
 import chambreRoutes from './routes/chambre.js';
-import authRoutes from './routes/authRoutes.js'; // 🔹 Auth (register/login)
+import authRoutes from './routes/authRoutes.js';
+import favorisRoutes from './routes/favorisRoutes.js'; //  Ajout des routes favoris
 
 dotenv.config();
 
@@ -25,9 +26,10 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ✅ Routes API
-app.use('/api/auth', authRoutes);            // 🔐 Authentification
-app.use('/api/chambres', chambreRoutes);     // 🛏️ Chambres
+//  Routes API
+app.use('/api/auth', authRoutes);            //  Authentification
+app.use('/api/chambres', chambreRoutes);     //  Chambres
+app.use('/api/favoris', favorisRoutes);      //  Favoris
 
 // Swagger
 const swaggerOptions = {
@@ -46,10 +48,10 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// ✅ Route de test
-app.get('/', (req, res) => res.send('API Hôtel en ligne 🚀'));
+//  Route de test
+app.get('/', (req, res) => res.send('API Hôtel en ligne '));
 
 // Lancer le serveur
 app.listen(PORT, () => {
-  console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
+  console.log(` Serveur démarré sur http://localhost:${PORT}`);
 });
