@@ -83,6 +83,9 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/avis', avisRoutes);
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
+
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
+}
 
 export default app;

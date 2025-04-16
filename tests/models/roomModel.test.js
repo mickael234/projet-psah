@@ -1,7 +1,31 @@
-import ChambreModel from '../../src/models/chambre.model.js';
-import { chambre as _room } from '../../__mocks__/prisma.mock.js';
+import { jest, describe, it, expect, beforeAll } from '@jest/globals';
+
+// Créer un mock de chambre
+const prismaMock = {
+  chambre: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn()
+  }
+};
+
+// Mock du module prisma 
+jest.mock('../../src/config/prisma.js', () => ({
+  __esModule: true,
+  default: prismaMock
+}));
+
+
+let ChambreModel;
+beforeAll(async () => {
+  ChambreModel = (await import("../../src/models/chambre.model.js")).default;
+});
 
 describe('Room Model', () => {
+    afterEach(() => jest.clearAllMocks());
+
     /**
      * Test : Récupération d'une chambre par ID avec médias et équipements
      */
@@ -44,13 +68,21 @@ describe('Room Model', () => {
             ]
         };
 
-        _room.findUnique.mockResolvedValue(mockRoom);
+        prismaMock.chambre.findUnique.mockResolvedValue(mockRoom);
 
         const room = await ChambreModel.getWithRelations(1);
+        
+      
+        expect(room.id_chambre).toEqual(mockRoom.id_chambre);
+        expect(room.numero_chambre).toEqual(mockRoom.numero_chambre);
+        expect(room.type_chambre).toEqual(mockRoom.type_chambre);
+        expect(room.prix_par_nuit.toString()).toEqual(mockRoom.prix_par_nuit);
+        expect(room.etat).toEqual(mockRoom.etat);
+        expect(room.description).toEqual(mockRoom.description);
+        expect(room.equipements).toEqual(mockRoom.equipements);
+        expect(room.medias).toEqual(mockRoom.medias);
 
-        expect(room).toEqual(mockRoom);
-
-        expect(_room.findUnique).toHaveBeenCalledWith({
+        expect(prismaMock.chambre.findUnique).toHaveBeenCalledWith({
             where: { id_chambre: 1 },
             include: {
                 equipements: {

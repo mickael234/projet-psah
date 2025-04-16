@@ -7,7 +7,7 @@ class AvisModel {
      * @returns {Promise<Array>} - Liste des avis
      */
     static async findAll(){
-        return prisma.avis.findMany()
+        return await prisma.avis.findMany()
     }
 
 
@@ -17,7 +17,7 @@ class AvisModel {
      * @returns {Promise<Object>} - L'avis trouvé
      */
     static async findByReservation(idReservation) {
-        return prisma.avis.findUnique({
+        return await prisma.avis.findUnique({
             where: { id_reservation: idReservation }
         });
     }

@@ -1,10 +1,28 @@
-import ReservationController from '../../src/controllers/reservationController';
-import ReservationModel from '../../src/models/reservation.model';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import prismaMock from '../../__mocks__/prisma.mock.js';
 
-// Mock du modèle pour éviter les appels réels à la base de données
-jest.mock('../../src/models/reservation.model.js');
+// Mock des modules
+jest.unstable_mockModule('../../src/models/reservation.model.js', () => ({
+  __esModule: true,
+  default: {
+    findAllPresentReservations: jest.fn(),
+    findAllPastReservations: jest.fn()
+  }
+}));
+
+let ReservationController;
+let ReservationModel;
+
+beforeEach(async () => {
+  // Réinitialisation de tous les mocks avant chaque test
+  jest.clearAllMocks();
+  
+  const modelModule = await import('../../src/models/reservation.model.js');
+  ReservationModel = modelModule.default;
+
+  const controllerModule = await import('../../src/controllers/reservationController.js');
+  ReservationController = controllerModule.default;
+});
 
 describe('Reservation Controller - Réservations Actuelles', () => {
     /**
