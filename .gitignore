@@ -1,7 +1,11 @@
 /node_modules/
 # Fichier contenant les variables d'environnement 
 .env
+<<<<<<< HEAD
 # Dossier généré lors des tests Jest
 coverage
 # Dossier contenant la documentation générée par JSDoc
 docs
+=======
+/prisma/migrations/*
+>>>>>>> 45e85b0 (modification gitignore)
