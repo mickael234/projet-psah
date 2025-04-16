@@ -144,6 +144,7 @@ model Chambre {
   medias          Media[]
   historique_prix HistoriquePrix[]
   Favori          Favori[]
+  maintenances    Maintenance[]
 }
 
 model Equipement {
@@ -397,4 +398,15 @@ model Favori {
   chambre     Chambre     @relation(fields: [id_chambre], references: [id_chambre])
 
   @@unique([id_utilisateur, id_chambre])
+}
+
+model Maintenance {
+  id_maintenance Int      @id @default(autoincrement())
+  id_chambre     Int
+  description    String
+  date           DateTime @default(now())
+
+  chambre Chambre @relation(fields: [id_chambre], references: [id_chambre])
+
+  @@index([id_chambre])
 }

@@ -1,4 +1,3 @@
-// src/server.js
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -10,7 +9,9 @@ import { fileURLToPath } from 'url';
 // Import des routes
 import chambreRoutes from './routes/chambre.js';
 import authRoutes from './routes/authRoutes.js';
-import favorisRoutes from './routes/favorisRoutes.js'; //  Ajout des routes favoris
+import favorisRoutes from './routes/favorisRoutes.js';
+import serviceRoutes from './routes/serviceRoutes.js';
+import maintenanceRoutes from './routes/maintenanceRoutes.js'; // ✅ Route maintenance ajoutée
 
 dotenv.config();
 
@@ -26,10 +27,12 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-//  Routes API
-app.use('/api/auth', authRoutes);            //  Authentification
-app.use('/api/chambres', chambreRoutes);     //  Chambres
-app.use('/api/favoris', favorisRoutes);      //  Favoris
+// Routes API
+app.use('/api/auth', authRoutes);             // 🔐 Authentification
+app.use('/api/chambres', chambreRoutes);      // 🛏️ Chambres
+app.use('/api/favoris', favorisRoutes);       // 💖 Favoris
+app.use('/api/services', serviceRoutes);      // 🛎️ Services de l’hôtel
+app.use('/api', maintenanceRoutes);           // 🔧 Maintenance (POST/GET hebergements/:id/maintenance)
 
 // Swagger
 const swaggerOptions = {
@@ -48,10 +51,10 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-//  Route de test
-app.get('/', (req, res) => res.send('API Hôtel en ligne '));
+// Route de test
+app.get('/', (req, res) => res.send('API Hôtel en ligne 🚀'));
 
 // Lancer le serveur
 app.listen(PORT, () => {
-  console.log(` Serveur démarré sur http://localhost:${PORT}`);
+  console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
 });
