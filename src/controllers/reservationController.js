@@ -604,50 +604,8 @@ class ReservationController {
         }
     }
 }
-  /**
-   *Suivi  status de reservation.
-   * @param {Object} req - Requête Express
-   * @param {Object} res - Réponse Express
-   */
 
-    getStatusReservation = async (req,res) => {
-    try {
-      const {id} = req.params.id
-      const existingReservation = await prisma.reservation.findFirst({
-        where: {
-          id_reservation: Number.parseInt(id),
-          supprime_le: null,
-        },
-      })
-      if(!existingReservation){
-        return res.status(404).json({
-          status: "ERROR",
-          message: "Réservation non trouvée ou déjà supprimée",
-        })
-      }
-      const reservationStatus = await prisma.reservation.findUnique({
-        where: {
-          id_reservation: Number.parseInt(id),
-        },
-        select: {
-          etat
-        },
-      })
-      res.status.status(200).json({
-        status: '0k',
-        reservationStatus: reservationStatus
-
-      })
-
-    }catch(error){
-      console.error(error)
-      res.status(500).json({
-        status: "ERROR",
-        message: "Erreur lors de suivi du status de Reservation",
-        error: error.message,
-      })
-    }
-   }
+   
 
 
 export default ReservationController;
