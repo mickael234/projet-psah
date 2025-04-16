@@ -30,7 +30,7 @@ beforeEach(async () => {
   app.use(express.json());
 });
 
-describe("Avis Routes Publiques & Middleware", () => {
+describe("Avis Routes Publiques", () => {
   it('devrait retourner la liste des avis existants avec un statut 200 OK', async () => {
     const mockAvis = [
       {

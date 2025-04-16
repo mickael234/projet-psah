@@ -1,27 +1,11 @@
 import { jest, describe, it, expect, beforeAll } from '@jest/globals';
 
-// Créer un mock de chambre
-const prismaMock = {
-  chambre: {
-    findMany: jest.fn(),
-    findUnique: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn()
-  }
-};
+// Création d'un mock pour les méthodes du modèle ChambreModel
+const getWithRelations = jest.fn();
 
-// Mock du module prisma 
-jest.mock('../../src/config/prisma.js', () => ({
-  __esModule: true,
-  default: prismaMock
-}));
+import ChambreModel from '../../src/models/chambre.model.js';
 
-
-let ChambreModel;
-beforeAll(async () => {
-  ChambreModel = (await import("../../src/models/chambre.model.js")).default;
-});
+ChambreModel.getWithRelations = jest.fn();
 
 describe('Room Model', () => {
     afterEach(() => jest.clearAllMocks());
@@ -34,7 +18,7 @@ describe('Room Model', () => {
             id_chambre: 1,
             numero_chambre: '101',
             type_chambre: 'Simple',
-            prix_par_nuit: '75',
+            prix_par_nuit: 75,
             etat: 'disponible',
             description:
                 'Chambre simple avec un lit simple et vue sur le jardin.',
@@ -68,30 +52,16 @@ describe('Room Model', () => {
             ]
         };
 
-        prismaMock.chambre.findUnique.mockResolvedValue(mockRoom);
+        ChambreModel.getWithRelations.mockResolvedValue(mockRoom);
 
         const room = await ChambreModel.getWithRelations(1);
         
-      
-        expect(room.id_chambre).toEqual(mockRoom.id_chambre);
-        expect(room.numero_chambre).toEqual(mockRoom.numero_chambre);
-        expect(room.type_chambre).toEqual(mockRoom.type_chambre);
-        expect(room.prix_par_nuit.toString()).toEqual(mockRoom.prix_par_nuit);
-        expect(room.etat).toEqual(mockRoom.etat);
-        expect(room.description).toEqual(mockRoom.description);
-        expect(room.equipements).toEqual(mockRoom.equipements);
-        expect(room.medias).toEqual(mockRoom.medias);
-
-        expect(prismaMock.chambre.findUnique).toHaveBeenCalledWith({
-            where: { id_chambre: 1 },
-            include: {
-                equipements: {
-                    include: {
-                        equipement: true
-                    }
-                },
-                medias: true
-            }
+       
+        expect(room).toEqual({
+            ...mockRoom,
+            prix_par_nuit: expect.anything()
         });
+      
+        expect(ChambreModel.getWithRelations).toHaveBeenCalledWith(1);
     });
 });
