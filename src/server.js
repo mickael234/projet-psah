@@ -20,6 +20,7 @@ import clientRoutes from './routes/clientRoutes.js';
 import chambreRoutes from './routes/chambreRoutes.js';
 import chambreRouteDoc from './docs/chambreRouteDoc.js';
 import avisRoutes from './routes/avisRoutes.js';
+import avisRouteDoc from './docs/avisRouteDoc.js';
 
 dotenv.config();
 
@@ -63,7 +64,8 @@ swaggerSpec.paths = {
     ...hebergementRouteDoc,
     ...reservationRouteDoc,
     ...paiementRouteDoc,
-    ...chambreRouteDoc
+    ...chambreRouteDoc,
+    ...avisRouteDoc
 };
 
 app.use(cors());
