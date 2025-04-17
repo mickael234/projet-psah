@@ -31,13 +31,13 @@ class AvisController{
             console.error('Une erreur est survenue : ' + error);
             return res.status(500).json({
                 status: 'ERREUR SERVEUR',
-                message: 'Une erreur interne est survenue.'
+                message: 'Une erreur interne est survenue lors de la récupération des avis.'
             });
         }
     }
 
    /**
-     * Récupère un avis d'une réservation spécifique.
+     * Récupère un avis laissé sur une réservation spécifique.
      * @param {Express.Request} req - La requête HTTP contenant l'id de la réservation.
      * @param {Express.Response} res - La réponse HTTP contenant les avis ou les erreurs.
      * @returns {Promise<Object>} La réponse HTTP avec un avis ou les erreurs.
@@ -59,7 +59,7 @@ class AvisController{
             if(!reservationExistante){
                 return res.status(404).json({
                     status: 'RESSOURCE NON TROUVEE',
-                    message: "L'id de la réservation est invalide."
+                    message: "Aucune réservation n'a été trouvé"
                 });
             }
             const avisReservation = await AvisModel.findByReservation(id);
@@ -98,15 +98,15 @@ class AvisController{
         try {
             const id = Number(req.params.idChambre);
 
-            if(isNaN(id) || !id){
+            if(isNaN(id) || !id || id <= 0){
                 return res.status(400).json({
                     status: 'MAUVAISE DEMANDE',
                     message: "L'id de la chambre est invalide"
                 });
             }
     
-            const avisParChambre = await AvisModel.findAllByChambre(id);
-            if(avisParChambre.length === 0 || !avisParChambre){
+            const avisChambre = await AvisModel.findAllByChambre(id);
+            if(avisChambre.length === 0 || !avisChambre){
                 return res.status(404).json({
                     status: 'RESSOURCE NON TROUVEE',
                     message: "Aucun avis n'a été trouvé pour cette chambre"
@@ -115,14 +115,14 @@ class AvisController{
     
             return res.status(200).json({
                 status: "OK",
-                data : avisParChambre
+                data : avisChambre
             })
 
         } catch (error){
             console.error('Une erreur est survenue : ' + error);
             return res.status(500).json({
                 status: 'ERREUR SERVEUR',
-                message: 'Une erreur interne est survenue.'
+                message: 'Une erreur interne est survenue lors de la récupération des avis de cette chambre.'
             });
         }
        
@@ -148,7 +148,7 @@ class AvisController{
             console.error('Une erreur est survenue : ' + error);
             return res.status(500).json({
                 status: 'ERREUR SERVEUR',
-                message: 'Une erreur interne est survenue.'
+                message: 'Une erreur interne est survenue lors de la récupération de la moyenne des avis existants.'
             });
         }
         
@@ -211,7 +211,7 @@ class AvisController{
                 });
             }
             
-            if(!nouvelAvis.id_reservation || isNaN(nouvelAvis.id_reservation)){
+            if(!nouvelAvis.id_reservation || isNaN(nouvelAvis.id_reservation) || nouvelAvis.id_reservation <= 0){
                 return res.status(400).json({
                     status: 'MAUVAISE DEMANDE',
                     message: "L'id de la réservation n'est pas valide."
@@ -227,8 +227,11 @@ class AvisController{
                 });
             }
 
+            // Extraction des dates de départ de toutes les chambres réservées
             const datesDepart = reservationExistante.chambres.map(chambre => new Date(chambre.date_depart));
-            const dateDepartMax = new Date(Math.max(...datesDepart.map(d => d.getTime())));
+            
+            // Détermination de la date de départ la plus tardive parmi toutes les chambres
+            const dateDepartMax = new Date(Math.max(...datesDepart.map(date => date.getTime())));
             
             const maintenant = new Date();
             

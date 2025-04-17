@@ -24,16 +24,16 @@ avisRouter.get("/note/:note", AvisController.getByNote)
  * Routes protégées 
  */
 
-// Route pour récupérer les avis d'une réservation spécifique après authentification et vérification d'accès
+// Route pour récupérer un avis laissé sur une réservation en tant que client
 avisRouter.get("/reservation/:idReservation", authenticateJWT, verifyClientAccessToReservation, AvisController.getByReservation);
 
-// Route pour créer un avis après authentification et vérification du rôle client
+// Route pour créer un avisen tant que client
 avisRouter.post("/", authenticateJWT, isClient, AvisController.createAvis);
 
-// Route pour répondre à un avis (administrateurs et certains rôles peuvent y accéder)
+// Route pour répondre à un avis en tant qu'administrateurs ou réceptionniste
 avisRouter.put("/:idAvis", authenticateJWT, checkRole(["ADMIN_GENERAL","RECEPTIONNISTE","RESPONSABLE_HEBERGEMENT"]), AvisController.answerToAvis);
 
-// Route pour supprimer un avis (réservée aux administrateurs et certains rôles)
+// Route pour supprimer un avis (réservée aux administrateurs et au réceptionniste)
 avisRouter.delete("/:idAvis", authenticateJWT, checkRole(["ADMIN_GENERAL","RECEPTIONNISTE","RESPONSABLE_HEBERGEMENT"]), AvisController.deleteAvis)
 
 

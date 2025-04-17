@@ -36,10 +36,10 @@ class AvisModel {
     }
 
     /**
- * Récupérer les avis de tous les clients pour une chambre spécifique
- * @param {number} idChambre - ID de la chambre
- * @returns {Promise<Array>} - Liste des avis associés à cette chambre
- */
+     * Récupérer les avis de tous les clients pour une chambre spécifique
+     * @param {number} idChambre - ID de la chambre
+     * @returns {Promise<Array>} - Liste des avis associés à cette chambre
+     */
     static async findAllByChambre(idChambre) {
         return prisma.avis.findMany({
             where: {
