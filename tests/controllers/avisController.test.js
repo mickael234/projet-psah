@@ -17,7 +17,7 @@ const mockReservationModel = {
   getWithRelations: jest.fn()
 };
 
-// Mock du controller
+// Controller
 const avisController = {
   getAllAvis: async (req, res) => {
     try {
