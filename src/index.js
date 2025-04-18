@@ -16,9 +16,9 @@ app.use(express.json());
 app.use('/chambres', chambreRoutes);
 
 // Test route
-app.get('/', (req, res) => res.send('API Hôtel en ligne 🚀'));
+app.get('/', (req, res) => res.send('API Hôtel en ligne '));
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
+  console.log(` Serveur lancé sur http://localhost:${PORT}`);
 });

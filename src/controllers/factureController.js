@@ -1,94 +1,105 @@
-// Importation du client Prisma pour interagir avec la base de données
+// src/controllers/factureController.js
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
-// Fonction pour générer la facture d'une réservation
-export const genererFacture = async (req, res) => {
-  const id = parseInt(req.params.id); // Récupère l'ID de réservation depuis l'URL
-
+const genererFacture = async (req, res) => {
   try {
-    // Recherche de la réservation avec ses relations (client, paiements, services, etc.)
+    const id = parseInt(req.params.id);
+
+    // Récupération complète de la réservation et ses relations
     const reservation = await prisma.reservation.findUnique({
       where: { id_reservation: id },
       include: {
         client: {
           include: {
-            utilisateur: true // Pour récupérer nom/email du client
+            utilisateur: true
           }
         },
-        paiements: true, // Inclure les paiements associés
+        chambres: {
+          include: { chambre: true }
+        },
+        paiements: true,
         services: {
-          include: { service: true } // Inclure détails de chaque service
+          include: { service: true }
         },
         services_locaux: {
-          include: { service_local: true } // Inclure services locaux (ex: pressing, transport)
+          include: { service_local: true }
         }
       }
     });
 
-    // Si la réservation n'existe pas, on retourne une erreur 404
     if (!reservation) {
-      return res.status(404).json({ message: 'Réservation non trouvée.' });
+      return res.status(404).json({ message: 'Réservation introuvable' });
     }
 
-    // Récupération des infos utilisateur liées au client
-    const client = reservation.client.utilisateur;
+    const utilisateur = reservation.client.utilisateur;
 
-    // Calcul du total des services hôteliers (ex: ménage, petit-déj)
-    const totalServices = reservation.services.reduce(
-      (total, s) => total + (s.service.prix * s.quantite),
-      0
-    );
+    // On récupère les infos de facturation du user lié via l'email
+    const user = await prisma.user.findUnique({
+      where: { email: utilisateur.email },
+      include: { billingInfo: true }
+    });
 
-    // Calcul du total des services locaux (prix optionnel)
-    const totalServicesLocaux = reservation.services_locaux.reduce(
-      (total, s) => total + (s.service_local?.prix || 0),
-      0
-    );
+    const billing = user?.billingInfo;
+    const chambreInfo = reservation.chambres[0];
+    const chambre = chambreInfo?.chambre;
+    const dateArrivee = chambreInfo?.date_arrivee;
+    const dateDepart = chambreInfo?.date_depart;
+    const nbNuits = (new Date(dateDepart) - new Date(dateArrivee)) / (1000 * 60 * 60 * 24);
 
-    // Calcul des paiements déjà effectués
-    const totalPaiements = reservation.paiements.reduce(
-      (total, p) => total + p.montant,
-      0
-    );
+    const prixChambreTotal = chambre?.prix_par_nuit * nbNuits;
+    const totalServices = reservation.services.reduce((acc, s) => acc + s.service.prix * s.quantite, 0);
+    const totalServicesLocaux = reservation.services_locaux.reduce((acc, s) => acc + (s.service_local?.prix || 0), 0);
+    const totalGeneral = prixChambreTotal + totalServices + totalServicesLocaux;
+    const montantPaye = reservation.paiements.reduce((acc, p) => acc + p.montant, 0);
 
-    // Construction de la facture au format JSON
+    // Construction de la réponse JSON
     const facture = {
-      facture_id: `FAC-${reservation.id_reservation}`,
-      date: reservation.date_reservation,
+      date: new Date(),
       client: {
-        nom: client.nom_utilisateur,
-        email: client.email
+        nom: `${reservation.client.prenom} ${reservation.client.nom}`,
+        email: utilisateur.email,
+        adresse: billing ? `${billing.address}, ${billing.postalCode}, ${billing.city}, ${billing.country}` : null
       },
       reservation: {
         id: reservation.id_reservation,
         etat: reservation.etat,
-        prix_total: reservation.prix_total,
+        date_arrivee: dateArrivee,
+        date_depart: dateDepart,
+        nb_nuits: nbNuits,
+        chambre: {
+          numero: chambre?.numero_chambre,
+          type: chambre?.type_chambre,
+          prix_par_nuit: chambre?.prix_par_nuit
+        },
         paiement: {
           statut: reservation.etat_paiement,
-          montant_total_paye: totalPaiements
+          montant_total_paye: montantPaye
         }
       },
       services: reservation.services.map(s => ({
         nom: s.service.nom,
-        prix_unitaire: s.service.prix,
+        prix: s.service.prix,
         quantite: s.quantite,
         total: s.service.prix * s.quantite
       })),
       services_locaux: reservation.services_locaux.map(s => ({
-        nom: s.service_local?.nom || 'Inconnu',
+        nom: s.service_local?.nom,
         prix: s.service_local?.prix || 0
       })),
       montant_total_services: totalServices,
       montant_total_services_locaux: totalServicesLocaux,
-      montant_total_general: (reservation.prix_total || 0) + totalServices + totalServicesLocaux
+      montant_total_general: totalGeneral
     };
 
-    // Envoie de la facture au client en réponse
     res.status(200).json(facture);
+
   } catch (error) {
-    // Gestion des erreurs serveur
-    console.error("Erreur génération facture :", error);
-    res.status(500).json({ message: "Erreur lors de la génération de la facture", error: error.message });
+    console.error('Erreur génération JSON :', error);
+    res.status(500).json({ message: 'Erreur lors de la génération de la facture JSON' });
   }
 };
+
+// ✅ Export correct nommé pour éviter les erreurs d'import
+export { genererFacture };

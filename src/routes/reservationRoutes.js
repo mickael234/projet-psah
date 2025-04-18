@@ -5,7 +5,8 @@ import {
   enregistrerDepart
 } from '../controllers/reservationController.js';
 
-import { genererFacture } from '../controllers/factureController.js'; //  Ajout pour la génération de facture
+import { genererFacture } from '../controllers/factureController.js'; // JSON
+import { genererFacturePDF } from '../controllers/facturePdfController.js'; // PDF
 
 const router = express.Router();
 
@@ -109,6 +110,30 @@ router.put('/:id/checkout', enregistrerDepart);
  *       500:
  *         description: Erreur lors de la génération de la facture.
  */
-router.get('/:id/facture', genererFacture); // Nouvelle route ajoutée
+router.get('/:id/facture', genererFacture);
+
+/**
+ * @swagger
+ * /api/reservations/{id}/facture/pdf:
+ *   get:
+ *     summary: Générer une facture au format PDF pour une réservation
+ *     tags:
+ *       - Réservations
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la réservation
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Facture PDF générée avec succès.
+ *       404:
+ *         description: Réservation non trouvée.
+ *       500:
+ *         description: Erreur lors de la génération du PDF.
+ */
+router.get('/:id/facture/pdf', genererFacturePDF); // ✅ Nouvelle route PDF ajoutée
 
 export default router;
