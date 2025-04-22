@@ -21,6 +21,7 @@ import chambreRoutes from './routes/chambreRoutes.js';
 import chambreRouteDoc from './docs/chambreRouteDoc.js';
 import avisRoutes from './routes/avisRoutes.js';
 import avisRouteDoc from './docs/avisRouteDoc.js';
+import rapportRoutes from './routes/rapportFinancierRoutes.js';
 
 dotenv.config();
 
@@ -84,6 +85,9 @@ app.use('/api/chambres', chambreRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/avis', avisRoutes);
+app.use('/api/rapports', rapportRoutes);
+
+
 const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== 'test') {

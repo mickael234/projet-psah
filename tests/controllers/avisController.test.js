@@ -304,6 +304,9 @@ beforeEach(() => {
 
 describe("Avis Controller", () => {
   describe("getAllAvis", () => {
+       /**
+     * Test : Retourne les avis existants avec un statut 200 OK
+     */
     it("devrait retourner tous les avis existants avec un status 200 OK", async () => {
       const mockAvis = [
         {
@@ -339,6 +342,10 @@ describe("Avis Controller", () => {
         data: mockAvis
       });
     });
+
+    /**
+     * Test : Retourne une erreur 404 si aucun n'est trouvé
+     */
 
     it("devrait retourner une erreur 404 si aucun avis a été trouvé", async () => {
 

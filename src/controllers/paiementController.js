@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import PaiementModel from '../models/paiement.model.js';
+import prisma from '../config/prisma.js';
 
 class PaiementController {
     /**
@@ -331,6 +331,50 @@ class PaiementController {
                 error: error.message
             });
         }
+    }
+
+    /**
+     * Génère un rapport financier selon la periode demandée
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+
+    static async generateRapportFinancier(req, res){
+
+        try {
+            const {debut, fin} = req.query;
+
+            if(!debut || !fin){
+                return res.status(400).json({
+                    statut: "MAUVAISE DEMANDE",
+                    message: "Les dates pour déterminer la période sont requises."
+                })
+            }
+
+            const result = await PaiementModel.getRapportFinancier(debut, fin);
+            if(result.total <= 0){
+                return res.status(404).json({
+                    statut: "RESSOURCE NON TROUVEE",
+                    message: `Aucune transaction n'a été trouvée pour la période allant du : ${debut} au ${fin}`
+                })
+            }
+
+            res.status(200).json({
+                statut: "OK",
+                data: {
+                    transactions: result.data,
+                    total: result.total
+                }
+            });
+                
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({
+                status: 'ERROR',
+                message: 'Une erreur est survenue lors de la génération du rapport financier.',
+            });
+        }
+
     }
 }
 

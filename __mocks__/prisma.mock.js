@@ -29,6 +29,9 @@ const prismaMock = {
   },
   utilisateur: {
     findUnique: jest.fn()
+  },
+  paiement : {
+    findMany: jest.fn()
   }
 };
 

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
 
 class PaiementModel {
     /**
@@ -46,6 +45,67 @@ class PaiementModel {
 
         return totalPaye >= reservation.prix_total;
     }
+
+    /**
+     * Génère un rapport financier en fonction d'une période
+     * @param {String} dateMin - Date minimale
+     * @param {String} dateMax - Date maximale
+     * @returns {Promise<Object>} - Transactions effectuées lors de la période choisie
+     */
+
+
+    static async getRapportFinancier(dateMin, dateMax) {
+
+        const minDate = dateMin ? new Date(dateMin) : new Date('2000-01-01');
+        const maxDate = dateMax ? new Date(dateMax) : new Date();
+        
+    
+        if (isNaN(minDate.getTime()) || isNaN(maxDate.getTime())) {
+            throw new Error('Les dates fournies ne sont pas valides');
+        }
+
+        const transactions = await prisma.paiement.findMany({
+            where: {
+              etat: "complete",
+              date_transaction: {
+                lte: new Date(maxDate),
+                gte: new Date(minDate)
+              }
+            }, 
+            include: {
+                reservation: {
+                    include: {
+                        client: {
+                            select: {
+                                prenom: true,
+                                nom: true 
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: [
+                { montant: "asc" }
+            ]
+
+        })
+
+        const total = await prisma.paiement.count({
+            where: {
+              etat: "complete",
+              date_transaction: {
+                lte: new Date(maxDate),
+                gte: new Date(minDate)
+              }
+            }
+        });
+      
+        return {
+          data: transactions,
+          total: total
+        };
+    }
+      
 }
 
-module.exports = PaiementModel;
+export default PaiementModel;
