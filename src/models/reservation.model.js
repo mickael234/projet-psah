@@ -1,12 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 class ReservationModel {
-  /**
-   * Récupère une réservation avec ses relations
-   * @param {number} id - ID de la réservation
-   * @returns {Promise<Object>} - La réservation avec ses relations
-   */
   static getWithRelations(id) {
     return prisma.reservation.findUnique({
       where: { id_reservation: id },
@@ -28,15 +23,7 @@ class ReservationModel {
     });
   }
 
-  /**
-   * Vérifie la disponibilité des chambres pour une période donnée
-   * @param {Date} dateArrivee - Date d'arrivée
-   * @param {Date} dateDepart - Date de départ
-   * @param {number} capacite - Capacité minimale requise
-   * @returns {Promise<Array>} - Liste des chambres disponibles
-   */
   static checkAvailability(dateArrivee, dateDepart, capacite = null) {
-    // Récupérer les IDs des chambres déjà réservées pour cette période
     return prisma.$transaction(async (tx) => {
       const reservedRooms = await tx.reservationsChambre.findMany({
         where: {
@@ -70,10 +57,9 @@ class ReservationModel {
           id_chambre: true
         }
       });
-      
+
       const reservedRoomIds = reservedRooms.map(room => room.id_chambre);
-      
-      // Trouver les chambres disponibles
+
       return tx.chambre.findMany({
         where: {
           id_chambre: { notIn: reservedRoomIds },
@@ -87,12 +73,6 @@ class ReservationModel {
     });
   }
 
-  /**
-   * Récupère les réservations pour une période donnée
-   * @param {Date} debut - Date de début
-   * @param {Date} fin - Date de fin
-   * @returns {Promise<Array>} - Liste des réservations
-   */
   static findByPeriod(debut, fin) {
     return prisma.reservation.findMany({
       where: {
@@ -132,6 +112,71 @@ class ReservationModel {
       }
     });
   }
+
+  static findById(id) {
+    return prisma.reservation.findUnique({
+      where: { id_reservation: id }
+    });
+  }
+
+  static updateEtat(id, nouvelEtat) {
+    return prisma.reservation.update({
+      where: { id_reservation: id },
+      data: { etat: nouvelEtat }
+    });
+  }
+
+  static getFullReservation(id) {
+    return prisma.reservation.findUnique({
+      where: { id_reservation: id },
+      include: {
+        client: {
+          include: {
+            utilisateur: true
+          }
+        },
+        chambres: {
+          include: {
+            chambre: true
+          }
+        },
+        services: {
+          include: {
+            service: true
+          }
+        },
+        services_locaux: {
+          include: {
+            service_local: true
+          }
+        },
+        paiements: true
+      }
+    });
+  }
+  static async getFullReservation(id) {
+    return prisma.reservation.findUnique({
+      where: { id_reservation: id },
+      include: {
+        client: {
+          include: {
+            utilisateur: true
+          }
+        },
+        chambres: {
+          include: { chambre: true }
+        },
+        paiements: true,
+        services: {
+          include: { service: true }
+        },
+        services_locaux: {
+          include: { service_local: true }
+        }
+      }
+    });
+  }
+  
 }
 
-module.exports = ReservationModel;
+export default ReservationModel;
