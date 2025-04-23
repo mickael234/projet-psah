@@ -5,4 +5,3 @@ node_modules/
 coverage
 # Dossier contenant la documentation générée par JSDoc
 docs
-node_modules

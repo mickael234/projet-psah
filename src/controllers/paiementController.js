@@ -1,5 +1,6 @@
 import PaiementModel from '../models/paiement.model.js';
 import prisma from '../config/prisma.js';
+import PDFDocument from "pdfkit"
 
 class PaiementController {
     /**
@@ -376,6 +377,42 @@ class PaiementController {
         }
 
     }
+
+    /**
+     * Retourne le revenu total
+     */
+
+    static async getRevenuTotal(req, res){
+        try {
+            const revenuTotal = await PaiementModel.getRevenuTotal();
+
+            res.status(200).json({
+                statut: "OK",
+                data: {
+                    revenuTotal
+                }
+            });
+            
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({
+                status: 'ERROR',
+                message: 'Une erreur est survenue lors du calcul du revenu total.',
+            });
+        }
+    }
+
+    /**
+     * Génère un PDF contenant le rapport financier
+     * @param {Array} transactions - Liste des paiements
+     * @param {number} total - Total des paiements
+     * @param {String} outputPath - Chemin du fichier PDF généré
+     */
+
+    static async generateRapportPDF(transactions, total, outputPath){
+        const doc = new PDFDocument();
+    }
+
 }
 
 export default PaiementController;

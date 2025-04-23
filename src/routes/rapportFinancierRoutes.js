@@ -4,6 +4,7 @@ import { authenticateJWT } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get("/financiers", authenticateJWT, PaiementController.generateRapportFinancier)
+router.get("/financiers", authenticateJWT, PaiementController.generateRapportFinancier);
+router.get("/revenus", PaiementController.getRevenuTotal);
 
 export default router;

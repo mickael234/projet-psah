@@ -105,6 +105,21 @@ class PaiementModel {
           total: total
         };
     }
+
+    /**
+     * Calcule le revenu total 
+     * @returns {Promise<number>} - Revenu total
+     */
+
+    static async getRevenuTotal(){
+        const revenuTotal = await prisma.paiement
+        .aggregate({ 
+            _sum: { montant: true }, 
+            where: { etat: "complete" } 
+        })
+
+        return revenuTotal._sum.montant;
+    }
       
 }
 
