@@ -154,6 +154,11 @@ describe("Paiement Model", () => {
 
         prisma.paiement.findMany.mockResolvedValue(mockTransactions);
         prisma.paiement.count.mockResolvedValue(2);
+        prisma.paiement.aggregate.mockResolvedValue({
+            _sum: {
+                montant: 800.00
+            }
+        });
 
         const rapport = await PaiementModel.getRapportFinancier(dateMin, dateMax);
     
@@ -196,8 +201,28 @@ describe("Paiement Model", () => {
     
         expect(rapport).toEqual({
             data: mockTransactions,
-            total: 2
+            totalMontant: 800.00,
+            totalTransactions: 2
         });
+    }),
+
+    /**
+     * Test : Vérifie que le revenu total est retourné
+     */
+    it("devrait retourner le revenu total", async () => {
+        prisma.paiement.aggregate.mockResolvedValue({
+            _sum: {
+                montant: 1000.00
+            }
+        });
+
+        const result = await PaiementModel.getRevenuTotal();
+
+        expect(prisma.paiement.aggregate).toHaveBeenCalledWith({ 
+            _sum: { montant: true }, 
+            where: { etat: "complete" } 
+        })
+        expect(result).toBe(1000.00)
     })
 
 })

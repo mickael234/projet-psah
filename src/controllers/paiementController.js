@@ -347,24 +347,25 @@ class PaiementController {
         try {
             const {debut, fin} = req.query;
 
+            // Vérifie que les dates sont bien passées en paramètres
             if(!debut || !fin){
                 return res.status(400).json({
-                    statut: "MAUVAISE DEMANDE",
+                    status: "MAUVAISE DEMANDE",
                     message: "Les dates pour déterminer la période sont requises."
                 })
             }
 
             const result = await PaiementModel.getRapportFinancier(debut, fin);
-            if(result.total <= 0){
+            if(result.totalTransactions <= 0){
                 return res.status(404).json({
-                    statut: "RESSOURCE NON TROUVEE",
+                    status: "RESSOURCE NON TROUVEE",
                     message: `Aucune transaction n'a été trouvée pour la période allant du : ${debut} au ${fin}`
                 })
             }
 
             res.status(200).json({
-                statut: "OK",
-                data: result.totalTransactions,
+                status: "OK",
+                data: result.data,
                 totalMontant: result.totalMontant
             });
                 
@@ -386,6 +387,8 @@ class PaiementController {
 
     static async exportRapportFinancierToPDF(req, res){
         const { debut, fin } = req.query;
+
+        // Vérifie que les dates sont bien passées en paramètres
         if(!debut || !fin){
             return res.status(400).json({
                 status: "MAUVAISE DEMANDE",
@@ -399,14 +402,18 @@ class PaiementController {
 
             if(totalMontant <= 0){
                 return res.status(404).json({
-                    statut: "RESSOURCE NON TROUVEE",
+                    status: "RESSOURCE NON TROUVEE",
                     message: `Aucune transaction n'a été trouvée pour la période allant du : ${debut} au ${fin}`
                 })
             }
+
+            // Génère un chemin temporaire pour le PDF
             const filePath = path.resolve(`rapport-financier-${Date.now()}.pdf`);
 
+            // Génère le PDF avec les données spécifiées
             generateRapportPDF(data, totalMontant, filePath);
 
+            // Pause de 500ms pour s'assurer que le fichier est bien écrit avant envoi
             setTimeout(() => {
                 res.download(filePath, (err) => {
                   if (err) {
@@ -445,7 +452,7 @@ class PaiementController {
             const revenuTotal = await PaiementModel.getRevenuTotal();
 
             res.status(200).json({
-                statut: "OK",
+                status: "OK",
                 data: {
                     revenuTotal
                 }

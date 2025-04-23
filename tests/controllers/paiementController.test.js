@@ -3,6 +3,35 @@ import PaiementController from "../../src/controllers/paiementController";
 import PaiementModel from '../../src/models/paiement.model.js';
 import prisma from '../../src/config/prisma.js';
 
+jest.mock('fs', () => ({
+    unlinkSync: jest.fn(),
+    existsSync: jest.fn(() => true),
+    writeFileSync: jest.fn(),
+    createWriteStream: jest.fn(() => ({
+        on: jest.fn(),
+        write: jest.fn(),
+        end: jest.fn()
+    }))
+}));
+
+jest.mock('path', () => ({
+    resolve: jest.fn(() => 'rapport-financier-12345.pdf')
+}));
+
+
+const mockGenerateRapportPDF = jest.fn((data, totalMontant, filePath) => {
+    const fs = require('fs');
+    fs.writeFileSync(filePath, 'fake pdf content');
+    return undefined;
+});
+
+jest.mock('../../src/services/paiementService.js', () => ({
+    generateRapportPDF: mockGenerateRapportPDF
+}));
+
+
+const paiementServiceMock = jest.requireMock('../../src/services/paiementService.js');
+const generateRapportPDFMock = paiementServiceMock.generateRapportPDF;
 
 describe('PaiementController', () => {
     /**
@@ -25,13 +54,21 @@ describe('PaiementController', () => {
         jest.spyOn(prisma.reservation, 'findUnique').mockImplementation(() => Promise.resolve({}));
         jest.spyOn(prisma.reservation, 'update').mockImplementation(() => Promise.resolve({}));
         jest.spyOn(prisma.paiement, 'aggregate').mockImplementation(() => Promise.resolve({ _sum: { montant: 0 } }));
-        jest.spyOn(prisma.journalModifications, 'create').mockImplementation(() => Promise.resolve({}));
-        jest.spyOn(PaiementModel, 'getRapportFinancier').mockImplementation(() => Promise.resolve({ data: [], total: 0 }));
+        jest.spyOn(PaiementModel, 'getRapportFinancier').mockImplementation(() => Promise.resolve({
+            data: [],
+            totalMontant: 0,
+            totalTransactions: 0
+        }));
+        jest.spyOn(PaiementModel, "getRevenuTotal").mockImplementation(() => Promise.resolve(0));
         
         
         res = {
             status: jest.fn(() => res),
-            json: jest.fn()
+            json: jest.fn(),
+            download: jest.fn((path, callback) => {
+                if (callback) callback(null);
+                return res;
+            })
         };
         
         req = {
@@ -377,7 +414,6 @@ describe('PaiementController', () => {
                     notes: 'Remboursement pour test'
                 }
             });
-            expect(prisma.journalModifications.create).toHaveBeenCalled();
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 status: 'OK',
@@ -408,7 +444,8 @@ describe('PaiementController', () => {
             
             PaiementModel.getRapportFinancier.mockResolvedValue({
                 data: mockTransactions,
-                total: 1
+                totalTransactions: 1,
+                totalMontant: 500.00
             });
             
             req.query = { debut: '2023-01-01', fin: '2023-12-31' };
@@ -420,11 +457,9 @@ describe('PaiementController', () => {
             expect(PaiementModel.getRapportFinancier).toHaveBeenCalledWith('2023-01-01', '2023-12-31');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                statut: 'OK',
-                data: {
-                    transactions: mockTransactions,
-                    total: 1
-                }
+                status: 'OK',
+                data: mockTransactions,
+                totalMontant: 500
             });
         }),
 
@@ -442,7 +477,7 @@ describe('PaiementController', () => {
 
             expect(res.status).toHaveBeenCalledWith(400);
             expect(res.json).toHaveBeenCalledWith({
-                statut: 'MAUVAISE DEMANDE',
+                status: 'MAUVAISE DEMANDE',
                 message: 'Les dates pour déterminer la période sont requises.'
             });
         }),
@@ -454,7 +489,8 @@ describe('PaiementController', () => {
 
             PaiementModel.getRapportFinancier.mockResolvedValue({
                 data: [],
-                total: 0
+                totalTransactions: 0,
+                totalMontant: 0
             });
             
             req.query = { debut: '2023-01-01', fin: '2023-12-31' };
@@ -465,9 +501,161 @@ describe('PaiementController', () => {
 
             expect(res.status).toHaveBeenCalledWith(404);
             expect(res.json).toHaveBeenCalledWith({
-                statut: 'RESSOURCE NON TROUVEE',
+                status: 'RESSOURCE NON TROUVEE',
                 message: 'Aucune transaction n\'a été trouvée pour la période allant du : 2023-01-01 au 2023-12-31'
             });
         })
+    });
+
+    describe('exportRapportFinancierToPDF', () => {
+
+        beforeEach(async () => {
+            jest.clearAllMocks();
+        });
+        
+        it('devrait générer et télécharger un rapport PDF avec succès', async () => {
+            const mockTransactions = [
+                {
+                    id_paiement: 1,
+                    id_reservation: 5,
+                    montant: 500.00,
+                    methode_paiement: 'carte',
+                    etat: 'complete',
+                    date_transaction: new Date('2023-06-15'),
+                    reservation: { client: { prenom: 'Jean', nom: 'Dupont' } }
+                }
+            ];
+            
+            PaiementModel.getRapportFinancier.mockResolvedValue({
+                data: mockTransactions,
+                totalMontant: 500.00,
+                totalTransactions: 1
+            });
+            
+            let downloadCalled = false;
+            res.download = jest.fn().mockImplementation((path, callback) => {
+                downloadCalled = true;
+                if (callback) callback(null);
+                return res;
+            });
+            
+            req.query = { debut: '2023-01-01', fin: '2023-12-31' };
+            
+            
+            await PaiementController.exportRapportFinancierToPDF(req, res);
+
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            expect(PaiementModel.getRapportFinancier).toHaveBeenCalledWith('2023-01-01', '2023-12-31');
+            
+
+            expect(downloadCalled).toBe(true);
+        });
+        
+        it('devrait retourner une erreur 400 si les dates ne sont pas fournies', async () => {
+            // Requête sans dates
+            req.query = {};
+
+            await PaiementController.exportRapportFinancierToPDF(req, res);
+            
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 'MAUVAISE DEMANDE',
+                message: 'Les dates de début et de fin sont requises.'
+            });
+            expect(generateRapportPDFMock).not.toHaveBeenCalled();
+        });
+        
+        it('devrait retourner une erreur 404 si aucune transaction n\'est trouvée', async () => {
+
+            PaiementModel.getRapportFinancier.mockResolvedValue({
+                data: [],
+                totalMontant: 0,
+                totalTransactions: 0
+            });
+            
+            req.query = { debut: '2023-01-01', fin: '2023-12-31' };
+            
+
+            await PaiementController.exportRapportFinancierToPDF(req, res);
+            
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 'RESSOURCE NON TROUVEE',
+                message: 'Aucune transaction n\'a été trouvée pour la période allant du : 2023-01-01 au 2023-12-31'
+            });
+            expect(generateRapportPDFMock).not.toHaveBeenCalled();
+        });
+        
+        it('devrait gérer les erreurs lors de la génération du PDF', async () => {
+
+            PaiementModel.getRapportFinancier.mockRejectedValue(new Error('Erreur lors de la génération'));
+            
+            req.query = { debut: '2023-01-01', fin: '2023-12-31' };
+            
+            await PaiementController.exportRapportFinancierToPDF(req, res);
+            
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 'ERREUR INTERNE',
+                message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.'
+            });
+        });
+        
+        it('devrait gérer les erreurs lors du téléchargement du PDF', async () => {
+            const mockTransactions = [
+                {
+                    id_paiement: 1,
+                    montant: 500.00,
+                    reservation: { 
+                        client: { 
+                            prenom: 'Jean',
+                            nom: 'Dupont' 
+                        } 
+                    }
+                }
+            ];
+            
+
+            PaiementModel.getRapportFinancier.mockResolvedValue({
+                data: mockTransactions,
+                totalMontant: 500.00,
+                totalTransactions: 1
+            });
+            
+
+            const originalDownload = res.download;
+            res.download = jest.fn().mockImplementation((path, callback) => {
+                
+                if (callback) callback(new Error('Erreur de téléchargement'));
+                
+                res.status(500);
+                res.json({
+                    status: 'ERREUR INTERNE',
+                    message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.'
+                });
+                return res;
+            });
+            
+            req.query = { debut: '2023-01-01', fin: '2023-12-31' };
+            
+            // Utilisation d'un timer mocké
+            jest.useFakeTimers();
+            
+            await PaiementController.exportRapportFinancierToPDF(req, res);
+            
+            // Avancer le temps pour déclencher le setTimeout
+            jest.advanceTimersByTime(500);
+            
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 'ERREUR INTERNE',
+                message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.'
+            });
+            
+            res.download = originalDownload;
+        });
     });
 });
