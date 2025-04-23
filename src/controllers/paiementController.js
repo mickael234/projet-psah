@@ -411,6 +411,19 @@ class PaiementController {
     static async generateRapportFinancier(req, res){
 
         try {
+
+            if (!PaiementController.verifierPermissions(req, [
+                  "COMPTABILITE",
+                  "SUPER_ADMIN",
+                  "ADMIN_GENERAL",
+                  "RESPONSABLE_HEBERGEMENT",
+                ])) {
+                return res.status(403).json({
+                  status: "FORBIDDEN",
+                  message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+                })
+            }
+
             const {debut, fin} = req.query;
 
             // Vérifie que les dates sont bien passées en paramètres
@@ -464,6 +477,18 @@ class PaiementController {
 
         try {
 
+            if (!PaiementController.verifierPermissions(req, [
+                  "COMPTABILITE",
+                  "SUPER_ADMIN",
+                  "ADMIN_GENERAL",
+                  "RESPONSABLE_HEBERGEMENT",
+                ])) {
+                return res.status(403).json({
+                  status: "FORBIDDEN",
+                  message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+                })
+            }
+
             const {data, totalMontant} = await PaiementModel.getRapportFinancier(debut, fin);
 
             if(totalMontant <= 0){
@@ -515,6 +540,17 @@ class PaiementController {
 
     static async getRevenuTotal(req, res){
         try {
+            if (!PaiementController.verifierPermissions(req, [
+                  "COMPTABILITE",
+                  "SUPER_ADMIN",
+                  "ADMIN_GENERAL",
+                  "RESPONSABLE_HEBERGEMENT",
+                ])) {
+                return res.status(403).json({
+                  status: "FORBIDDEN",
+                  message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+                })
+            }
             const revenuTotal = await PaiementModel.getRevenuTotal();
 
             res.status(200).json({

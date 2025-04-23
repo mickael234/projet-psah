@@ -19,8 +19,8 @@ router.delete('/:id', authenticateJWT, ReservationController.deleteReservation);
 router.post('/:id/cancel', authenticateJWT, ReservationController.cancelReservation);
 
 // Nouvelles routes pour la gestion des arrivées/départs
-router.put("/:id/checkin", authenticateJWT, ReservationController.checkIn)
-router.put("/:id/checkout", authenticateJWT, ReservationController.checkOut)
+/*router.put("/:id/checkin", authenticateJWT, ReservationController.checkIn)
+router.put("/:id/checkout", authenticateJWT, ReservationController.checkOut)*/
 
 /**
  * Récupération des réservations actuelles d'un client en vérifiant que l'utilisateur a le droit d'accéder qu'à ses propres données

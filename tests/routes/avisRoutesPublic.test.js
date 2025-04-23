@@ -31,6 +31,10 @@ beforeEach(async () => {
 });
 
 describe("Avis Routes Publiques", () => {
+  
+  /** 
+   * Test: Vérifie que la liste des avis est bien retournée avec un statut 200
+   */
   it('devrait retourner la liste des avis existants avec un statut 200 OK', async () => {
     const mockAvis = [
       {
@@ -59,6 +63,9 @@ describe("Avis Routes Publiques", () => {
     expect(res.body.data).toHaveLength(1);
   });
 
+  /** 
+   * Test: Vérifie que l'erreur 404 est bien renvoyée quand aucun avis n'est trouvé
+   */
   it("devrait retourner une erreur 404 si aucun avis n'est trouvé", async () => {
     mockAvisController.getAllAvis.mockImplementation((req, res) => {
       res.status(404).json({
@@ -77,6 +84,9 @@ describe("Avis Routes Publiques", () => {
     expect(res.body.message).toBe("Aucun avis n'a été trouvé");
   });
 
+  /** 
+   * Test: Vérifie que les avis liés à une chambre spécifique sont bien retournés 
+   */
   it("devrait retourner des avis par chambre (ou hébergement)", async ()=> {
     const mockAvis = [
       {
@@ -129,6 +139,9 @@ describe("Avis Routes Publiques", () => {
     expect(res.body.data).toEqual(mockAvis);
   })
 
+  /** 
+   * Test: Vérifie que l'erreur 400 est retournée pour un ID de chambre invalide 
+   */
   it("devrait retourner une 400 si l'ID de la chambre n'est pas valide", async ()=> {
     mockAvisController.getAvisByChambre.mockImplementation((req, res) => {
       res.status(400).json({
@@ -148,6 +161,9 @@ describe("Avis Routes Publiques", () => {
 
   })
 
+  /** 
+   * Test: Vérifie que l'erreur 404 est retournée quand aucun avis n'existe pour la chambre 
+   */
   it("devrait retourner 404 si aucun avis a été trouvé pour la chambre demandée", async () => {
     mockAvisController.getAvisByChambre.mockImplementation((req, res) => {
       res.status(404).json({
@@ -167,6 +183,9 @@ describe("Avis Routes Publiques", () => {
 
   })
 
+  /** 
+   * Test: Vérifie que la note moyenne des avis est bien retournée 
+   */
   it("devrait retourner la moyenne des avis existants", async ()=> {
     const mockMoyenne = 4;
 
@@ -188,6 +207,9 @@ describe("Avis Routes Publiques", () => {
 
   })
 
+  /** 
+   * Test: Vérifie que les avis filtrés par note sont bien retournés
+   */
   it("devrait retourner les avis par note", async () => {
     const mockAvis = [
       {
@@ -217,6 +239,9 @@ describe("Avis Routes Publiques", () => {
     expect(res.body.data).toEqual(mockAvis);
   })
 
+  /** 
+   * Test: Vérifie que l'erreur 404 est retournée quand aucun avis n'existe pour cette note 
+   */
   it("devrait retourner 404 si aucun avis a été trouvé avec cette note", async () => {
     mockAvisController.getByNote.mockImplementation((req, res) => {
       res.status(404).json({
@@ -236,6 +261,9 @@ describe("Avis Routes Publiques", () => {
 
   })
 
+  /** 
+   * Test: Vérifie que l'erreur 400 est retournée pour une note invalide 
+   */
   it("devrait retourner 400 si la note n'est pas valide", async () => {
     mockAvisController.getByNote.mockImplementation((req, res) => {
       res.status(400).json({

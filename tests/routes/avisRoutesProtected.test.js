@@ -93,6 +93,9 @@ describe('Routes Avis', () => {
   });
 
   describe('GET /api/avis/reservation/:idReservation', () => {
+    /** 
+     * Test: Vérifie l'appel des middlewares d'authentification pour l'accès à une réservation 
+     */
     it('devrait appeler les middlewares d\'authentification et de vérification d\'accès', async () => {
       const res = await request(app).get('/api/avis/reservation/1');
       
@@ -102,6 +105,9 @@ describe('Routes Avis', () => {
       expect(res.status).toBe(200);
     });
 
+    /** 
+     * Test: Vérifie que l'avis lié à une réservation spécifique est correctement retourné 
+     */
     it('devrait retourner un avis pour une réservation spécifique', async () => {
       const res = await request(app).get('/api/avis/reservation/1');
       
@@ -113,6 +119,9 @@ describe('Routes Avis', () => {
   });
 
   describe('POST /api/avis', () => {
+    /** 
+     * Test: Vérifie l'appel des middlewares d'authentification pour la création d'avis
+     */
     it('devrait appeler les middlewares d\'authentification et de vérification du rôle client', async () => {
       const nouvelAvis = {
         id_reservation: 1,
@@ -130,6 +139,9 @@ describe('Routes Avis', () => {
       expect(res.status).toBe(201);
     });
 
+    /**
+     * Test: Vérifie la création d'un nouvel avis avec les données correctes 
+     */
     it('devrait créer un nouvel avis', async () => {
       const nouvelAvis = {
         id_reservation: 1,
@@ -149,6 +161,9 @@ describe('Routes Avis', () => {
   });
 
   describe('PUT /api/avis/:idAvis', () => {
+    /** 
+     * Test: Vérifie l'appel des middlewares d'authentification pour la réponse à un avis 
+     */
     it('devrait appeler les middlewares d\'authentification et de vérification des rôles', async () => {
       const reponse = {
         reponse: 'Merci pour votre commentaire'
@@ -164,6 +179,9 @@ describe('Routes Avis', () => {
       expect(res.status).toBe(200);
     });
 
+    /** 
+     * Test: Vérifie que la réponse à un avis est correctement enregistrée 
+     */
     it('devrait mettre à jour un avis avec une réponse', async () => {
       const reponse = {
         reponse: 'Merci pour votre commentaire'
@@ -181,6 +199,9 @@ describe('Routes Avis', () => {
   });
 
   describe('DELETE /api/avis/:idAvis', () => {
+    /** 
+     * Test: Vérifie l'appel des middlewares d'authentification pour la suppression d'un avis 
+     */
     it('devrait appeler les middlewares d\'authentification et de vérification des rôles', async () => {
       const res = await request(app).delete('/api/avis/1');
       
@@ -190,6 +211,9 @@ describe('Routes Avis', () => {
       expect(res.status).toBe(200);
     });
 
+    /** 
+     * Test: Vérifie que la suppression d'un avis est correctement effectuée 
+     */
     it('devrait supprimer un avis', async () => {
       const res = await request(app).delete('/api/avis/1');
       
@@ -204,6 +228,9 @@ describe('Routes Avis', () => {
    * Tests pour les cas d'erreur 
    */ 
   describe('Gestion des erreurs', () => {
+    /** 
+     * Test: Vérifie que l'erreur d'authentification est bien gérée 
+     */
     it('devrait gérer l\'erreur d\'authentification', async () => {
       mockAuthenticateJWT.mockImplementationOnce((req, res, next) => {
         return res.status(401).json({
@@ -221,6 +248,9 @@ describe('Routes Avis', () => {
       });
     });
 
+    /** 
+     * Test: Vérifie que l'erreur d'accès à une réservation est bien gérée 
+     */
     it('devrait gérer l\'erreur d\'autorisation pour un client', async () => {
       mockVerifyClientAccessToReservation.mockImplementationOnce((req, res, next) => {
         return res.status(403).json({
@@ -238,6 +268,9 @@ describe('Routes Avis', () => {
       });
     });
 
+    /** 
+     * Test: Vérifie que l'erreur de rôle non autorisé est bien gérée 
+     */
     it('devrait gérer l\'erreur d\'autorisation pour un rôle non autorisé', async () => {
       mockCheckRole.mockImplementationOnce(() => (req, res, next) => {
         return res.status(403).json({

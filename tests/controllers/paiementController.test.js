@@ -2,6 +2,9 @@ import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import PaiementController from "../../src/controllers/paiementController";
 import PaiementModel from '../../src/models/paiement.model.js';
 import prisma from '../../src/config/prisma.js';
+import { RoleMapper } from '../../src/utils/roleMapper.js';
+
+
 
 jest.mock('fs', () => ({
     unlinkSync: jest.fn(),
@@ -60,7 +63,10 @@ describe('PaiementController', () => {
             totalTransactions: 0
         }));
         jest.spyOn(PaiementModel, "getRevenuTotal").mockImplementation(() => Promise.resolve(0));
-        
+
+        jest.spyOn(RoleMapper, 'hasAuthorizedRole').mockReturnValue(true);
+        jest.spyOn(prisma.journalModifications, 'create').mockResolvedValue({});
+        jest.spyOn(prisma.utilisateur, 'findUnique').mockResolvedValue({ id_utilisateur: 1 });
         
         res = {
             status: jest.fn(() => res),
@@ -74,7 +80,11 @@ describe('PaiementController', () => {
         req = {
             params: {},
             body: {},
-            query: {}
+            query: {},
+            user: {
+                userId: 1,
+                role: "COMPTABILITE" 
+            }
         };
         
     });
@@ -85,6 +95,27 @@ describe('PaiementController', () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
+
+    /**
+     * Test pour les cas où l'accès est refusé
+     */
+    describe('verifierPermissions', () => {
+        it('devrait refuser l\'accès aux utilisateurs non autorisés', async () => {
+   
+            RoleMapper.hasAuthorizedRole.mockReturnValue(false);
+            
+            req.user = { userId: 2, role: "CLIENT" };
+            
+            await PaiementController.getPaiementsByReservation(req, res);
+            
+            expect(res.status).toHaveBeenCalledWith(403);
+            expect(res.json).toHaveBeenCalledWith({
+                status: "ERROR",
+                message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements"
+            });
+        });
+    });
+
 
     /**
      * Tests pour la méthode getPaiementsByReservation

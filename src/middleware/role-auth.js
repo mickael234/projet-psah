@@ -1,4 +1,4 @@
-import { RoleMapper } from "../utils/RoleMapper.js"
+import { RoleMapper } from "../utils/roleMapper.js"
 
 /**
  * Middleware pour vérifier si l'utilisateur a les rôles autorisés
