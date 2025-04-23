@@ -64,6 +64,7 @@ class PaiementModel {
             throw new Error('Les dates fournies ne sont pas valides');
         }
 
+        // Récupérer les transactions
         const transactions = await prisma.paiement.findMany({
             where: {
               etat: "complete",
@@ -90,19 +91,35 @@ class PaiementModel {
 
         })
 
-        const total = await prisma.paiement.count({
+        // Calcul du total des montants des transactions
+        const { _sum } = await prisma.paiement.aggregate({
             where: {
-              etat: "complete",
-              date_transaction: {
-                lte: new Date(maxDate),
-                gte: new Date(minDate)
-              }
+                etat: "complete",
+                date_transaction: {
+                    lte: maxDate,
+                    gte: minDate
+                }
+            },
+            _sum: {
+                montant: true
+            }
+        });
+
+        // Calcul du nombre total de transactions 
+        const totalTransactions = await prisma.paiement.count({
+            where: {
+                etat: "complete",
+                date_transaction: {
+                    lte: maxDate,
+                    gte: minDate
+                }
             }
         });
       
         return {
-          data: transactions,
-          total: total
+            data: transactions,
+            totalTransactions: totalTransactions,
+            totalMontant: _sum.montant || 0
         };
     }
 

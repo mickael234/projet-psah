@@ -1,6 +1,8 @@
 import PaiementModel from '../models/paiement.model.js';
 import prisma from '../config/prisma.js';
-import PDFDocument from "pdfkit"
+import path from 'path';
+import { generateRapportPDF } from '../services/paiementService.js';
+import fs from 'fs';
 
 class PaiementController {
     /**
@@ -362,16 +364,14 @@ class PaiementController {
 
             res.status(200).json({
                 statut: "OK",
-                data: {
-                    transactions: result.data,
-                    total: result.total
-                }
+                data: result.totalTransactions,
+                totalMontant: result.totalMontant
             });
                 
         } catch (error) {
             console.error(error);
             res.status(500).json({
-                status: 'ERROR',
+                status: 'ERREUR INTERNE',
                 message: 'Une erreur est survenue lors de la génération du rapport financier.',
             });
         }
@@ -379,7 +379,65 @@ class PaiementController {
     }
 
     /**
+     * Exporte le rapport financier en format PDF
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+
+    static async exportRapportFinancierToPDF(req, res){
+        const { debut, fin } = req.query;
+        if(!debut || !fin){
+            return res.status(400).json({
+                status: "MAUVAISE DEMANDE",
+                message: "Les dates de début et de fin sont requises."
+            })
+        }
+
+        try {
+
+            const {data, totalMontant} = await PaiementModel.getRapportFinancier(debut, fin);
+
+            if(totalMontant <= 0){
+                return res.status(404).json({
+                    statut: "RESSOURCE NON TROUVEE",
+                    message: `Aucune transaction n'a été trouvée pour la période allant du : ${debut} au ${fin}`
+                })
+            }
+            const filePath = path.resolve(`rapport-financier-${Date.now()}.pdf`);
+
+            generateRapportPDF(data, totalMontant, filePath);
+
+            setTimeout(() => {
+                res.download(filePath, (err) => {
+                  if (err) {
+                    console.error('Erreur lors du téléchargement du fichier :', err);
+                    res.status(500).json({
+                        status: 'ERREUR INTERNE',
+                        message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.',
+                    });
+                  } else {
+                    fs.unlinkSync(filePath); // Supprime le fichier temporaire après téléchargement
+                  }
+                });
+            }, 500);
+
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({
+                status: 'ERREUR INTERNE',
+                message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.',
+            });
+            
+        }
+    }
+
+
+
+    /**
      * Retourne le revenu total
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
      */
 
     static async getRevenuTotal(req, res){
@@ -396,21 +454,10 @@ class PaiementController {
         } catch (error) {
             console.error(error);
             res.status(500).json({
-                status: 'ERROR',
+                status: 'ERREUR INTERNE',
                 message: 'Une erreur est survenue lors du calcul du revenu total.',
             });
         }
-    }
-
-    /**
-     * Génère un PDF contenant le rapport financier
-     * @param {Array} transactions - Liste des paiements
-     * @param {number} total - Total des paiements
-     * @param {String} outputPath - Chemin du fichier PDF généré
-     */
-
-    static async generateRapportPDF(transactions, total, outputPath){
-        const doc = new PDFDocument();
     }
 
 }
