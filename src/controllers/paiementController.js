@@ -1,7 +1,22 @@
 import { PrismaClient } from "@prisma/client"
+import { RoleMapper } from "../utils/roleMapper.js"
+
 const prisma = new PrismaClient()
 
 class PaiementController {
+  /**
+   * Vérifie si l'utilisateur a les permissions nécessaires
+   * @param {Object} req - Requête Express
+   * @param {Array} rolesAutorises - Rôles autorisés
+   * @returns {boolean} - L'utilisateur a-t-il les permissions
+   */
+  static verifierPermissions(req, rolesAutorises) {
+    if (!req.user) return false
+
+    // Utiliser le service RoleMapper pour vérifier les permissions
+    return RoleMapper.hasAuthorizedRole(req.user, rolesAutorises)
+  }
+
   /**
    * Récupère tous les paiements d'une réservation
    * @param {Object} req - Requête Express
@@ -9,6 +24,21 @@ class PaiementController {
    */
   static async getPaiementsByReservation(req, res) {
     try {
+      // Vérifier les permissions (consultation des paiements)
+      if (
+        !PaiementController.verifierPermissions(req, [
+          "COMPTABILITE",
+          "SUPER_ADMIN",
+          "ADMIN_GENERAL",
+          "RESPONSABLE_HEBERGEMENT",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+        })
+      }
+
       const { id } = req.params
 
       const paiements = await prisma.paiement.findMany({
@@ -38,6 +68,21 @@ class PaiementController {
    */
   static async getPaiementById(req, res) {
     try {
+      // Vérifier les permissions (consultation des paiements)
+      if (
+        !PaiementController.verifierPermissions(req, [
+          "COMPTABILITE",
+          "SUPER_ADMIN",
+          "ADMIN_GENERAL",
+          "RESPONSABLE_HEBERGEMENT",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+        })
+      }
+
       const { id } = req.params
 
       const paiement = await prisma.paiement.findUnique({
@@ -73,6 +118,14 @@ class PaiementController {
    */
   static async createPaiement(req, res) {
     try {
+      // Vérifier les permissions (gestion des paiements)
+      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour créer un paiement",
+        })
+      }
+
       const {
         id_reservation,
         montant,
@@ -160,6 +213,14 @@ class PaiementController {
    */
   static async updatePaiement(req, res) {
     try {
+      // Vérifier les permissions (gestion des paiements)
+      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour modifier un paiement",
+        })
+      }
+
       const { id } = req.params
       const { etat, reference_transaction, notes } = req.body
 
@@ -232,6 +293,14 @@ class PaiementController {
    */
   static async refundPaiement(req, res) {
     try {
+      // Vérifier les permissions (gestion des paiements)
+      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour rembourser un paiement",
+        })
+      }
+
       const { id } = req.params
       const { raison } = req.body
 

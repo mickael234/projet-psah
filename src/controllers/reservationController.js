@@ -1,7 +1,21 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"; 
+import { RoleMapper } from "../utils/roleMapper.js"
 const prisma = new PrismaClient()
 
 class ReservationController {
+  /**
+   * Vérifie si l'utilisateur a les permissions nécessaires
+   * @param {Object} req - Requête Express
+   * @param {Array} rolesAutorises - Rôles autorisés
+   * @returns {boolean} - L'utilisateur a-t-il les permissions
+   */
+  static verifierPermissions(req, rolesAutorises) {
+    if (!req.user) return false
+
+    // Utiliser le service RoleMapper pour vérifier les permissions
+    return RoleMapper.hasAuthorizedRole(req.user, rolesAutorises)
+  }
+
   /**
    * Récupère toutes les réservations avec filtres optionnels
    * @param {Object} req - Requête Express
@@ -168,8 +182,8 @@ class ReservationController {
    */
   static async createReservation(req, res) {
     try {
-      const { id_client, chambres, services, prix_total, etat = "en_attente", source_reservation } = req.body
-
+      const { id_client, chambres, services, etat = "en_attente", source_reservation } = req.body
+  
       // Validation des données
       if (!id_client || !chambres || chambres.length === 0) {
         return res.status(400).json({
@@ -177,23 +191,23 @@ class ReservationController {
           message: "Client et au moins une chambre sont requis",
         })
       }
-
+  
       // Vérifier si le client existe
       const clientExists = await prisma.client.findUnique({
         where: { id_client: Number.parseInt(id_client) },
       })
-
+  
       if (!clientExists) {
         return res.status(400).json({
           status: "ERROR",
           message: "Le client spécifié n'existe pas",
         })
       }
-
+  
       // Vérifier la disponibilité des chambres
       for (const chambre of chambres) {
         const { id_chambre, date_arrivee, date_depart } = chambre
-
+  
         const isAvailable = await prisma.$transaction(async (tx) => {
           const reservedRooms = await tx.reservationsChambre.findMany({
             where: {
@@ -226,10 +240,10 @@ class ReservationController {
               },
             },
           })
-
+  
           return reservedRooms.length === 0
         })
-
+  
         if (!isAvailable) {
           return res.status(400).json({
             status: "ERROR",
@@ -237,59 +251,94 @@ class ReservationController {
           })
         }
       }
+  
+      let prix_total = 0;
 
-      // Créer la réservation
-      const reservation = await prisma.reservation.create({
-        data: {
-          id_client: Number.parseInt(id_client),
-          date_reservation: new Date(),
-          etat,
-          prix_total,
-          etat_paiement: "en_attente",
-          source_reservation,
-          chambres: {
-            create: chambres.map((chambre) => ({
-              chambre: {
-                connect: { id_chambre: Number.parseInt(chambre.id_chambre) },
+    // Calcul du prix total
+    for (const chambre of chambres) {
+      const { id_chambre, date_arrivee, date_depart } = chambre;
+      
+      const chambreDetails = await prisma.chambre.findUnique({
+        where: { id_chambre: Number.parseInt(id_chambre) },
+        select: { prix_par_nuit: true },
+      });
+
+      if (chambreDetails && chambreDetails.prix_par_nuit) {
+        const prix_par_nuit = chambreDetails.prix_par_nuit;
+        const dateArrivee = new Date(date_arrivee);
+        const dateDepart = new Date(date_depart);
+        const nbNuits = Math.ceil((dateDepart - dateArrivee) / (1000 * 60 * 60 * 24)); // Calcul des nuits
+
+        prix_total += prix_par_nuit * nbNuits;
+      } else {
+        return res.status(400).json({
+          status: "ERROR",
+          message: `Le prix de la chambre ${id_chambre} est introuvable.`,
+        });
+      }
+    }
+
+    // Si prix_total est NaN
+    if (isNaN(prix_total)) {
+      return res.status(400).json({
+        status: "ERROR",
+        message: "Le prix total est invalide.",
+      });
+    }
+
+    // Créer la réservation
+    const reservation = await prisma.reservation.create({
+      data: {
+        id_client: Number.parseInt(id_client),
+        date_reservation: new Date(),
+        etat,
+        prix_total: prix_total.toFixed(2),  // Pas besoin de Prisma.Decimal, juste un string avec 2 décimales
+        etat_paiement: "en_attente",
+        source_reservation,
+        chambres: {
+          create: chambres.map((chambre) => ({
+            chambre: {
+              connect: { id_chambre: Number.parseInt(chambre.id_chambre) },
+            },
+            date_arrivee: new Date(chambre.date_arrivee),
+            date_depart: new Date(chambre.date_depart),
+          })),
+        },
+        ...(services && services.length > 0
+          ? {
+              services: {
+                create: services.map((service) => ({
+                  service: {
+                    connect: { id_service: Number.parseInt(service.id_service) },
+                  },
+                  date_demande: new Date(),
+                  quantite: service.quantite || 1,
+                })),
               },
-              date_arrivee: new Date(chambre.date_arrivee),
-              date_depart: new Date(chambre.date_depart),
-            })),
-          },
-          ...(services && services.length > 0
-            ? {
-                services: {
-                  create: services.map((service) => ({
-                    service: {
-                      connect: { id_service: Number.parseInt(service.id_service) },
-                    },
-                    date_demande: new Date(),
-                    quantite: service.quantite || 1,
-                  })),
-                },
-              }
-            : {}),
-        },
-        include: {
-          client: true,
-          chambres: {
-            include: {
-              chambre: true,
-            },
-          },
-          services: {
-            include: {
-              service: true,
-            },
+            }
+          : {}),
+      },
+      include: {
+        client: true,
+        chambres: {
+          include: {
+            chambre: true,
           },
         },
-      })
+        services: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
 
-      res.status(201).json({
-        status: "OK",
-        message: "Réservation créée avec succès",
-        data: reservation,
-      })
+    return res.status(201).json({
+      status: "OK",
+      message: "Réservation créée avec succès",
+      data: reservation,
+    })
+
     } catch (error) {
       console.error(error)
       res.status(500).json({
@@ -452,6 +501,306 @@ class ReservationController {
       res.status(500).json({
         status: "ERROR",
         message: "Erreur lors de la suppression de la réservation",
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Enregistre l'arrivée d'un client (check-in)
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async checkIn(req, res) {
+    try {
+      // Vérifier les permissions (seuls le personnel et l'administrateur peuvent faire un check-in)
+      if (
+        !ReservationController.verifierPermissions(req, [
+          "RECEPTIONNISTE",
+          "RESPONSABLE_HEBERGEMENT",
+          "ADMIN_GENERAL",
+          "SUPER_ADMIN",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour effectuer un check-in",
+        })
+      }
+
+      const { id } = req.params
+      const { notes } = req.body
+
+      // Vérifier si la réservation existe et n'est pas supprimée
+      const existingReservation = await prisma.reservation.findFirst({
+        where: {
+          id_reservation: Number.parseInt(id),
+          supprime_le: null,
+        },
+        include: {
+          chambres: true,
+        },
+      })
+
+      if (!existingReservation) {
+        return res.status(404).json({
+          status: "ERROR",
+          message: "Réservation non trouvée ou supprimée",
+        })
+      }
+
+      // Vérifier si la réservation est dans un état qui permet le check-in
+      if (existingReservation.etat !== "confirmee" && existingReservation.etat !== "en_attente") {
+        return res.status(400).json({
+          status: "ERROR",
+          message: `Impossible d'effectuer le check-in. La réservation est dans l'état "${existingReservation.etat}"`,
+        })
+      }
+
+      // Mettre à jour l'état de la réservation
+      const reservation = await prisma.reservation.update({
+        where: { id_reservation: Number.parseInt(id) },
+        data: {
+          etat: "enregistree",
+        },
+        include: {
+          client: true,
+          chambres: {
+            include: {
+              chambre: true,
+            },
+          },
+        },
+      })
+
+      // Mettre à jour l'état des chambres
+      for (const chambreReservation of existingReservation.chambres) {
+        await prisma.chambre.update({
+          where: { id_chambre: chambreReservation.id_chambre },
+          data: {
+            etat: "occupee",
+          },
+        })
+      }
+
+      // CORRECTION: Vérifier si l'utilisateur existe avant d'ajouter une entrée dans le journal
+      let userId = null
+
+      if (req.user && req.user.userId) {
+        // Vérifier si l'utilisateur existe dans la base de données
+        const utilisateur = await prisma.utilisateur.findUnique({
+          where: { id_utilisateur: req.user.userId },
+        })
+
+        if (utilisateur) {
+          userId = req.user.userId
+        }
+      }
+
+      // Si aucun utilisateur valide n'est trouvé, rechercher un utilisateur par défaut
+      if (!userId) {
+        // Rechercher un utilisateur avec un rôle approprié
+        const defaultUser = await prisma.utilisateur.findFirst({
+          where: {
+            role: {
+              in: ["personnel", "administrateur"],
+            },
+          },
+        })
+
+        if (defaultUser) {
+          userId = defaultUser.id_utilisateur
+        } else {
+          // Si aucun utilisateur n'est trouvé, ne pas créer d'entrée dans le journal
+          console.warn("Aucun utilisateur valide trouvé pour le journal des modifications")
+        }
+      }
+
+      // Ajouter une entrée dans le journal des modifications seulement si un utilisateur valide est trouvé
+      if (userId) {
+        await prisma.journalModifications.create({
+          data: {
+            id_utilisateur: userId,
+            type_ressource: "reservation",
+            id_ressource: Number.parseInt(id),
+            action: "check_in",
+            details: {
+              date: new Date().toISOString(),
+              notes: notes || "Check-in effectué",
+            },
+          },
+        })
+      }
+
+      res.status(200).json({
+        status: "OK",
+        message: "Check-in effectué avec succès",
+        data: reservation,
+      })
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors du check-in",
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Enregistre le départ d'un client (check-out)
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async checkOut(req, res) {
+    try {
+      // Vérifier les permissions (seuls le personnel et l'administrateur peuvent faire un check-out)
+      if (
+        !ReservationController.verifierPermissions(req, [
+          "RECEPTIONNISTE",
+          "RESPONSABLE_HEBERGEMENT",
+          "ADMIN_GENERAL",
+          "SUPER_ADMIN",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour effectuer un check-out",
+        })
+      }
+
+      const { id } = req.params
+      const { notes } = req.body
+
+      // Vérifier si la réservation existe et n'est pas supprimée
+      const existingReservation = await prisma.reservation.findFirst({
+        where: {
+          id_reservation: Number.parseInt(id),
+          supprime_le: null,
+        },
+        include: {
+          chambres: true,
+          paiements: true,
+        },
+      })
+
+      if (!existingReservation) {
+        return res.status(404).json({
+          status: "ERROR",
+          message: "Réservation non trouvée ou supprimée",
+        })
+      }
+
+      // Vérifier si la réservation est dans un état qui permet le check-out
+      if (existingReservation.etat !== "enregistree") {
+        return res.status(400).json({
+          status: "ERROR",
+          message: `Impossible d'effectuer le check-out. La réservation est dans l'état "${existingReservation.etat}"`,
+        })
+      }
+
+      // Vérifier si le paiement est complet
+      const totalPaye = existingReservation.paiements
+        .filter((p) => p.etat === "complete")
+        .reduce((sum, p) => sum + Number(p.montant), 0)
+
+      if (totalPaye < Number(existingReservation.prix_total)) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "Impossible d'effectuer le check-out. Le paiement n'est pas complet",
+          data: {
+            prixTotal: Number(existingReservation.prix_total),
+            totalPaye: totalPaye,
+            reste: Number(existingReservation.prix_total) - totalPaye,
+          },
+        })
+      }
+
+      // Mettre à jour l'état de la réservation
+      const reservation = await prisma.reservation.update({
+        where: { id_reservation: Number.parseInt(id) },
+        data: {
+          etat: "depart",
+        },
+        include: {
+          client: true,
+          chambres: {
+            include: {
+              chambre: true,
+            },
+          },
+        },
+      })
+
+      // Mettre à jour l'état des chambres
+      for (const chambreReservation of existingReservation.chambres) {
+        await prisma.chambre.update({
+          where: { id_chambre: chambreReservation.id_chambre },
+          data: {
+            etat: "disponible",
+          },
+        })
+      }
+
+      // CORRECTION: Vérifier si l'utilisateur existe avant d'ajouter une entrée dans le journal
+      let userId = null
+
+      if (req.user && req.user.userId) {
+        // Vérifier si l'utilisateur existe dans la base de données
+        const utilisateur = await prisma.utilisateur.findUnique({
+          where: { id_utilisateur: req.user.userId },
+        })
+
+        if (utilisateur) {
+          userId = req.user.userId
+        }
+      }
+
+      // Si aucun utilisateur valide n'est trouvé, rechercher un utilisateur par défaut
+      if (!userId) {
+        // Rechercher un utilisateur avec un rôle approprié
+        const defaultUser = await prisma.utilisateur.findFirst({
+          where: {
+            role: {
+              in: ["personnel", "administrateur"],
+            },
+          },
+        })
+
+        if (defaultUser) {
+          userId = defaultUser.id_utilisateur
+        } else {
+          // Si aucun utilisateur n'est trouvé, ne pas créer d'entrée dans le journal
+          console.warn("Aucun utilisateur valide trouvé pour le journal des modifications")
+        }
+      }
+
+      // Ajouter une entrée dans le journal des modifications seulement si un utilisateur valide est trouvé
+      if (userId) {
+        await prisma.journalModifications.create({
+          data: {
+            id_utilisateur: userId,
+            type_ressource: "reservation",
+            id_ressource: Number.parseInt(id),
+            action: "check_out",
+            details: {
+              date: new Date().toISOString(),
+              notes: notes || "Check-out effectué",
+            },
+          },
+        })
+      }
+
+      res.status(200).json({
+        status: "OK",
+        message: "Check-out effectué avec succès",
+        data: reservation,
+      })
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors du check-out",
         error: error.message,
       })
     }

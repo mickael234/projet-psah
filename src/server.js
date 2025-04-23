@@ -17,6 +17,8 @@ import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
 import clientRoutes from './routes/clientRoutes.js';
+import factureRoutes from './routes/factureRoutes.js';
+import FactureController from './controllers/factureController.js';
 
 dotenv.config();
 
@@ -74,6 +76,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/hebergements', hebergementRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/paiements', paiementRoutes);
+app.use('/api/factures', factureRoutes);
 // Routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);
