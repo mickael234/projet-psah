@@ -22,6 +22,8 @@ import chambreRouteDoc from './docs/chambreRouteDoc.js';
 import avisRoutes from './routes/avisRoutes.js';
 import avisRouteDoc from './docs/avisRouteDoc.js';
 import rapportRoutes from './routes/rapportFinancierRoutes.js';
+import factureRoutes from './routes/factureRoutes.js';
+import FactureController from './controllers/factureController.js';
 
 dotenv.config();
 
@@ -81,6 +83,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/hebergements', hebergementRoutes);
 app.use('/api/paiements', paiementRoutes);
 app.use('/api/chambres', chambreRoutes);
+app.use('/api/factures', factureRoutes);
 // Routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);

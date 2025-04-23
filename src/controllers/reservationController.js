@@ -1,25 +1,32 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { PrismaClient } from "@prisma/client"
+import { RoleMapper } from "../utils/roleMapper.js"
+const prisma = new PrismaClient()
 import { authenticateJWT } from '../middleware/auth.js';
 import ReservationModel from '../models/reservation.model.js';
 
 class ReservationController {
-    /**
-     * Récupère toutes les réservations avec filtres optionnels
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async getAllReservations(req, res) {
-        try {
-            const {
-                page = 1,
-                limit = 10,
-                etat,
-                clientId,
-                dateDebut,
-                dateFin
-            } = req.query;
-            const skip = (Number.parseInt(page) - 1) * Number.parseInt(limit);
+  /**
+   * Vérifie si l'utilisateur a les permissions nécessaires
+   * @param {Object} req - Requête Express
+   * @param {Array} rolesAutorises - Rôles autorisés
+   * @returns {boolean} - L'utilisateur a-t-il les permissions
+   */
+  static verifierPermissions(req, rolesAutorises) {
+    if (!req.user) return false
+
+    // Utiliser le service RoleMapper pour vérifier les permissions
+    return RoleMapper.hasAuthorizedRole(req.user, rolesAutorises)
+  }
+
+  /**
+   * Récupère toutes les réservations avec filtres optionnels
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async getAllReservations(req, res) {
+    try {
+      const { page = 1, limit = 10, etat, clientId, dateDebut, dateFin } = req.query
+      const skip = (Number.parseInt(page) - 1) * Number.parseInt(limit)
 
             // Construire les filtres
             const where = {
@@ -197,185 +204,179 @@ class ReservationController {
         }
     }
 
-    /**
-     * Crée une nouvelle réservation
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async createReservation(req, res) {
-        try {
-            const {
-                id_client,
-                chambres,
-                services,
-                prix_total,
-                etat = 'en_attente',
-                source_reservation
-            } = req.body;
-
-            // Validation des données
-            if (!id_client || !chambres || chambres.length === 0) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message: 'Client et au moins une chambre sont requis'
-                });
-            }
-
-            // Vérifier si le client existe
-            const clientExists = await prisma.client.findUnique({
-                where: { id_client: Number.parseInt(id_client) }
-            });
-
-            if (!clientExists) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message: "Le client spécifié n'existe pas"
-                });
-            }
-
-            // Vérifier la disponibilité des chambres
-            for (const chambre of chambres) {
-                const { id_chambre, date_arrivee, date_depart } = chambre;
-
-                const isAvailable = await prisma.$transaction(async (tx) => {
-                    const reservedRooms = await tx.reservationsChambre.findMany(
-                        {
-                            where: {
-                                id_chambre: Number.parseInt(id_chambre),
-                                OR: [
-                                    {
-                                        AND: [
-                                            {
-                                                date_arrivee: {
-                                                    lte: new Date(date_arrivee)
-                                                }
-                                            },
-                                            {
-                                                date_depart: {
-                                                    gt: new Date(date_arrivee)
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        AND: [
-                                            {
-                                                date_arrivee: {
-                                                    lt: new Date(date_depart)
-                                                }
-                                            },
-                                            {
-                                                date_depart: {
-                                                    gte: new Date(date_depart)
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        AND: [
-                                            {
-                                                date_arrivee: {
-                                                    gte: new Date(date_arrivee)
-                                                }
-                                            },
-                                            {
-                                                date_depart: {
-                                                    lte: new Date(date_depart)
-                                                }
-                                            }
-                                        ]
-                                    }
-                                ],
-                                reservation: {
-                                    etat: {
-                                        notIn: ['annulee']
-                                    },
-                                    supprime_le: null // Exclure les réservations supprimées
-                                }
-                            }
-                        }
-                    );
-
-                    return reservedRooms.length === 0;
-                });
-
-                if (!isAvailable) {
-                    return res.status(400).json({
-                        status: 'ERROR',
-                        message: `La chambre ${id_chambre} n'est pas disponible pour les dates sélectionnées`
-                    });
-                }
-            }
-
-            // Créer la réservation
-            const reservation = await prisma.reservation.create({
-                data: {
-                    id_client: Number.parseInt(id_client),
-                    date_reservation: new Date(),
-                    etat,
-                    prix_total,
-                    etat_paiement: 'en_attente',
-                    source_reservation,
-                    chambres: {
-                        create: chambres.map((chambre) => ({
-                            chambre: {
-                                connect: {
-                                    id_chambre: Number.parseInt(
-                                        chambre.id_chambre
-                                    )
-                                }
-                            },
-                            date_arrivee: new Date(chambre.date_arrivee),
-                            date_depart: new Date(chambre.date_depart)
-                        }))
-                    },
-                    ...(services && services.length > 0
-                        ? {
-                              services: {
-                                  create: services.map((service) => ({
-                                      service: {
-                                          connect: {
-                                              id_service: Number.parseInt(
-                                                  service.id_service
-                                              )
-                                          }
-                                      },
-                                      date_demande: new Date(),
-                                      quantite: service.quantite || 1
-                                  }))
-                              }
-                          }
-                        : {})
+  /**
+   * Crée une nouvelle réservation
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async createReservation(req, res) {
+    try {
+      const { id_client, chambres, services, etat = "en_attente", source_reservation } = req.body
+  
+      // Validation des données
+      if (!id_client || !chambres || chambres.length === 0) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "Client et au moins une chambre sont requis",
+        })
+      }
+  
+      // Vérifier si le client existe
+      const clientExists = await prisma.client.findUnique({
+        where: { id_client: Number.parseInt(id_client) },
+      })
+  
+      if (!clientExists) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "Le client spécifié n'existe pas",
+        })
+      }
+  
+      // Vérifier la disponibilité des chambres
+      for (const chambre of chambres) {
+        const { id_chambre, date_arrivee, date_depart } = chambre
+  
+        const isAvailable = await prisma.$transaction(async (tx) => {
+          const reservedRooms = await tx.reservationsChambre.findMany({
+            where: {
+              id_chambre: Number.parseInt(id_chambre),
+              OR: [
+                {
+                  AND: [
+                    { date_arrivee: { lte: new Date(date_arrivee) } },
+                    { date_depart: { gt: new Date(date_arrivee) } },
+                  ],
                 },
-                include: {
-                    client: true,
-                    chambres: {
-                        include: {
-                            chambre: true
-                        }
-                    },
-                    services: {
-                        include: {
-                            service: true
-                        }
-                    }
-                }
-            });
-
-            res.status(201).json({
-                status: 'OK',
-                message: 'Réservation créée avec succès',
-                data: reservation
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors de la création de la réservation',
-                error: error.message
-            });
+                {
+                  AND: [
+                    { date_arrivee: { lt: new Date(date_depart) } },
+                    { date_depart: { gte: new Date(date_depart) } },
+                  ],
+                },
+                {
+                  AND: [
+                    { date_arrivee: { gte: new Date(date_arrivee) } },
+                    { date_depart: { lte: new Date(date_depart) } },
+                  ],
+                },
+              ],
+              reservation: {
+                etat: {
+                  notIn: ["annulee"],
+                },
+                supprime_le: null, // Exclure les réservations supprimées
+              },
+            },
+          })
+  
+          return reservedRooms.length === 0
+        })
+  
+        if (!isAvailable) {
+          return res.status(400).json({
+            status: "ERROR",
+            message: `La chambre ${id_chambre} n'est pas disponible pour les dates sélectionnées`,
+          })
         }
+      }
+  
+      let prix_total = 0;
+
+    // Calcul du prix total
+    for (const chambre of chambres) {
+      const { id_chambre, date_arrivee, date_depart } = chambre;
+      
+      const chambreDetails = await prisma.chambre.findUnique({
+        where: { id_chambre: Number.parseInt(id_chambre) },
+        select: { prix_par_nuit: true },
+      });
+
+      if (chambreDetails && chambreDetails.prix_par_nuit) {
+        const prix_par_nuit = chambreDetails.prix_par_nuit;
+        const dateArrivee = new Date(date_arrivee);
+        const dateDepart = new Date(date_depart);
+        const nbNuits = Math.ceil((dateDepart - dateArrivee) / (1000 * 60 * 60 * 24)); // Calcul des nuits
+
+        prix_total += prix_par_nuit * nbNuits;
+      } else {
+        return res.status(400).json({
+          status: "ERROR",
+          message: `Le prix de la chambre ${id_chambre} est introuvable.`,
+        });
+      }
     }
+
+    // Si prix_total est NaN
+    if (isNaN(prix_total)) {
+      return res.status(400).json({
+        status: "ERROR",
+        message: "Le prix total est invalide.",
+      });
+    }
+
+    // Créer la réservation
+    const reservation = await prisma.reservation.create({
+      data: {
+        id_client: Number.parseInt(id_client),
+        date_reservation: new Date(),
+        etat,
+        prix_total: prix_total.toFixed(2),  // Pas besoin de Prisma.Decimal, juste un string avec 2 décimales
+        etat_paiement: "en_attente",
+        source_reservation,
+        chambres: {
+          create: chambres.map((chambre) => ({
+            chambre: {
+              connect: { id_chambre: Number.parseInt(chambre.id_chambre) },
+            },
+            date_arrivee: new Date(chambre.date_arrivee),
+            date_depart: new Date(chambre.date_depart),
+          })),
+        },
+        ...(services && services.length > 0
+          ? {
+              services: {
+                create: services.map((service) => ({
+                  service: {
+                    connect: { id_service: Number.parseInt(service.id_service) },
+                  },
+                  date_demande: new Date(),
+                  quantite: service.quantite || 1,
+                })),
+              },
+            }
+          : {}),
+      },
+      include: {
+        client: true,
+        chambres: {
+          include: {
+            chambre: true,
+          },
+        },
+        services: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    return res.status(201).json({
+      status: "OK",
+      message: "Réservation créée avec succès",
+      data: reservation,
+    })
+
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors de la création de la réservation",
+        error: error.message,
+      })
+    }
+  }
 
     /**
      * Met à jour une réservation

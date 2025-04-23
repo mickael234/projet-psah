@@ -175,6 +175,24 @@ model ChambresEquipements {
   @@id([id_chambre, id_equipement])
 }
 
+// Modèle de facture
+model Facture {
+  id_facture     Int       @id @default(autoincrement())
+  id_reservation Int
+  montant_total  Decimal   @db.Decimal(10, 2)
+  date_creation  DateTime  @default(now())
+  date_envoi     DateTime?
+  date_paiement  DateTime?
+  etat           String    @default("en_attente") // en_attente, envoyee, payee, annulee
+  details        Json?     // Stocke les détails complets de la facture
+  notes          String?
+  
+  // Relations
+  reservation    Reservation @relation(fields: [id_reservation], references: [id_reservation])
+
+  @@index([id_reservation])
+}
+
 model Reservation {
   id_reservation       Int              @id @default(autoincrement())
   id_client            Int
@@ -192,6 +210,7 @@ model Reservation {
   paiements            Paiement[]
   avis                 Avis?
   services_locaux      ReservationsServicesLocaux[]
+  factures             Facture[]        // Ajoutez cette ligne pour définir la relation inverse
 
   @@index([id_client])
 }

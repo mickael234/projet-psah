@@ -1,9 +1,8 @@
-// src/routes/paiementRoutes.js
-import express from 'express';
-import PaiementController from '../controllers/paiementController.js';
-import { authenticateJWT } from '../middleware/auth.js';
+import express from "express"
+import PaiementController from "../controllers/paiementController.js"
+import { authenticateJWT } from "../middleware/auth.js"
 
-const router = express.Router();
+const router = express.Router()
 
 // Routes protégées (nécessitent une authentification)
 router.get(

@@ -3,16 +3,43 @@ import prisma from '../config/prisma.js';
 import path from 'path';
 import { generateRapportPDF } from '../services/paiementService.js';
 import fs from 'fs';
+import { RoleMapper } from "../utils/roleMapper.js"
 
 class PaiementController {
-    /**
-     * Récupère tous les paiements d'une réservation
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async getPaiementsByReservation(req, res) {
-        try {
-            const { id } = req.params;
+  /**
+   * Vérifie si l'utilisateur a les permissions nécessaires
+   * @param {Object} req - Requête Express
+   * @param {Array} rolesAutorises - Rôles autorisés
+   * @returns {boolean} - L'utilisateur a-t-il les permissions
+   */
+  static verifierPermissions(req, rolesAutorises) {
+    if (!req.user) return false
+
+    // Utiliser le service RoleMapper pour vérifier les permissions
+    return RoleMapper.hasAuthorizedRole(req.user, rolesAutorises)
+  }
+  /**
+   * Récupère tous les paiements d'une réservation
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async getPaiementsByReservation(req, res) {
+    try {
+      // Vérifier les permissions (consultation des paiements)
+      if (
+        !PaiementController.verifierPermissions(req, [
+          "COMPTABILITE",
+          "SUPER_ADMIN",
+          "ADMIN_GENERAL",
+          "RESPONSABLE_HEBERGEMENT",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+        })
+      }
+      const { id } = req.params
 
             const paiements = await prisma.paiement.findMany({
                 where: { id_reservation: Number.parseInt(id) },
@@ -34,14 +61,29 @@ class PaiementController {
         }
     }
 
-    /**
-     * Récupère un paiement par son ID
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async getPaiementById(req, res) {
-        try {
-            const { id } = req.params;
+  /**
+   * Récupère un paiement par son ID
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async getPaiementById(req, res) {
+    try {
+      // Vérifier les permissions (consultation des paiements)
+      if (
+        !PaiementController.verifierPermissions(req, [
+          "COMPTABILITE",
+          "SUPER_ADMIN",
+          "ADMIN_GENERAL",
+          "RESPONSABLE_HEBERGEMENT",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+        })
+      }
+
+      const { id } = req.params
 
             const paiement = await prisma.paiement.findUnique({
                 where: { id_paiement: Number.parseInt(id) }
@@ -69,23 +111,31 @@ class PaiementController {
         }
     }
 
-    /**
-     * Crée un nouveau paiement
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async createPaiement(req, res) {
-        try {
-            const {
-                id_reservation,
-                montant,
-                methode_paiement,
-                reference_transaction,
-                etat = 'en_attente',
-                numero_echeance,
-                total_echeances,
-                notes
-            } = req.body;
+  /**
+   * Crée un nouveau paiement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async createPaiement(req, res) {
+    try {
+      // Vérifier les permissions (gestion des paiements)
+      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour créer un paiement",
+        })
+      }
+
+      const {
+        id_reservation,
+        montant,
+        methode_paiement,
+        reference_transaction,
+        etat = "en_attente",
+        numero_echeance,
+        total_echeances,
+        notes,
+      } = req.body
 
             // Validation des données
             if (!id_reservation || !montant || !methode_paiement) {
@@ -162,15 +212,23 @@ class PaiementController {
         }
     }
 
-    /**
-     * Met à jour un paiement
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async updatePaiement(req, res) {
-        try {
-            const { id } = req.params;
-            const { etat, reference_transaction, notes } = req.body;
+  /**
+   * Met à jour un paiement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async updatePaiement(req, res) {
+    try {
+      // Vérifier les permissions (gestion des paiements)
+      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour modifier un paiement",
+        })
+      }
+
+      const { id } = req.params
+      const { etat, reference_transaction, notes } = req.body
 
             // Vérifier si le paiement existe
             const existingPaiement = await prisma.paiement.findUnique({
@@ -237,15 +295,23 @@ class PaiementController {
         }
     }
 
-    /**
-     * Rembourse un paiement
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async refundPaiement(req, res) {
-        try {
-            const { id } = req.params;
-            const { raison } = req.body;
+  /**
+   * Rembourse un paiement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async refundPaiement(req, res) {
+    try {
+      // Vérifier les permissions (gestion des paiements)
+      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
+        return res.status(403).json({
+          status: "ERROR",
+          message: "Vous n'avez pas les permissions nécessaires pour rembourser un paiement",
+        })
+      }
+
+      const { id } = req.params
+      const { raison } = req.body
 
             // Vérifier si le paiement existe
             const existingPaiement = await prisma.paiement.findUnique({
