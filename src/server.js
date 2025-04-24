@@ -17,8 +17,13 @@ import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
 import clientRoutes from './routes/clientRoutes.js';
+import chambreRouteDoc from './docs/chambreRouteDoc.js';
+import avisRoutes from './routes/avisRoutes.js';
+import avisRouteDoc from './docs/avisRouteDoc.js';
+import rapportRoutes from './routes/rapportFinancierRoutes.js';
 import factureRoutes from './routes/factureRoutes.js';
 import FactureController from './controllers/factureController.js';
+import rapportFinancierRouteDoc from "./docs/rapportFinancierRouteDoc.js"
 
 dotenv.config();
 
@@ -29,39 +34,42 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'API de Gestion Hôtelière',
-      version: '1.0.0',
-      description: 'API pour le système de gestion hôtelière',
-    },
-    servers: [
-      {
-        url: `http://localhost:${process.env.PORT || 3000}`,
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API de Gestion Hôtelière',
+            version: '1.0.0',
+            description: 'API pour le système de gestion hôtelière'
+        },
+        servers: [
+            {
+                url: `http://localhost:${process.env.PORT || 3000}`
+            }
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT'
+                }
+            }
         }
-      }
-    }
-  },
-  apis: ['./src/docs/*.js'],
+    },
+    apis: ['./src/docs/*.js']
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-swaggerSpec.paths = { 
-  ...swaggerSpec.paths, 
-  ...authRouteDoc, 
-  ...profileRouteDoc,
-  ...hebergementRouteDoc,
-  ...reservationRouteDoc,
-  ...paiementRouteDoc
+swaggerSpec.paths = {
+    ...swaggerSpec.paths,
+    ...authRouteDoc,
+    ...profileRouteDoc,
+    ...hebergementRouteDoc,
+    ...reservationRouteDoc,
+    ...paiementRouteDoc,
+    ...rapportFinancierRouteDoc,
+    ...chambreRouteDoc,
+    ...avisRouteDoc
 };
 
 app.use(cors());
@@ -74,11 +82,19 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/hebergements', hebergementRoutes);
-app.use('/api/reservations', reservationRoutes);
 app.use('/api/paiements', paiementRoutes);
 app.use('/api/factures', factureRoutes);
 // Routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/avis', avisRoutes);
+app.use('/api/rapports', rapportRoutes);
+
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
+
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
+}
+
+export default app;
