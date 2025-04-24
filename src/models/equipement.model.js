@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 class EquipementModel {
@@ -18,7 +18,7 @@ class EquipementModel {
      * @param {number} id - ID de l'équipement
      * @returns {Promise<Object>} - L'équipement trouvé
      */
-    async findById(id) {
+    static async findById(id) {
         return prisma.equipement.findUnique({
             where: { id_equipement: id }
         });
@@ -76,4 +76,4 @@ class EquipementModel {
     }
 }
 
-module.exports = EquipementModel;
+export default EquipementModel;

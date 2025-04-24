@@ -14,8 +14,11 @@ router.get('/:id/availability', HebergementController.checkAvailability);
 
 // Routes protégées (nécessitent une authentification)
 router.post('/', authenticateJWT, HebergementController.createHebergement);
+router.post('/:id/equipements', authenticateJWT, HebergementController.addEquipementToChambre);
 router.put('/:id', authenticateJWT, HebergementController.updateHebergement);
 router.delete('/:id', authenticateJWT, HebergementController.deleteHebergement);
+router.delete('/:id/equipements/:equipementId', authenticateJWT, HebergementController.removeEquipementFromChambre)
+
 
 // Routes pour les médias
 router.post(

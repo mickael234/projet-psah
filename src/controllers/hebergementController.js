@@ -1,6 +1,7 @@
 import HebergementModel from '../models/hebergementModel.js';
 import { PrismaClient } from '@prisma/client';
 import { RoleMapper } from '../utils/roleMapper.js';
+import EquipementModel from '../models/equipement.model.js';
 
 const prisma = new PrismaClient();
 
@@ -90,6 +91,7 @@ class HebergementController {
             });
         }
     }
+
 
     /**
      * Vérifie la disponibilité d'un hébergement
@@ -547,6 +549,166 @@ class HebergementController {
             res.status(500).json({
                 status: 'ERROR',
                 message: 'Erreur lors de la suppression du média',
+                error: error.message
+            });
+        }
+    }
+
+  
+    /**
+     * Ajoute un équipement à une chambre
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+    static async addEquipementToChambre(req, res) {
+        try {
+            // Vérifier les permissions
+            if (
+                !HebergementController.verifierPermissions(req, [
+                    'RESPONSABLE_HEBERGEMENT',
+                    'ADMIN_GENERAL',
+                    'SUPER_ADMIN',
+                    'RECEPTIONNISTE'
+                ])
+            ) {
+                return res.status(403).json({
+                    status: 'ERROR',
+                    message:
+                        "Vous n'avez pas les permissions nécessaires pour ajouter un équipement à un hébergement"
+                });
+            }
+
+            const { id } = req.params;
+            const { idEquipement } = req.body;
+
+            // Validation des IDs
+            const hebergementId = Number.parseInt(id);
+            const equipementId = Number.parseInt(idEquipement);
+
+            if (isNaN(hebergementId) || isNaN(equipementId)) {
+                return res.status(400).json({
+                    status: 'MAUVAISE DEMANDE',
+                    message: "IDs invalides"
+                });
+            }
+
+            // Vérifier si l'hébergement existe
+            const hebergementExistant = await HebergementModel.findById(hebergementId);
+            if (!hebergementExistant) {
+                return res.status(404).json({
+                    status: 'RESSOURCE NON TROUVEE',
+                    message: 'Hébergement non trouvé'
+                });
+            }
+
+            // Vérifier si l'équipement existe
+            const equipementExistant = await EquipementModel.findById(equipementId);
+
+            if (!equipementExistant) {
+                return res.status(404).json({
+                    status: 'RESSOURCE NON TROUVEE',
+                    message: 'Équipement non trouvé'
+                });
+            }
+
+            // Vérifier si la relation existe déjà
+            const relationExistante = await prisma.chambresEquipements.findUnique({
+                where: {
+                    id_chambre_id_equipement: {
+                        id_chambre: hebergementId,
+                        id_equipement: equipementId
+                    }
+                }
+            });
+
+            if (relationExistante) {
+                return res.status(400).json({
+                    status: 'ERROR',
+                    message: 'Cet équipement est déjà associé à cette chambre'
+                });
+            }
+
+            const relation = await HebergementModel.addEquipement(hebergementId, equipementId);
+
+            res.status(201).json({
+                status: 'OK',
+                message: 'Équipement ajouté avec succès',
+                data: relation
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({
+                status: 'ERROR',
+                message: "Erreur lors de l'ajout de l'équipement",
+                error: error.message
+            });
+        }
+    }
+
+    /**
+     * Supprime un équipement d'une chambre
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+    static async removeEquipementFromChambre(req, res) {
+        try {
+            // Vérifier les permissions
+            if (
+                !HebergementController.verifierPermissions(req, [
+                    'RESPONSABLE_HEBERGEMENT',
+                    'ADMIN_GENERAL',
+                    'SUPER_ADMIN',
+                    'RECEPTIONNISTE'
+                ])
+            ) {
+                return res.status(403).json({
+                    status: 'ERROR',
+                    message:
+                        "Vous n'avez pas les permissions nécessaires pour supprimer un équipement d'un hébergement"
+                });
+            }
+
+            const { id, equipementId } = req.params;
+
+            // Validation des IDs
+            const hebergementId = Number.parseInt(id);
+            const equipId = Number.parseInt(equipementId);
+
+            if (isNaN(hebergementId) || isNaN(equipId)) {
+                return res.status(400).json({
+                    status: 'ERROR',
+                    message: "IDs invalides"
+                });
+            }
+
+            // Vérifier si la relation existe
+            const relationExistante = await prisma.chambresEquipements.findUnique({
+                where: {
+                    id_chambre_id_equipement: {
+                        id_chambre: hebergementId,
+                        id_equipement: equipId
+                    }
+                }
+            });
+
+            if (!relationExistante) {
+                return res.status(404).json({
+                    status: 'ERROR',
+                    message: "Cet équipement n'est pas associé à cette chambre"
+                });
+            }
+
+            await HebergementModel.removeEquipement(hebergementId, equipId);
+
+            res.status(200).json({
+                status: 'OK',
+                message: 'Équipement supprimé avec succès'
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({
+                status: 'ERROR',
+                message: "Erreur lors de la suppression de l'équipement",
                 error: error.message
             });
         }

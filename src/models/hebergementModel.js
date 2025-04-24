@@ -394,6 +394,38 @@ class HebergementModel {
             }
         });
     }
+
+    /**
+     * Ajoute un équipement à une chambre
+     * @param {number} idChambre - ID de la chambre
+     * @param {number} idEquipement - ID de l'équipement
+     * @returns {Promise<Object>} - La relation créée
+     */
+    static async addEquipement(idChambre, idEquipement) {
+        return prisma.chambresEquipements.create({
+            data: {
+                id_chambre: idChambre,
+                id_equipement: idEquipement
+            }
+        });
+    }
+
+    /**
+     * Supprime un équipement d'une chambre
+     * @param {number} idChambre - ID de la chambre
+     * @param {number} idEquipement - ID de l'équipement
+     * @returns {Promise<Object>} - La relation supprimée
+     */
+    static async removeEquipement(idChambre, idEquipement) {
+        return prisma.chambresEquipements.delete({
+            where: {
+                id_chambre_id_equipement: {
+                    id_chambre: idChambre,
+                    id_equipement: idEquipement
+                }
+            }
+        });
+    }
 }
 
 export default HebergementModel;

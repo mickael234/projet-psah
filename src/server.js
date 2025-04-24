@@ -17,13 +17,13 @@ import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
 import clientRoutes from './routes/clientRoutes.js';
-import chambreRoutes from './routes/chambreRoutes.js';
 import chambreRouteDoc from './docs/chambreRouteDoc.js';
 import avisRoutes from './routes/avisRoutes.js';
 import avisRouteDoc from './docs/avisRouteDoc.js';
 import rapportRoutes from './routes/rapportFinancierRoutes.js';
 import factureRoutes from './routes/factureRoutes.js';
 import FactureController from './controllers/factureController.js';
+import rapportFinancierRouteDoc from "./docs/rapportFinancierRouteDoc.js"
 
 dotenv.config();
 
@@ -67,6 +67,7 @@ swaggerSpec.paths = {
     ...hebergementRouteDoc,
     ...reservationRouteDoc,
     ...paiementRouteDoc,
+    ...rapportFinancierRouteDoc,
     ...chambreRouteDoc,
     ...avisRouteDoc
 };
@@ -82,7 +83,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/hebergements', hebergementRoutes);
 app.use('/api/paiements', paiementRoutes);
-app.use('/api/chambres', chambreRoutes);
 app.use('/api/factures', factureRoutes);
 // Routes
 app.use('/api/clients', clientRoutes);
