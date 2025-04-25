@@ -820,7 +820,14 @@ class HebergementModel {
    * @returns {Promise<Object>}
    */
   static async updateAvailability(id, etat) {
-    return await prisma.chambre.update({
+    const ETATS_VALIDES = ["disponible", "occupe", "maintenance"];
+    if (typeof id !== "number") {
+      throw new TypeError("L'identifiant (id) doit être un nombre.");
+    }
+    if (!ETATS_VALIDES.includes(etat)) {
+      throw new Error(`L'état "${etat}" n'est pas valide. États valides : ${ETATS_VALIDES.join(", ")}`);
+    }
+    const updatedChambre = await prisma.chambre.update({
       where: {
         id_chambre: id,
       },
@@ -828,6 +835,10 @@ class HebergementModel {
         etat: etat,
       },
     });
+    return {
+      ...updatedChambre,
+      prix_par_nuit: Number(updatedChambre.prix_par_nuit),
+    }
   }
 
     /**
@@ -837,7 +848,14 @@ class HebergementModel {
    * @returns {Promise<Object>}
    */
  static async updatePrice(id, prix_par_nuit){
-  return await prisma.chambre.update({
+  if (typeof id !== "number") {
+    throw new TypeError("L'identifiant (id) doit être un nombre.");
+  }
+  if(typeof prix_par_nuit != "number"){
+    throw new TypeError("Le prix par nuit (prix_par_nuit) doit être un nombre.");
+  }
+
+  const updatedChambre = await prisma.chambre.update({
     where: {
       id_chambre: id,
     },
@@ -845,6 +863,10 @@ class HebergementModel {
       prix_par_nuit: prix_par_nuit
     }
   });
+  return {
+    ...updatedChambre,
+    prix_par_nuit:Number(updatedChambre.prix_par_nuit),
+  }
  }
 >>>>>>> bb160e8 (Endpoints pour mettre à jour les tarifs et disponibilités)
 }
