@@ -17,13 +17,10 @@ import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
 import clientRoutes from './routes/clientRoutes.js';
-import chambreRouteDoc from './docs/chambreRouteDoc.js';
 import avisRoutes from './routes/avisRoutes.js';
-import avisRouteDoc from './docs/avisRouteDoc.js';
 import rapportRoutes from './routes/rapportFinancierRoutes.js';
 import factureRoutes from './routes/factureRoutes.js';
 import FactureController from './controllers/factureController.js';
-import rapportFinancierRouteDoc from "./docs/rapportFinancierRouteDoc.js"
 
 dotenv.config();
 
@@ -67,9 +64,6 @@ swaggerSpec.paths = {
     ...hebergementRouteDoc,
     ...reservationRouteDoc,
     ...paiementRouteDoc,
-    ...rapportFinancierRouteDoc,
-    ...chambreRouteDoc,
-    ...avisRouteDoc
 };
 
 app.use(cors());
