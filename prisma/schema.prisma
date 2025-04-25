@@ -424,6 +424,7 @@ model ConfigurationSysteme {
 model Depense {
   id_depense Int @id @default(autoincrement())
   id_utilisateur Int 
+  description String?
   montant Decimal   @db.Decimal(10, 2)
   categorie CategorieDepense
   date_creation DateTime @default(now())
