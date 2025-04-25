@@ -99,6 +99,7 @@ model Utilisateur {
   journaux_chatbot  JournalChatbot[]
   activites         ActiviteUtilisateur[]
   journal_modifications JournalModifications[] // Ajoutez cette ligne
+  depenses Depense[]
 
   @@index([email])
 }
@@ -418,4 +419,31 @@ model ConfigurationSysteme {
   categorie String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Depense {
+  id_depense Int @id @default(autoincrement())
+  id_utilisateur Int 
+  montant Decimal   @db.Decimal(10, 2)
+  categorie CategorieDepense
+  date_creation DateTime @default(now())
+  date_modification DateTime? 
+  date_suppression DateTime? 
+
+  utilisateur      Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  @@index([date_creation])
+  @@index([categorie])
+}
+
+enum CategorieDepense {
+  maintenance
+  personnel
+  services
+  transport
+  communication
+  logiciel
+  marketing
+  admin
+  equipement
+  autre
 }
