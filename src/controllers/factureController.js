@@ -1,46 +1,17 @@
-// src/controllers/factureController.js
-import { PrismaClient } from '@prisma/client';
+import ReservationModel from '../models/reservation.model.js';
+import UtilisateurModel from '../models/utilisateur.model.js';
 
-const prisma = new PrismaClient();
-
-const genererFacture = async (req, res) => {
+export const genererFacture = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-
-    // Récupération complète de la réservation et ses relations
-    const reservation = await prisma.reservation.findUnique({
-      where: { id_reservation: id },
-      include: {
-        client: {
-          include: {
-            utilisateur: true
-          }
-        },
-        chambres: {
-          include: { chambre: true }
-        },
-        paiements: true,
-        services: {
-          include: { service: true }
-        },
-        services_locaux: {
-          include: { service_local: true }
-        }
-      }
-    });
+    const reservation = await ReservationModel.getFullReservation(id); 
 
     if (!reservation) {
       return res.status(404).json({ message: 'Réservation introuvable' });
     }
 
     const utilisateur = reservation.client.utilisateur;
-
-    // On récupère les infos de facturation du user lié via l'email
-    const user = await prisma.user.findUnique({
-      where: { email: utilisateur.email },
-      include: { billingInfo: true }
-    });
-
+    const user = await UtilisateurModel.findByEmail(utilisateur.email);
     const billing = user?.billingInfo;
     const chambreInfo = reservation.chambres[0];
     const chambre = chambreInfo?.chambre;
@@ -54,7 +25,6 @@ const genererFacture = async (req, res) => {
     const totalGeneral = prixChambreTotal + totalServices + totalServicesLocaux;
     const montantPaye = reservation.paiements.reduce((acc, p) => acc + p.montant, 0);
 
-    // Construction de la réponse JSON
     const facture = {
       date: new Date(),
       client: {
@@ -100,6 +70,3 @@ const genererFacture = async (req, res) => {
     res.status(500).json({ message: 'Erreur lors de la génération de la facture JSON' });
   }
 };
-
-// ✅ Export correct nommé pour éviter les erreurs d'import
-export { genererFacture };

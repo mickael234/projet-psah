@@ -1,3 +1,4 @@
+// seed.js
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -10,8 +11,19 @@ async function main() {
       nom_utilisateur: 'lyna_auto',
       mot_de_passe: '1234',
       email: 'lyna.auto@example.com',
-      role: 'client'
-    }
+      role: 'client',
+      billingInfo: {
+        create: {
+          address: '123 Rue de Paris',
+          city: 'Paris',
+          postalCode: '75001',
+          country: 'France',
+          billingName: 'Lyna Chalal',
+          vatNumber: 'FR12345678901'
+        }
+      }
+    },
+    include: { billingInfo: true }
   });
 
   // Créer ou récupérer le client lié à cet utilisateur

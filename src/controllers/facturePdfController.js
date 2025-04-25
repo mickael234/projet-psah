@@ -1,45 +1,18 @@
-// src/controllers/facturePdfController.js
 import PDFDocument from 'pdfkit';
-import { PrismaClient } from '@prisma/client';
+import ReservationModel from '../models/reservation.model.js';
+import UtilisateurModel from '../models/utilisateur.model.js';
 
-const prisma = new PrismaClient();
-
-const genererFacturePDF = async (req, res) => {
+export const genererFacturePDF = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-
-    const reservation = await prisma.reservation.findUnique({
-      where: { id_reservation: id },
-      include: {
-        client: {
-          include: {
-            utilisateur: true
-          }
-        },
-        chambres: {
-          include: { chambre: true }
-        },
-        paiements: true,
-        services: {
-          include: { service: true }
-        },
-        services_locaux: {
-          include: { service_local: true }
-        }
-      }
-    });
+    const reservation = await ReservationModel.getFullReservation(id); 
 
     if (!reservation) {
       return res.status(404).json({ message: 'Réservation introuvable' });
     }
 
     const utilisateur = reservation.client.utilisateur;
-
-    const user = await prisma.user.findUnique({
-      where: { email: utilisateur.email },
-      include: { billingInfo: true }
-    });
-
+    const user = await UtilisateurModel.findByEmail(utilisateur.email);
     const billing = user?.billingInfo;
     const chambreInfo = reservation.chambres[0];
     const chambre = chambreInfo?.chambre;
@@ -58,12 +31,11 @@ const genererFacturePDF = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     doc.pipe(res);
 
-    // Infos de facturation
-    doc.fontSize(18).text('FACTURE', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Date : ${new Date().toLocaleDateString()}`);
-    doc.moveDown();
+    //  En-tête
+    doc.fontSize(18).text('FACTURE', { align: 'center' }).moveDown();
+    doc.fontSize(12).text(`Date : ${new Date().toLocaleDateString()}`).moveDown();
 
+    //  Infos client
     doc.text(`Client : ${reservation.client.prenom} ${reservation.client.nom}`);
     doc.text(`Email : ${utilisateur.email}`);
     if (billing) {
@@ -71,6 +43,7 @@ const genererFacturePDF = async (req, res) => {
     }
     doc.moveDown();
 
+    //  Détails réservation
     doc.fontSize(14).text('Détails de la réservation');
     doc.fontSize(12).text(`Numéro de réservation : ${reservation.id_reservation}`);
     doc.text(`Chambre : ${chambre?.numero_chambre} - ${chambre?.type_chambre}`);
@@ -78,27 +51,27 @@ const genererFacturePDF = async (req, res) => {
     doc.text(`Date de départ : ${new Date(dateDepart).toLocaleDateString()}`);
     doc.text(`Nombre de nuits : ${nbNuits}`);
     doc.text(`Prix par nuit : ${chambre?.prix_par_nuit} €`);
-    doc.text(`Total chambre : ${prixChambreTotal.toFixed(2)} €`);
-    doc.moveDown();
+    doc.text(`Total chambre : ${prixChambreTotal.toFixed(2)} €`).moveDown();
 
+    // Services
     if (reservation.services.length > 0) {
       doc.fontSize(14).text('Services additionnels');
       reservation.services.forEach(s => {
         doc.fontSize(12).text(`- ${s.service.nom} x ${s.quantite} : ${(s.service.prix * s.quantite).toFixed(2)} €`);
       });
-      doc.text(`Total services : ${totalServices.toFixed(2)} €`);
-      doc.moveDown();
+      doc.text(`Total services : ${totalServices.toFixed(2)} €`).moveDown();
     }
 
+    //  Services locaux
     if (reservation.services_locaux.length > 0) {
       doc.fontSize(14).text('Services locaux');
       reservation.services_locaux.forEach(s => {
-        doc.fontSize(12).text(`- ${s.service_local.nom} : ${(s.service_local?.prix || 0).toFixed(2)} €`);
+        doc.fontSize(12).text(`- ${s.service_local?.nom} : ${(s.service_local?.prix || 0).toFixed(2)} €`);
       });
-      doc.text(`Total services locaux : ${totalServicesLocaux.toFixed(2)} €`);
-      doc.moveDown();
+      doc.text(`Total services locaux : ${totalServicesLocaux.toFixed(2)} €`).moveDown();
     }
 
+    //  Paiement
     doc.fontSize(14).text(`Montant total payé : ${montantPaye.toFixed(2)} €`);
     doc.fontSize(16).text(`Total à payer : ${totalGeneral.toFixed(2)} €`, { align: 'right' });
 
@@ -109,6 +82,3 @@ const genererFacturePDF = async (req, res) => {
     res.status(500).json({ message: 'Erreur lors de la génération de la facture PDF' });
   }
 };
-
-// ✅ Export nommé pour éviter l’erreur dans reservationRoutes.js
-export { genererFacturePDF };
