@@ -17,13 +17,10 @@ router.post('/', authenticateJWT, HebergementController.createHebergement);
 router.post('/:id/equipements', authenticateJWT, HebergementController.addEquipementToChambre);
 router.put('/:id', authenticateJWT, HebergementController.updateHebergement);
 router.delete('/:id', authenticateJWT, HebergementController.deleteHebergement);
-<<<<<<< HEAD
 router.delete('/:id/equipements/:equipementId', authenticateJWT, HebergementController.removeEquipementFromChambre)
-
-=======
 router.put('/:id/tarifs', authenticateJWT, HebergementController.updatePriceHebergement);
 router.put('/:id/disponibilite', authenticateJWT, HebergementController.updateAvailabilityHebergement)
->>>>>>> bb160e8 (Endpoints pour mettre à jour les tarifs et disponibilités)
+
 
 // Routes pour les médias
 router.post(
