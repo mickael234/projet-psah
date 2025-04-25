@@ -1,53 +1,7 @@
-<<<<<<< HEAD
 /node_modules/
 # Fichier contenant les variables d'environnement 
 .env
-<<<<<<< HEAD
 # Dossier généré lors des tests Jest
 coverage
 # Dossier contenant la documentation générée par JSDoc
 docs
-=======
-/prisma/migrations/*
->>>>>>> 45e85b0 (modification gitignore)
-=======
-# Node.js
-node_modules/
-
-# Prisma
-.prisma/
-prisma/migrations/
-assets/
-# Logs
-logs/
-*.log
-
-# Fichiers environnement (ne jamais versionner les secrets)
-.env
-.env.local
-.env.*.local
-
-# Répertoire de cache de npm
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Fichiers de build
-dist/
-build/
-
-# IDE et éditeurs de texte
-.vscode/
-.idea/
-
-# Système d'exploitation
-.DS_Store      # MacOS
-Thumbs.db      # Windows
-
-# Fichiers temporaires
-*.swp
-*.swo
-
-# Cache
-.cache/
->>>>>>> 1c8d182 (modification .gitinore)
