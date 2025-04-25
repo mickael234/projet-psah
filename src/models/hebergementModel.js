@@ -426,6 +426,65 @@ class HebergementModel {
             }
         });
     }
+    /**
+     * mettre à jour l ' etat d'un hebergement
+     * @param {number} id - ID de l'hébergement
+     * @param {string} etat- Etat de l'hebergement
+     * @returns {Promise<Object>}
+     */
+    static async updateAvailability(id, etat) {
+        const ETATS_VALIDES = ['disponible', 'occupe', 'maintenance'];
+        if (typeof id !== 'number') {
+            throw new TypeError("L'identifiant (id) doit être un nombre.");
+        }
+        if (!ETATS_VALIDES.includes(etat)) {
+            throw new Error(
+                `L'état "${etat}" n'est pas valide. États valides : ${ETATS_VALIDES.join(', ')}`
+            );
+        }
+        const updatedChambre = await prisma.chambre.update({
+            where: {
+                id_chambre: id
+            },
+            data: {
+                etat: etat
+            }
+        });
+        return {
+            ...updatedChambre,
+            prix_par_nuit: Number(updatedChambre.prix_par_nuit)
+        };
+    }
+
+    /**
+     * mettre à jour le prix par nuit  d'un hebergement
+     * @param {number} id - ID de l'hébergement
+     * @param {number(10,2)} prix_par_nuit- Prix par nuit
+     * @returns {Promise<Object>}
+     */
+    static async updatePrice(id, prix_par_nuit) {
+        if (typeof id !== 'number') {
+            throw new TypeError("L'identifiant (id) doit être un nombre.");
+        }
+        if (typeof prix_par_nuit != 'number') {
+            throw new TypeError(
+                'Le prix par nuit (prix_par_nuit) doit être un nombre.'
+            );
+        }
+
+        const updatedChambre = await prisma.chambre.update({
+            where: {
+                id_chambre: id
+            },
+            data: {
+                prix_par_nuit: prix_par_nuit
+            }
+        });
+        return {
+            ...updatedChambre,
+            prix_par_nuit: Number(updatedChambre.prix_par_nuit)
+        };
+    }
 }
 
 export default HebergementModel;

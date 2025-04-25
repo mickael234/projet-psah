@@ -204,6 +204,109 @@ const hebergementRouteDoc = {
       }
     }
   },
+  "/api/hebergements/{id}/disponibilite": {
+    put: {
+      summary: "Mettre à jour le status d'un hebergement",
+      tags: ["Hébergements"],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          in: "path",
+          name: "id",
+          required: true,
+          schema: { type: "integer" },
+          description: "ID de l'hébergement",
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["etat"],
+              properties: {
+                etat: {
+                  type: "string",
+                  enum: ["disponible", "occupee", "maintenance"],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "mise à jour etat hébergement avec succès",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  status: { type: "string", example: "Requête réussie" },
+                  message: {
+                    type: "string",
+                    example: "Etat de l'Hébergement mis à jour avec succès",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/api/hebergements/{id}/tarifs": {
+    put: {
+      summary: "Mettre à jour le prix par nuit  d'un hébergment",
+      tags: ["Hébergements"],
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          in: "path",
+          name: "id",
+          required: true,
+          schema: { type: "integer" },
+          description: "ID de l'hébergement",
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["prix_par_nuit"],
+              properties: {
+                prix_par_nuit: { type: "number" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description:
+            "mise à jour du prix par nuit d 'un hébergement avec succès",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  status: { type: "string", example: "Requête réussie" },
+                  message: {
+                    type: "string",
+                    example:
+                      "prix par nuit de l'Hébergement mis à jour avec succès",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   '/api/hebergements/search': {
     get: {
       summary: 'Rechercher des hébergements disponibles',

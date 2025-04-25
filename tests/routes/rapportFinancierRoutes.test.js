@@ -10,7 +10,7 @@ const PaiementController = {
 };
 
 const auth = {
-  authenticateJWT: jest.fn((req, res, next) => next())
+  authenticateJWT: jest.fn((_, __, next) => next())
 };
 
 // Mock des modules avec les objets créés
@@ -42,7 +42,7 @@ describe('Routes de rapports financiers', () => {
         jest.clearAllMocks();
         
         // Configuration par défaut pour les réponses du contrôleur
-        PaiementController.generateRapportFinancier.mockImplementation((req, res) => {
+        PaiementController.generateRapportFinancier.mockImplementation((_, res) => {
           res.status(200).json({
             status: 'OK',
             data: [
@@ -52,14 +52,14 @@ describe('Routes de rapports financiers', () => {
           });
         });
         
-        PaiementController.exportRapportFinancierToPDF.mockImplementation((req, res) => {
+        PaiementController.exportRapportFinancierToPDF.mockImplementation((_, res) => {
           // Simuler l'envoi d'un fichier en réponse
           res.setHeader('Content-disposition', 'attachment; filename=rapport-financier.pdf');
           res.setHeader('Content-type', 'application/pdf');
           res.send('Mock PDF Content');
         });
         
-        PaiementController.getRevenuTotal.mockImplementation((req, res) => {
+        PaiementController.getRevenuTotal.mockImplementation((_, res) => {
           res.status(200).json({
             status: 'OK',
             data: {
@@ -173,7 +173,7 @@ describe('Routes de rapports financiers', () => {
      */
     it('devrait gérer l\'erreur d\'authentification', async () => {
 
-      auth.authenticateJWT.mockImplementationOnce((req, res, next) => {
+      auth.authenticateJWT.mockImplementationOnce((_, res) => {
         return res.status(401).json({
           status: 'ERROR',
           message: 'Authentification requise'
@@ -194,7 +194,7 @@ describe('Routes de rapports financiers', () => {
      */
     it('devrait gérer l\'erreur de paramètres manquants pour le rapport financier', async () => {
 
-      PaiementController.generateRapportFinancier.mockImplementationOnce((req, res) => {
+      PaiementController.generateRapportFinancier.mockImplementationOnce((_, res) => {
         return res.status(400).json({
           status: 'MAUVAISE DEMANDE',
           message: 'Les dates pour déterminer la période sont requises.'
@@ -215,7 +215,7 @@ describe('Routes de rapports financiers', () => {
      */
     it('devrait gérer l\'erreur de données non trouvées pour le rapport financier', async () => {
 
-      PaiementController.generateRapportFinancier.mockImplementationOnce((req, res) => {
+      PaiementController.generateRapportFinancier.mockImplementationOnce((_, res) => {
         return res.status(404).json({
           status: 'RESSOURCE NON TROUVEE',
           message: 'Aucune transaction n\'a été trouvée pour la période spécifiée'
@@ -236,7 +236,7 @@ describe('Routes de rapports financiers', () => {
      */
     it('devrait gérer l\'erreur interne lors de la génération du PDF', async () => {
 
-      PaiementController.exportRapportFinancierToPDF.mockImplementationOnce((req, res) => {
+      PaiementController.exportRapportFinancierToPDF.mockImplementationOnce((_, res) => {
         return res.status(500).json({
           status: 'ERREUR INTERNE',
           message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.'

@@ -3,10 +3,10 @@ import express from 'express';
 import request from 'supertest';
 
 // Mock des dépendances
-const mockAuthenticateJWT = jest.fn((req, res, next) => next());
-const mockVerifyClientAccessToReservation = jest.fn((req, res, next) => next());
-const mockIsClient = jest.fn((req, res, next) => next());
-const mockCheckRole = jest.fn(() => (req, res, next) => next());
+const mockAuthenticateJWT = jest.fn((_, __, next) => next());
+const mockVerifyClientAccessToReservation = jest.fn((_, __, next) => next());
+const mockIsClient = jest.fn((_, __, next) => next());
+const mockCheckRole = jest.fn(() => (_, __, next) => next());
 
 // Mock des méthodes du contrôleur d'avis
 const mockAvisController = {
@@ -63,7 +63,7 @@ describe('Routes Avis', () => {
     jest.clearAllMocks();
     
     // Configuration par défaut pour les réponses du contrôleur
-    mockAvisController.getByReservation.mockImplementation((req, res) => {
+    mockAvisController.getByReservation.mockImplementation((_, res) => {
       res.status(200).json({
         status: 'OK',
         data: { id_avis: 1, note: 4, commentaire: 'Très bien' }
@@ -84,7 +84,7 @@ describe('Routes Avis', () => {
       });
     });
     
-    mockAvisController.deleteAvis.mockImplementation((req, res) => {
+    mockAvisController.deleteAvis.mockImplementation((_, res) => {
       res.status(200).json({
         status: 'SUPPRIME',
         data: { id_avis: 1 }
@@ -232,7 +232,7 @@ describe('Routes Avis', () => {
      * Test: Vérifie que l'erreur d'authentification est bien gérée 
      */
     it('devrait gérer l\'erreur d\'authentification', async () => {
-      mockAuthenticateJWT.mockImplementationOnce((req, res, next) => {
+      mockAuthenticateJWT.mockImplementationOnce((_, res) => {
         return res.status(401).json({
           status: 'ERROR',
           message: 'Authentification requise'
@@ -252,7 +252,7 @@ describe('Routes Avis', () => {
      * Test: Vérifie que l'erreur d'accès à une réservation est bien gérée 
      */
     it('devrait gérer l\'erreur d\'autorisation pour un client', async () => {
-      mockVerifyClientAccessToReservation.mockImplementationOnce((req, res, next) => {
+      mockVerifyClientAccessToReservation.mockImplementationOnce((_, res) => {
         return res.status(403).json({
           status: 'ACCÈS REFUSÉ',
           message: 'Vous n\'avez pas accès à cette réservation.'
@@ -272,7 +272,7 @@ describe('Routes Avis', () => {
      * Test: Vérifie que l'erreur de rôle non autorisé est bien gérée 
      */
     it('devrait gérer l\'erreur d\'autorisation pour un rôle non autorisé', async () => {
-      mockCheckRole.mockImplementationOnce(() => (req, res, next) => {
+      mockCheckRole.mockImplementationOnce(() => (_, res) => {
         return res.status(403).json({
           status: 'ERROR',
           message: 'Accès non autorisé'

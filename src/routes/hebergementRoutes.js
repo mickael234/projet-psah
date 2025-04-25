@@ -18,6 +18,8 @@ router.post('/:id/equipements', authenticateJWT, HebergementController.addEquipe
 router.put('/:id', authenticateJWT, HebergementController.updateHebergement);
 router.delete('/:id', authenticateJWT, HebergementController.deleteHebergement);
 router.delete('/:id/equipements/:equipementId', authenticateJWT, HebergementController.removeEquipementFromChambre)
+router.put('/:id/tarifs', authenticateJWT, HebergementController.updatePriceHebergement);
+router.put('/:id/disponibilite', authenticateJWT, HebergementController.updateAvailabilityHebergement)
 
 
 // Routes pour les médias
