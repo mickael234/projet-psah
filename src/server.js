@@ -23,7 +23,7 @@ import avisRoutes from './routes/avisRoutes.js';
 import rapportRoutes from './routes/rapportFinancierRoutes.js';
 import factureRoutes from './routes/factureRoutes.js';
 
-// 👉 Importer aussi tes routes à toi (ton travail)
+//  Importer aussi tes routes à toi (ton travail)
 import favorisRoutes from './routes/favorisRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
