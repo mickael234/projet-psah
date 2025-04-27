@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export const PrismaClient = jest.fn(() => ({
     service: {
       findMany: jest.fn(),
@@ -18,3 +19,12 @@ export const PrismaClient = jest.fn(() => ({
     }
   }));
   
+=======
+const prismaMock = require('../prisma.mock.js');
+
+const PrismaClient = jest.fn(() => prismaMock);
+
+module.exports = {
+    PrismaClient
+};
+>>>>>>> origin/hassan

@@ -1,5 +1,12 @@
 export default {
     testEnvironment: 'node',
-    transform: {}
+    transform: {},
+    globals: {
+      'jest': {
+        useESM: true
+      }
+    },
+    moduleNameMapper: {
+    }
   };
   

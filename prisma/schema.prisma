@@ -83,6 +83,7 @@ enum TypeMedia {
 
 // Models
 model Utilisateur {
+<<<<<<< HEAD
   id_utilisateur   Int             @id @default(autoincrement())
   nom_utilisateur  String          @unique
   mot_de_passe     String
@@ -99,6 +100,24 @@ model Utilisateur {
   journaux_chatbot JournalChatbot[]
   activites        ActiviteUtilisateur[]
   Favori           Favori[]
+=======
+  id_utilisateur    Int      @id @default(autoincrement())
+  nom_utilisateur   String   @unique
+  mot_de_passe      String
+  email             String   @unique
+  role              RoleUtilisateur
+  fournisseur_auth  String?
+  id_auth_externe   String?
+  supprime_le       DateTime?
+  
+  client            Client?
+  personnel         Personnel?
+  preferences       PreferenceUtilisateur[]
+  notifications     Notification[]
+  journaux_chatbot  JournalChatbot[]
+  activites         ActiviteUtilisateur[]
+  journal_modifications JournalModifications[] // Ajoutez cette ligne
+>>>>>>> origin/hassan
 
   @@index([email])
 }
@@ -132,6 +151,7 @@ model Personnel {
 }
 
 model Chambre {
+<<<<<<< HEAD
   id_chambre     Int         @id @default(autoincrement())
   numero_chambre String
   type_chambre   String
@@ -145,8 +165,34 @@ model Chambre {
   historique_prix HistoriquePrix[]
   Favori          Favori[]
   maintenances    Maintenance[]
+=======
+  id_chambre       Int         @id @default(autoincrement())
+  numero_chambre   String
+  type_chambre     String
+  prix_par_nuit    Decimal     @db.Decimal(10, 2)
+  etat             EtatChambre
+  description      String?
+  modifie_par      Int?        // Ajoutez ce champ
+  date_modification DateTime?  // Optionnel : pour suivre quand la modification a été faite
+  
+  equipements      ChambresEquipements[]
+  reservations     ReservationsChambre[]
+  medias           Media[]
+  historique_prix  HistoriquePrix[]
+>>>>>>> origin/hassan
 }
 
+model JournalModifications {
+  id_journal       Int      @id @default(autoincrement())
+  id_utilisateur   Int
+  type_ressource   String   // par ex. 'chambre', 'reservation', etc.
+  id_ressource     Int
+  action           String   // par ex. 'create', 'update', 'delete'
+  details          Json?    // détails de la modification (avant/après)
+  date             DateTime @default(now())
+  
+  utilisateur      Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+}
 model Equipement {
   id_equipement Int    @id @default(autoincrement())
   nom           String
@@ -164,6 +210,24 @@ model ChambresEquipements {
   @@id([id_chambre, id_equipement])
 }
 
+// Modèle de facture
+model Facture {
+  id_facture     Int       @id @default(autoincrement())
+  id_reservation Int
+  montant_total  Decimal   @db.Decimal(10, 2)
+  date_creation  DateTime  @default(now())
+  date_envoi     DateTime?
+  date_paiement  DateTime?
+  etat           String    @default("en_attente") // en_attente, envoyee, payee, annulee
+  details        Json?     // Stocke les détails complets de la facture
+  notes          String?
+  
+  // Relations
+  reservation    Reservation @relation(fields: [id_reservation], references: [id_reservation])
+
+  @@index([id_reservation])
+}
+
 model Reservation {
   id_reservation         Int             @id @default(autoincrement())
   id_client              Int
@@ -173,6 +237,7 @@ model Reservation {
   etat_paiement          EtatPaiement?
   source_reservation     String?
   id_reservation_externe String?
+<<<<<<< HEAD
   supprime_le            DateTime?
 
   client          Client                       @relation(fields: [id_client], references: [id_client])
@@ -181,6 +246,17 @@ model Reservation {
   paiements       Paiement[]
   avis            Avis?
   services_locaux ReservationsServicesLocaux[]
+=======
+  supprime_le          DateTime?
+  
+  client               Client           @relation(fields: [id_client], references: [id_client])
+  chambres             ReservationsChambre[]
+  services             ReservationsServices[]
+  paiements            Paiement[]
+  avis                 Avis?
+  services_locaux      ReservationsServicesLocaux[]
+  factures             Facture[]        // Ajoutez cette ligne pour définir la relation inverse
+>>>>>>> origin/hassan
 
   @@index([id_client])
 }
@@ -221,6 +297,7 @@ model ReservationsServices {
 }
 
 model Paiement {
+<<<<<<< HEAD
   id_paiement           Int          @id @default(autoincrement())
   id_reservation        Int
   montant               Decimal      @db.Decimal(10, 2)
@@ -232,9 +309,24 @@ model Paiement {
   total_echeances       Int?
 
   reservation Reservation @relation(fields: [id_reservation], references: [id_reservation])
+=======
+  id_paiement            Int           @id @default(autoincrement())
+  id_reservation         Int
+  montant                Decimal       @db.Decimal(10, 2)
+  methode_paiement       String?
+  date_transaction       DateTime      @default(now())
+  etat                   EtatPaiement
+  reference_transaction  String?
+  numero_echeance        Int?
+  total_echeances        Int?
+  notes                  String?       // Nouveau champ pour les notes
+  
+  reservation            Reservation   @relation(fields: [id_reservation], references: [id_reservation])
+>>>>>>> origin/hassan
 
   @@index([id_reservation])
 }
+
 
 model Avis {
   id_avis        Int      @id @default(autoincrement())

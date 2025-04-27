@@ -1,4 +1,5 @@
 import express from 'express';
+<<<<<<< HEAD
 import {
   enregistrerArrivee,
   enregistrerDepart
@@ -112,5 +113,51 @@ router.get('/:id/facture', genererFacture);
  *         description: Erreur serveur
  */
 router.get('/:id/facture/pdf', genererFacturePDF);
+=======
+import ReservationController from '../controllers/reservationController.js';
+import {
+    authenticateJWT,
+    checkClientAccess,
+    isClient
+} from '../middleware/auth.js';
+
+const router = express.Router()
+
+// Routes publiques
+router.get("/", ReservationController.getAllReservations)
+router.get("/:id", ReservationController.getReservationById)
+
+// Routes protégées (nécessitent une authentification)
+router.post('/', authenticateJWT, ReservationController.createReservation);
+router.put('/:id', authenticateJWT, ReservationController.updateReservation);
+router.delete('/:id', authenticateJWT, ReservationController.deleteReservation);
+router.post('/:id/cancel', authenticateJWT, ReservationController.cancelReservation);
+
+// Nouvelles routes pour la gestion des arrivées/départs
+/*router.put("/:id/checkin", authenticateJWT, ReservationController.checkIn)
+router.put("/:id/checkout", authenticateJWT, ReservationController.checkOut)*/
+
+/**
+ * Récupération des réservations actuelles d'un client en vérifiant que l'utilisateur a le droit d'accéder qu'à ses propres données
+ */ 
+router.get(
+    '/actuelles/:clientId',
+    authenticateJWT,
+    checkClientAccess,
+    ReservationController.getAllUserPresentReservations
+);
+
+/**
+* Récupération des réservations passées d'un client en vérifiant que l'utilisateur a le droit d'accéder qu'à ses propres données 
+*/
+router.get(
+    '/passees/:clientId',
+    authenticateJWT,
+    checkClientAccess,
+    ReservationController.getAllUserPastReservations
+);
+
+
+>>>>>>> origin/hassan
 
 export default router;
