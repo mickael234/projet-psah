@@ -94,7 +94,7 @@ app.use('/api/avis', avisRoutes);
 app.use('/api/rapports', rapportRoutes);
 app.use('/api/factures', factureRoutes);
 
-// 👉 Ajouter aussi tes routes persos :
+
 app.use('/api/favoris', favorisRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api', maintenanceRoutes); // /api/hebergements/:id/maintenance
