@@ -1,352 +1,357 @@
+
 import HebergementModel from '../models/hebergementModel.js';
 import { PrismaClient } from '@prisma/client';
 import { RoleMapper } from '../utils/roleMapper.js';
 import EquipementModel from '../models/equipement.model.js';
 
+
 const prisma = new PrismaClient();
 
 class HebergementController {
-    /**
-     * Vérifie si l'utilisateur a les permissions nécessaires
-     * @param {Object} req - Requête Express
-     * @param {Array} rolesAutorises - Rôles autorisés
-     * @returns {boolean} - L'utilisateur a-t-il les permissions
-     */
-    static verifierPermissions(req, rolesAutorises) {
-        if (!req.user) return false;
 
-        // Utiliser le service RoleMapper pour vérifier les permissions
-        return RoleMapper.hasAuthorizedRole(req.user, rolesAutorises);
+  /**
+   * Vérifie si l'utilisateur a les permissions nécessaires
+   * @param {Object} req - Requête Express
+   * @param {Array} rolesAutorises - Rôles autorisés
+   * @returns {boolean} - L'utilisateur a-t-il les permissions
+   */
+  static verifierPermissions(req, rolesAutorises) {
+    if (!req.user) return false;
+
+    // Utiliser le service RoleMapper pour vérifier les permissions
+    return RoleMapper.hasAuthorizedRole(req.user, rolesAutorises);
+  }
+
+  /**
+   * Récupère tous les hébergements avec filtres optionnels
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async getAllHebergements(req, res) {
+    try {
+      const { page = 1, limit = 10, ...filters } = req.query;
+      const hebergements = await HebergementModel.findAll(
+        filters,
+        Number.parseInt(page),
+        Number.parseInt(limit)
+      );
+
+      res.status(200).json({
+        status: "OK",
+        message: "Hébergements récupérés avec succès",
+        data: hebergements,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors de la récupération des hébergements",
+        error: error.message,
+      });
+
     }
+  }
+  /**
+   * Récupère un hébergement par son ID
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async getHebergementById(req, res) {
+    try {
+      const { id } = req.params;
 
-    /**
-     * Récupère tous les hébergements avec filtres optionnels
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async getAllHebergements(req, res) {
-        try {
-            const { page = 1, limit = 10, ...filters } = req.query;
-            const hebergements = await HebergementModel.findAll(
-                filters,
-                Number.parseInt(page),
-                Number.parseInt(limit)
-            );
+      // Assurez-vous que l'ID est un entier
+      const hebergementId = Number.parseInt(id);
 
-            res.status(200).json({
-                status: 'OK',
-                message: 'Hébergements récupérés avec succès',
-                data: hebergements
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors de la récupération des hébergements',
-                error: error.message
-            });
+      // Vérifiez que l'ID est valide
+      if (isNaN(hebergementId)) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "ID d'hébergement invalide",
+        });
+      }
+
+      const hebergement = await HebergementModel.findById(hebergementId);
+
+      if (!hebergement) {
+        return res.status(404).json({
+          status: "ERROR",
+          message: "Hébergement non trouvé",
+        });
+      }
+
+      res.status(200).json({
+        status: "OK",
+        message: "Hébergement récupéré avec succès",
+        data: hebergement,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors de la récupération de l'hébergement",
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Vérifie la disponibilité d'un hébergement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async checkAvailability(req, res) {
+    try {
+      const { id } = req.params;
+      const { dateArrivee, dateDepart } = req.query;
+
+      if (!dateArrivee || !dateDepart) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "Les dates d'arrivée et de départ sont requises",
+        });
+      }
+
+      // Assurez-vous que l'ID est un entier
+      const hebergementId = Number.parseInt(id);
+
+      // Vérifiez que l'ID est valide
+      if (isNaN(hebergementId)) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "ID d'hébergement invalide",
+        });
+      }
+
+      const isAvailable = await HebergementModel.checkAvailability(
+        hebergementId,
+        dateArrivee,
+        dateDepart
+      );
+
+      res.status(200).json({
+        status: "OK",
+        message: "Disponibilité vérifiée avec succès",
+        data: { isAvailable },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors de la vérification de la disponibilité",
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Recherche des hébergements disponibles
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async searchAvailableHebergements(req, res) {
+    try {
+      const {
+        dateArrivee,
+        dateDepart,
+        page = 1,
+        limit = 10,
+        ...filters
+      } = req.query;
+
+      if (!dateArrivee || !dateDepart) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "Les dates d'arrivée et de départ sont requises",
+        });
+      }
+
+      const hebergements = await HebergementModel.findAvailable(
+        dateArrivee,
+        dateDepart,
+        filters,
+        Number.parseInt(page),
+        Number.parseInt(limit)
+      );
+
+      res.status(200).json({
+        status: "OK",
+        message: "Hébergements disponibles récupérés avec succès",
+        data: hebergements,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors de la recherche d'hébergements disponibles",
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Crée un nouvel hébergement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async createHebergement(req, res) {
+    try {
+      // Vérifier les permissions (seuls le personnel et l'administrateur peuvent créer)
+      if (
+        !HebergementController.verifierPermissions(req, [
+          "RESPONSABLE_HEBERGEMENT",
+          "ADMIN_GENERAL",
+          "SUPER_ADMIN",
+          "RECEPTIONNISTE",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message:
+            "Vous n'avez pas les permissions nécessaires pour créer un hébergement",
+        });
+      }
+
+      const hebergementData = req.body;
+
+      // Validation des données pour une chambre (hébergement)
+      if (
+        !hebergementData.numero_chambre ||
+        !hebergementData.type_chambre ||
+        !hebergementData.prix_par_nuit
+      ) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "Numéro de chambre, type et prix par nuit sont requis",
+        });
+      }
+
+      // Ajouter l'ID de l'utilisateur qui crée l'hébergement
+      if (req.user && req.user.userId) {
+        // Vérifiez si l'utilisateur existe dans la base de données
+        const utilisateur = await prisma.utilisateur.findUnique({
+          where: { id_utilisateur: req.user.userId },
+        });
+
+        if (utilisateur) {
+          hebergementData.modifie_par = req.user.userId;
+          hebergementData.date_modification = new Date();
+        } else {
+          // Si l'utilisateur n'existe pas, ne pas inclure modifie_par
+          delete hebergementData.modifie_par;
         }
+      }
+
+      const hebergement = await HebergementModel.create(hebergementData);
+
+      res.status(201).json({
+        status: "OK",
+        message: "Hébergement créé avec succès",
+        data: hebergement,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors de la création de l'hébergement",
+        error: error.message,
+      });
     }
 
-    /**
-     * Récupère un hébergement par son ID
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async getHebergementById(req, res) {
-        try {
-            const { id } = req.params;
+    }
 
-            // Assurez-vous que l'ID est un entier
-            const hebergementId = Number.parseInt(id);
+  /**
+   * Met à jour un hébergement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async updateHebergement(req, res) {
+    try {
+      // Vérifier les permissions (seuls le personnel et l'administrateur peuvent modifier)
+      if (
+        !HebergementController.verifierPermissions(req, [
+          "RESPONSABLE_HEBERGEMENT",
+          "ADMIN_GENERAL",
+          "SUPER_ADMIN",
+          "RECEPTIONNISTE",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "ERROR",
+          message:
+            "Vous n'avez pas les permissions nécessaires pour modifier un hébergement",
+        });
+      }
 
-            // Vérifiez que l'ID est valide
-            if (isNaN(hebergementId)) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message: "ID d'hébergement invalide"
-                });
-            }
+      const { id } = req.params;
+      const hebergementData = req.body;
 
-            const hebergement = await HebergementModel.findById(hebergementId);
+      // Assurez-vous que l'ID est un entier
+      const hebergementId = Number.parseInt(id);
 
-            if (!hebergement) {
-                return res.status(404).json({
-                    status: 'ERROR',
-                    message: 'Hébergement non trouvé'
-                });
-            }
+      // Vérifiez que l'ID est valide
+      if (isNaN(hebergementId)) {
+        return res.status(400).json({
+          status: "ERROR",
+          message: "ID d'hébergement invalide",
+        });
+      }
 
-            res.status(200).json({
-                status: 'OK',
-                message: 'Hébergement récupéré avec succès',
-                data: hebergement
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: "Erreur lors de la récupération de l'hébergement",
-                error: error.message
-            });
+      // Vérifier si l'hébergement existe
+      const hebergementExistant = await HebergementModel.findById(
+        hebergementId
+      );
+
+      if (!hebergementExistant) {
+        return res.status(404).json({
+          status: "ERROR",
+          message: "Hébergement non trouvé",
+        });
+      }
+
+      // Ajouter l'ID de l'utilisateur qui modifie l'hébergement
+      // IMPORTANT: Vérifiez que l'utilisateur existe avant d'utiliser son ID
+      if (req.user && req.user.userId) {
+        // Vérifiez si l'utilisateur existe dans la base de données
+        const utilisateur = await prisma.utilisateur.findUnique({
+          where: { id_utilisateur: req.user.userId },
+        });
+
+        if (utilisateur) {
+          hebergementData.modifie_par = req.user.userId;
+          hebergementData.date_modification = new Date();
+        } else {
+          // Si l'utilisateur n'existe pas, ne pas inclure modifie_par
+          delete hebergementData.modifie_par;
         }
+      } else {
+        // Si pas d'utilisateur dans la requête, ne pas inclure modifie_par
+        delete hebergementData.modifie_par;
+      }
+
+      // Mettre à jour l'hébergement
+      const hebergement = await HebergementModel.update(
+        hebergementId,
+        hebergementData
+      );
+
+      res.status(200).json({
+        status: "OK",
+        message: "Hébergement mis à jour avec succès",
+        data: hebergement,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "ERROR",
+        message: "Erreur lors de la mise à jour de l'hébergement",
+        error: error.message,
+      });
+
     }
+  }
 
 
-    /**
-     * Vérifie la disponibilité d'un hébergement
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async checkAvailability(req, res) {
-        try {
-            const { id } = req.params;
-            const { dateArrivee, dateDepart } = req.query;
-
-            if (!dateArrivee || !dateDepart) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message: "Les dates d'arrivée et de départ sont requises"
-                });
-            }
-
-            // Assurez-vous que l'ID est un entier
-            const hebergementId = Number.parseInt(id);
-
-            // Vérifiez que l'ID est valide
-            if (isNaN(hebergementId)) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message: "ID d'hébergement invalide"
-                });
-            }
-
-            const isAvailable = await HebergementModel.checkAvailability(
-                hebergementId,
-                dateArrivee,
-                dateDepart
-            );
-
-            res.status(200).json({
-                status: 'OK',
-                message: 'Disponibilité vérifiée avec succès',
-                data: { isAvailable }
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors de la vérification de la disponibilité',
-                error: error.message
-            });
-        }
-    }
-
-    /**
-     * Recherche des hébergements disponibles
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async searchAvailableHebergements(req, res) {
-        try {
-            const {
-                dateArrivee,
-                dateDepart,
-                page = 1,
-                limit = 10,
-                ...filters
-            } = req.query;
-
-            if (!dateArrivee || !dateDepart) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message: "Les dates d'arrivée et de départ sont requises"
-                });
-            }
-
-            const hebergements = await HebergementModel.findAvailable(
-                dateArrivee,
-                dateDepart,
-                filters,
-                Number.parseInt(page),
-                Number.parseInt(limit)
-            );
-
-            res.status(200).json({
-                status: 'OK',
-                message: 'Hébergements disponibles récupérés avec succès',
-                data: hebergements
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message:
-                    "Erreur lors de la recherche d'hébergements disponibles",
-                error: error.message
-            });
-        }
-    }
-
-    /**
-     * Crée un nouvel hébergement
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async createHebergement(req, res) {
-        try {
-            // Vérifier les permissions (seuls le personnel et l'administrateur peuvent créer)
-            if (
-                !HebergementController.verifierPermissions(req, [
-                    'RESPONSABLE_HEBERGEMENT',
-                    'ADMIN_GENERAL',
-                    'SUPER_ADMIN',
-                    'RECEPTIONNISTE'
-                ])
-            ) {
-                return res.status(403).json({
-                    status: 'ERROR',
-                    message:
-                        "Vous n'avez pas les permissions nécessaires pour créer un hébergement"
-                });
-            }
-
-            const hebergementData = req.body;
-
-            // Validation des données pour une chambre (hébergement)
-            if (
-                !hebergementData.numero_chambre ||
-                !hebergementData.type_chambre ||
-                !hebergementData.prix_par_nuit
-            ) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message:
-                        'Numéro de chambre, type et prix par nuit sont requis'
-                });
-            }
-
-            // Ajouter l'ID de l'utilisateur qui crée l'hébergement
-            if (req.user && req.user.userId) {
-                // Vérifiez si l'utilisateur existe dans la base de données
-                const utilisateur = await prisma.utilisateur.findUnique({
-                    where: { id_utilisateur: req.user.userId }
-                });
-
-                if (utilisateur) {
-                    hebergementData.modifie_par = req.user.userId;
-                    hebergementData.date_modification = new Date();
-                } else {
-                    // Si l'utilisateur n'existe pas, ne pas inclure modifie_par
-                    delete hebergementData.modifie_par;
-                }
-            }
-
-            const hebergement = await HebergementModel.create(hebergementData);
-
-            res.status(201).json({
-                status: 'OK',
-                message: 'Hébergement créé avec succès',
-                data: hebergement
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: "Erreur lors de la création de l'hébergement",
-                error: error.message
-            });
-        }
-    }
-
-    /**
-     * Met à jour un hébergement
-     * @param {Object} req - Requête Express
-     * @param {Object} res - Réponse Express
-     */
-    static async updateHebergement(req, res) {
-        try {
-            // Vérifier les permissions (seuls le personnel et l'administrateur peuvent modifier)
-            if (
-                !HebergementController.verifierPermissions(req, [
-                    'RESPONSABLE_HEBERGEMENT',
-                    'ADMIN_GENERAL',
-                    'SUPER_ADMIN',
-                    'RECEPTIONNISTE'
-                ])
-            ) {
-                return res.status(403).json({
-                    status: 'ERROR',
-                    message:
-                        "Vous n'avez pas les permissions nécessaires pour modifier un hébergement"
-                });
-            }
-
-            const { id } = req.params;
-            const hebergementData = req.body;
-
-            // Assurez-vous que l'ID est un entier
-            const hebergementId = Number.parseInt(id);
-
-            // Vérifiez que l'ID est valide
-            if (isNaN(hebergementId)) {
-                return res.status(400).json({
-                    status: 'ERROR',
-                    message: "ID d'hébergement invalide"
-                });
-            }
-
-            // Vérifier si l'hébergement existe
-            const hebergementExistant =
-                await HebergementModel.findById(hebergementId);
-
-            if (!hebergementExistant) {
-                return res.status(404).json({
-                    status: 'ERROR',
-                    message: 'Hébergement non trouvé'
-                });
-            }
-
-            // Ajouter l'ID de l'utilisateur qui modifie l'hébergement
-            // IMPORTANT: Vérifiez que l'utilisateur existe avant d'utiliser son ID
-            if (req.user && req.user.userId) {
-                // Vérifiez si l'utilisateur existe dans la base de données
-                const utilisateur = await prisma.utilisateur.findUnique({
-                    where: { id_utilisateur: req.user.userId }
-                });
-
-                if (utilisateur) {
-                    hebergementData.modifie_par = req.user.userId;
-                    hebergementData.date_modification = new Date();
-                } else {
-                    // Si l'utilisateur n'existe pas, ne pas inclure modifie_par
-                    delete hebergementData.modifie_par;
-                }
-            } else {
-                // Si pas d'utilisateur dans la requête, ne pas inclure modifie_par
-                delete hebergementData.modifie_par;
-            }
-
-            // Mettre à jour l'hébergement
-            const hebergement = await HebergementModel.update(
-                hebergementId,
-                hebergementData
-            );
-
-            res.status(200).json({
-                status: 'OK',
-                message: 'Hébergement mis à jour avec succès',
-                data: hebergement
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: "Erreur lors de la mise à jour de l'hébergement",
-                error: error.message
-            });
-        }
-    }
 
     /**
      * Supprime un hébergement
@@ -713,6 +718,143 @@ class HebergementController {
             });
         }
     }
+  /**
+   * Mettre à jour le prix d'un hebergement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static async updatePriceHebergement(req, res) {
+    const { id } = req.params;
+    const { prix_par_nuit } = req.body;
+
+    //verifier si l'user à une Autorisation de faire appelle  à cette fonction
+    try {
+      if (
+        !HebergementController.verifierPermissions(req, [
+          "RESPONSABLE_HEBERGEMENT",
+          "ADMIN_GENERAL",
+          "SUPER_ADMIN",
+          "RECEPTIONNISTE",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "Accès interdit",
+          message:
+            "Vous n'avez pas les permissions nécessaires pour modifier le prix  par nuit d'un hebergement",
+        });
+      }
+
+      //verifier que l' hebergement à modifier le prix par nuit existe
+      const hebergementExist = await HebergementModel.findById(parseInt(id));
+      if (!hebergementExist) {
+        return res.status(404).json({
+          status: "Ressource non trouvée",
+          message: "Hebergement non trouvé",
+        });
+      } else {
+        //verfier  que prix_par_nuit est valide et non null
+        if (!prix_par_nuit) {
+          return res.status(404).json({
+            status: "Ressource non trouvée",
+            message: "le corps du requete  doit  contenir le champs etat",
+          });
+
+          //verfier que prix_par_nuit est positive et supperieur à 0 
+        } else if (parseFloat(prix_par_nuit) <= 0) {
+          return res.status(400).json({
+            status: "Requête mal formé",
+            message:
+              "Le prix par nuit de l'hébergement ne doit pas être négatif ou équivalent à zéro",
+          });
+        } else {
+
+          //conversion du prix_par_nuit en num(10,2)
+          let parsePrix = parseFloat(prix_par_nuit);
+          parsePrix = Math.round(parsePrix * 100) / 100;
+
+          //mettre à jour le prix par nuit d'un hebergement
+          const updatedHebergement = await HebergementModel.updatePrice(
+            parseInt(id),
+            parsePrix
+          );
+          return res.status(200).json({
+            status: "Requête réussie",
+            message: "Prix de l'hébergement mis à jour avec succès",
+            data: updatedHebergement,
+          });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "Erreur interne du serveur",
+        message:
+          "Erreur du serveur lors de la mise à jour du prix de l'hébergement",
+        error: error.message,
+      });
+    }
+  };
+  /**
+   * Mettre à jour l'Etat   d'un hebergement
+   * @param {Object} req - Requête Express
+   * @param {Object} res - Réponse Express
+   */
+  static updateAvailabilityHebergement = async (req, res) => {
+    const { id } = req.params;
+    const { etat } = req.body;
+    try {
+      //verifier si l'user à une Autorisation de faire appelle  à cette fonction
+      if (
+        !HebergementController.verifierPermissions(req, [
+          "RESPONSABLE_HEBERGEMENT",
+          "ADMIN_GENERAL",
+          "SUPER_ADMIN",
+        ])
+      ) {
+        return res.status(403).json({
+          status: "Accès interdit",
+          message:
+            "Vous n'avez pas les permissions nécessaires pour mettre  à jour l' etat d'un hebergement",
+        });
+      }
+      //verifier si l'Hebergement dans l'etat à modifier existe
+      const hebergementExist = await HebergementModel.findById(parseInt(id));
+      if (!hebergementExist) {
+        return res.status(404).json({
+          status: "Ressource non trouvée",
+          message: "Hebergement non trouvé",
+        });
+      } else {
+        //verifier que l' etat dans le body de la  requete n'est pas null et valide
+
+        if (!etat) {
+          return res.status(400).json({
+            status: "Requête mal formée",
+            message: "le corps du requete  doit  contenir le champs etat",
+          });
+        } else {
+          // mise à jour de l'etat d'un hebergement
+
+          const updatedHebergement = await HebergementModel.updateAvailability(
+            parseInt(id),
+            etat
+          );
+          res.status(200).json({
+            status: "Requête réussie",
+            message: "Etat de l'Hebergement mis à jour avec success",
+            data: updatedHebergement,
+          });
+        }
+      }
+    } catch (error) {
+      res.status(500).json({
+        status: "Erreur interne du serveur",
+        message:
+          "Erreur du serveur lors de la mise à jour de l'etat de l'hébergement",
+        error: error.message,
+      });
+    }
+  };
 }
 
 export default HebergementController;

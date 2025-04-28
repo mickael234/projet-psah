@@ -6,7 +6,7 @@ import { checkRole } from "../middleware/role-auth.js"
 const router = express.Router()
 
 // Définir les rôles autorisés pour les opérations de facturation
-const ROLES_GESTION_FACTURES = ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"]
+const ROLES_GESTION_FACTURES = ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RECEPTIONNISTE"]
 const ROLES_CONSULTATION_FACTURES = ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]
 
 // Routes protégées (nécessitent une authentification et des rôles spécifiques)

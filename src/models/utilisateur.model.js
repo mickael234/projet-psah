@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
 import bcrypt from 'bcrypt';
+
+const prisma = new PrismaClient();
 
 class UtilisateurModel {
     /**
@@ -9,10 +10,7 @@ class UtilisateurModel {
      * @returns {Promise<Object>} - L'utilisateur créé
      */
     static async create(userData) {
-        // Changé de 'async create' à 'static async create'
-        // Hachage du mot de passe
         const hashedPassword = await bcrypt.hash(userData.mot_de_passe, 10);
-
         return prisma.utilisateur.create({
             data: {
                 ...userData,
@@ -26,7 +24,7 @@ class UtilisateurModel {
      * @param {number} id - ID de l'utilisateur
      * @returns {Promise<Object>} - L'utilisateur trouvé
      */
-    async findById(id) {
+    static async findById(id) {
         return prisma.utilisateur.findUnique({
             where: { id_utilisateur: id },
             include: {
@@ -41,7 +39,7 @@ class UtilisateurModel {
      * @param {number} id - ID de l'utilisateur
      * @returns {Promise<Object>} - L'utilisateur avec ses relations
      */
-    static getWithRelations(id) {
+    static async getWithRelations(id) {
         return prisma.utilisateur.findUnique({
             where: { id_utilisateur: id },
             include: {
@@ -56,7 +54,7 @@ class UtilisateurModel {
      * @param {string} email - Email de l'utilisateur
      * @returns {Promise<Object>} - L'utilisateur trouvé
      */
-    static findByEmail(email) {
+    static async findByEmail(email) {
         return prisma.utilisateur.findUnique({
             where: { email }
         });
@@ -67,7 +65,7 @@ class UtilisateurModel {
      * @param {string} username - Nom d'utilisateur
      * @returns {Promise<Object>} - L'utilisateur trouvé
      */
-    static findByUsername(username) {
+    static async findByUsername(username) {
         return prisma.utilisateur.findUnique({
             where: { nom_utilisateur: username }
         });
@@ -78,11 +76,11 @@ class UtilisateurModel {
      * @param {Object} filters - Filtres optionnels
      * @returns {Promise<Array>} - Liste des utilisateurs
      */
-    async findAll(filters = {}) {
+    static async findAll(filters = {}) {
         return prisma.utilisateur.findMany({
             where: {
                 ...filters,
-                supprime_le: null // Exclure les utilisateurs supprimés
+                supprime_le: null
             },
             include: {
                 client: true,
@@ -97,13 +95,9 @@ class UtilisateurModel {
      * @param {Object} userData - Nouvelles données
      * @returns {Promise<Object>} - L'utilisateur mis à jour
      */
-    async update(id, userData) {
-        // Si le mot de passe est fourni, le hacher
+    static async update(id, userData) {
         if (userData.mot_de_passe) {
-            userData.mot_de_passe = await bcrypt.hash(
-                userData.mot_de_passe,
-                10
-            );
+            userData.mot_de_passe = await bcrypt.hash(userData.mot_de_passe, 10);
         }
 
         return prisma.utilisateur.update({
@@ -117,7 +111,7 @@ class UtilisateurModel {
      * @param {number} id - ID de l'utilisateur
      * @returns {Promise<Object>} - L'utilisateur supprimé
      */
-    async delete(id) {
+    static async delete(id) {
         return prisma.utilisateur.update({
             where: { id_utilisateur: id },
             data: { supprime_le: new Date() }
@@ -130,7 +124,7 @@ class UtilisateurModel {
      * @param {string} password - Mot de passe
      * @returns {Promise<Object|null>} - L'utilisateur authentifié ou null
      */
-    async authenticate(email, password) {
+    static async authenticate(email, password) {
         const user = await UtilisateurModel.findByEmail(email);
 
         if (!user || user.supprime_le) {
@@ -138,7 +132,6 @@ class UtilisateurModel {
         }
 
         const passwordMatch = await bcrypt.compare(password, user.mot_de_passe);
-
         return passwordMatch ? user : null;
     }
 
@@ -148,8 +141,8 @@ class UtilisateurModel {
      * @param {string} role - Rôle à vérifier
      * @returns {Promise<boolean>} - True si l'utilisateur a le rôle
      */
-    async hasRole(id, role) {
-        const user = await this.findById(id);
+    static async hasRole(id, role) {
+        const user = await UtilisateurModel.findById(id);
         return user && user.role === role;
     }
 }
