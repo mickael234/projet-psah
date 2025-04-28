@@ -99,14 +99,12 @@ async function main() {
 
         for (const equipementId of equipementsForChambre) {
             // Vérifier si la relation existe déjà
-            const existingRelation = await prisma.chambresEquipements.findFirst(
-                {
-                    where: {
-                        id_chambre: chambreId,
-                        id_equipement: equipementId
-                    }
+            const existingRelation = await prisma.chambresEquipements.findFirst({
+                where: {
+                    id_chambre: chambreId,
+                    id_equipement: equipementId
                 }
-            );
+            });
 
             if (!existingRelation) {
                 await prisma.chambresEquipements.create({

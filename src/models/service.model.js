@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 class ServiceModel {
@@ -82,4 +82,4 @@ class ServiceModel {
     }
 }
 
-module.exports = ServiceModel;
+export default ServiceModel;
