@@ -24,6 +24,7 @@ import rapportRoutes from './routes/rapportFinancierRoutes.js';
 import factureRoutes from './routes/factureRoutes.js';
 import FactureController from './controllers/factureController.js';
 import rapportFinancierRouteDoc from "./docs/rapportFinancierRouteDoc.js"
+import depenseRoutes from './routes/depenseRoutes.js'
 
 dotenv.config();
 
@@ -89,6 +90,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/avis', avisRoutes);
 app.use('/api/rapports', rapportRoutes);
+app.use('/api/depenses', depenseRoutes);
 
 
 const PORT = process.env.PORT || 3000;
