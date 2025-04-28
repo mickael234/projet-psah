@@ -104,5 +104,4 @@ router.delete('/', supprimerFavori);
  *         description: Erreur interne serveur
  */
 router.get('/:id_utilisateur', listerFavorisUtilisateur);
-
 export default router;

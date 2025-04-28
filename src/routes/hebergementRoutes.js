@@ -1,7 +1,12 @@
-<<<<<<< HEAD
+// src/routes/hebergementRoutes.js
+
 import express from 'express';
-const router = express.Router();
 import { PrismaClient } from '@prisma/client';
+import HebergementController from '../controllers/hebergementController.js';
+import { authenticateJWT } from '../middleware/auth.js';
+import { upload } from '../utils/fileUpload.js';
+
+const router = express.Router();
 const prisma = new PrismaClient();
 
 /**
@@ -117,14 +122,10 @@ router.get('/recherche', async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
-=======
-// src/routes/hebergementRoutes.js
-import express from 'express';
-import HebergementController from '../controllers/hebergementController.js';
-import { authenticateJWT } from '../middleware/auth.js';
-import { upload } from '../utils/fileUpload.js';
 
-const router = express.Router();
+// --------------------------------------------------------
+// Routes Hassan (HebergementController)
+// --------------------------------------------------------
 
 // Routes publiques
 router.get('/', HebergementController.getAllHebergements);
@@ -137,23 +138,19 @@ router.post('/', authenticateJWT, HebergementController.createHebergement);
 router.post('/:id/equipements', authenticateJWT, HebergementController.addEquipementToChambre);
 router.put('/:id', authenticateJWT, HebergementController.updateHebergement);
 router.delete('/:id', authenticateJWT, HebergementController.deleteHebergement);
-router.delete('/:id/equipements/:equipementId', authenticateJWT, HebergementController.removeEquipementFromChambre)
+router.delete('/:id/equipements/:equipementId', authenticateJWT, HebergementController.removeEquipementFromChambre);
 router.put('/:id/tarifs', authenticateJWT, HebergementController.updatePriceHebergement);
-router.put('/:id/disponibilite', authenticateJWT, HebergementController.updateAvailabilityHebergement)
-
-
+router.put('/:id/disponibilite', authenticateJWT, HebergementController.updateAvailabilityHebergement);
 // Routes pour les médias
 router.post(
-    '/:id/media',
-    authenticateJWT,
-    upload.single('media'),
-    HebergementController.addMedia
+  '/:id/media',
+  authenticateJWT,
+  upload.single('media'),
+  HebergementController.addMedia
 );
 router.delete(
-    '/:id/media/:mediaId',
-    authenticateJWT,
-    HebergementController.removeMedia
+  '/:id/media/:mediaId',
+  authenticateJWT,
+  HebergementController.removeMedia
 );
->>>>>>> origin/hassan
-
 export default router;

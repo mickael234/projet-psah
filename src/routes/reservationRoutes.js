@@ -1,12 +1,12 @@
-import express from 'express';
-<<<<<<< HEAD
-import {
-  enregistrerArrivee,
-  enregistrerDepart
-} from '../controllers/reservationController.js';
+// src/routes/reservationRoutes.js
 
-import { genererFacture } from '../controllers/factureController.js';
-import { genererFacturePDF } from '../controllers/facturePdfController.js';
+import express from 'express';
+import ReservationController from '../controllers/reservationController.js';
+import { enregistrerArrivee, enregistrerDepart } from '../controllers/checkincheckoutController.js';
+import {
+  authenticateJWT,
+  checkClientAccess
+} from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -14,8 +14,26 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Réservations
- *   description: Opérations sur les réservations (check-in, check-out, factures)
+ *   description: Opérations sur les réservations (CRUD, check-in, check-out)
  */
+
+// =========================
+// Routes publiques
+// =========================
+router.get('/', ReservationController.getAllReservations);
+router.get('/:id', ReservationController.getReservationById);
+
+// =========================
+// Routes protégées (authentification obligatoire)
+// =========================
+router.post('/', authenticateJWT, ReservationController.createReservation);
+router.put('/:id', authenticateJWT, ReservationController.updateReservation);
+router.delete('/:id', authenticateJWT, ReservationController.deleteReservation);
+router.post('/:id/cancel', authenticateJWT, ReservationController.cancelReservation);
+
+// =========================
+// Check-in et Check-out
+// =========================
 
 /**
  * @swagger
@@ -38,7 +56,7 @@ const router = express.Router();
  *       500:
  *         description: Erreur serveur
  */
-router.put('/:id/checkin', enregistrerArrivee);
+router.put('/:id/checkin', authenticateJWT, enregistrerArrivee);
 
 /**
  * @swagger
@@ -61,103 +79,24 @@ router.put('/:id/checkin', enregistrerArrivee);
  *       500:
  *         description: Erreur serveur
  */
-router.put('/:id/checkout', enregistrerDepart);
+router.put('/:id/checkout', authenticateJWT, enregistrerDepart);
 
-/**
- * @swagger
- * /api/reservations/{id}/facture:
- *   get:
- *     summary: Générer une facture JSON pour une réservation
- *     tags: [Réservations]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID de la réservation
- *     responses:
- *       200:
- *         description: Facture JSON générée
- *       404:
- *         description: Réservation introuvable
- *       500:
- *         description: Erreur serveur
- */
-router.get('/:id/facture', genererFacture);
+// =========================
+// Récupération des réservations d'un client
+// =========================
 
-/**
- * @swagger
- * /api/reservations/{id}/facture/pdf:
- *   get:
- *     summary: Générer une facture PDF pour une réservation
- *     tags: [Réservations]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID de la réservation
- *     responses:
- *       200:
- *         description: Facture PDF générée
- *         content:
- *           application/pdf:
- *             schema:
- *               type: string
- *               format: binary
- *       404:
- *         description: Réservation introuvable
- *       500:
- *         description: Erreur serveur
- */
-router.get('/:id/facture/pdf', genererFacturePDF);
-=======
-import ReservationController from '../controllers/reservationController.js';
-import {
-    authenticateJWT,
-    checkClientAccess,
-    isClient
-} from '../middleware/auth.js';
-
-const router = express.Router()
-
-// Routes publiques
-router.get("/", ReservationController.getAllReservations)
-router.get("/:id", ReservationController.getReservationById)
-
-// Routes protégées (nécessitent une authentification)
-router.post('/', authenticateJWT, ReservationController.createReservation);
-router.put('/:id', authenticateJWT, ReservationController.updateReservation);
-router.delete('/:id', authenticateJWT, ReservationController.deleteReservation);
-router.post('/:id/cancel', authenticateJWT, ReservationController.cancelReservation);
-
-// Nouvelles routes pour la gestion des arrivées/départs
-/*router.put("/:id/checkin", authenticateJWT, ReservationController.checkIn)
-router.put("/:id/checkout", authenticateJWT, ReservationController.checkOut)*/
-
-/**
- * Récupération des réservations actuelles d'un client en vérifiant que l'utilisateur a le droit d'accéder qu'à ses propres données
- */ 
 router.get(
-    '/actuelles/:clientId',
-    authenticateJWT,
-    checkClientAccess,
-    ReservationController.getAllUserPresentReservations
+  '/actuelles/:clientId',
+  authenticateJWT,
+  checkClientAccess,
+  ReservationController.getAllUserPresentReservations
 );
 
-/**
-* Récupération des réservations passées d'un client en vérifiant que l'utilisateur a le droit d'accéder qu'à ses propres données 
-*/
 router.get(
-    '/passees/:clientId',
-    authenticateJWT,
-    checkClientAccess,
-    ReservationController.getAllUserPastReservations
+  '/passees/:clientId',
+  authenticateJWT,
+  checkClientAccess,
+  ReservationController.getAllUserPastReservations
 );
-
-
->>>>>>> origin/hassan
 
 export default router;
