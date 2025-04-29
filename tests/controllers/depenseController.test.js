@@ -1,4 +1,3 @@
-// depenseController.test.js
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import DepenseController from '../../src/controllers/depenseController.js';
 import DepenseModel from '../../src/models/depense.model.js';
@@ -52,6 +51,10 @@ describe('DepenseController', () => {
     });
 
     describe('getById', () => {
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 400 
+         * lorsqu'un ID non numérique est fourni
+         */
         it('devrait retourner une erreur 400 si l\'ID est invalide', async () => {
             req.params.id = 'invalid';
             
@@ -65,6 +68,10 @@ describe('DepenseController', () => {
             expect(DepenseModel.findById).not.toHaveBeenCalled();
         });
         
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 404 
+         * lorsque la dépense demandée n'existe pas dans la base de données
+         */
         it('devrait retourner une erreur 404 si la dépense n\'existe pas', async () => {
             req.params.id = '123';
             DepenseModel.findById.mockResolvedValue(null);
@@ -79,6 +86,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur retourne la dépense correcte
+         * avec un statut 200 lorsque l'ID existe
+         */
         it('devrait retourner la dépense si elle existe', async () => {
             req.params.id = '123';
             const mockDepense = { id_depense: 123, montant: 100 };
@@ -94,6 +105,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur gère correctement les erreurs imprévues
+         * qui peuvent survenir lors de l'appel au modèle
+         */
         it('devrait gérer les erreurs inattendues', async () => {
             req.params.id = '123';
             const mockError = new Error('Test error');
@@ -111,6 +126,10 @@ describe('DepenseController', () => {
     });
 
     describe('getAll', () => {
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 400
+         * lorsque le numéro de page fourni est négatif ou non numérique
+         */
         it('devrait retourner une erreur 400 si le numéro de page est invalide', async () => {
             req.query.page = '-1';
             
@@ -123,6 +142,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 400
+         * lorsque la limite de pagination est inférieure à 1
+         */
         it('devrait retourner une erreur 400 si la limite est invalide', async () => {
             req.query.page = '1';
             req.query.limit = '0';
@@ -136,6 +159,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 404
+         * lorsqu'aucune dépense ne correspond aux filtres demandés
+         */
         it('devrait retourner une erreur 404 si aucune dépense n\'est trouvée', async () => {
             req.query.page = '1';
             req.query.limit = '10';
@@ -150,6 +177,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur applique correctement tous les filtres
+         * et retourne les données paginées avec les metadata appropriées
+         */
         it('devrait appliquer correctement les filtres', async () => {
             req.query = {
                 page: '2',
@@ -203,6 +234,10 @@ describe('DepenseController', () => {
     });
 
     describe('getFinancialDataByPeriod', () => {
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 400
+         * lorsque les dates de période fournies sont invalides
+         */
         it('devrait retourner une erreur 400 si la validation des dates échoue', async () => {
             const validationError = { error: true, message: 'Dates invalides' };
             ValidationService.validateDatePeriod.mockReturnValue(validationError);
@@ -217,6 +252,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 404
+         * lorsqu'aucune transaction n'est trouvée pendant la période demandée
+         */
         it('devrait retourner une erreur 404 si aucune transaction n\'est trouvée', async () => {
             const validationSuccess = {
                 error: false,
@@ -244,6 +283,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur retourne les données financières correctes
+         * pour une période valide avec des transactions
+         */
         it('devrait retourner les données financières trouvées', async () => {
             const validationSuccess = {
                 error: false,
@@ -273,6 +316,10 @@ describe('DepenseController', () => {
     });
 
     describe('generateFinancialReport', () => {
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 400
+         * lorsque les dates de période pour le rapport sont invalides
+         */
         it('devrait retourner une erreur 400 si la validation des dates échoue', async () => {
             const validationError = { error: true, message: 'Dates invalides' };
             ValidationService.validateDatePeriod.mockReturnValue(validationError);
@@ -287,6 +334,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur délègue correctement la génération
+         * de rapport financier au service approprié avec les dates valides
+         */
         it('devrait appeler le service DepenseService si les dates sont valides', async () => {
             const validationSuccess = {
                 error: false,
@@ -306,6 +357,10 @@ describe('DepenseController', () => {
     });
 
     describe('create', () => {
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 400
+         * lorsque les données de la requête pour créer une dépense sont manquantes ou invalides
+         */
         it('devrait retourner une erreur 400 si les données sont invalides', async () => {
             req.body = null;
             
@@ -318,6 +373,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur crée correctement une nouvelle dépense
+         * lorsque des données valides sont fournies
+         */
         it('devrait créer une dépense avec des données valides', async () => {
             const mockDepense = { 
                 id_utilisateur: 1, 
@@ -342,6 +401,10 @@ describe('DepenseController', () => {
     });
 
     describe('updateDescription', () => {
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 400
+         * lorsque l'ID fourni pour mettre à jour la description est invalide
+         */
         it('devrait retourner une erreur 400 si l\'ID est invalide', async () => {
             req.params = { id: 'invalid' };
             req.body = { description: 'Nouvelle description' };
@@ -355,6 +418,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur retourne une erreur 404
+         * lorsque la dépense à mettre à jour n'existe pas
+         */
         it('devrait retourner une erreur 404 si la dépense n\'existe pas', async () => {
             req.params = { id: '999' };
             req.body = { description: 'Nouvelle description' };
@@ -371,6 +438,10 @@ describe('DepenseController', () => {
             });
         });
         
+        /**
+         * Test : Vérifie que le contrôleur met à jour correctement la description
+         * d'une dépense existante avec des données valides
+         */
         it('devrait mettre à jour la description avec des données valides', async () => {
             req.params = { id: '1' };
             req.body = { description: 'Nouvelle description' };
@@ -393,6 +464,10 @@ describe('DepenseController', () => {
     });
 
     describe('updatePrice', () => {
+        /**
+         * Test : Vérifie que le contrôleur met à jour correctement le montant
+         * d'une dépense existante avec un montant valide
+         */
         it('devrait mettre à jour le prix avec un montant valide', async () => {
             req.params = { id: '1' };
             req.body = { montant: 150 };
@@ -415,6 +490,10 @@ describe('DepenseController', () => {
     });
 
     describe('updateCategory', () => {
+        /**
+         * Test : Vérifie que le contrôleur met à jour correctement la catégorie
+         * d'une dépense existante avec une valeur valide
+         */
         it('devrait mettre à jour la catégorie avec une valeur valide', async () => {
             req.params = { id: '1' };
             req.body = { categorie: 'Loisirs' };
@@ -437,6 +516,10 @@ describe('DepenseController', () => {
     });
 
     describe('deleteExpense', () => {
+        /**
+         * Test : Vérifie que le contrôleur supprime correctement (soft delete)
+         * une dépense existante avec un ID valide
+         */
         it('devrait supprimer une dépense avec un ID valide', async () => {
             req.params = { id: '1' };
             
@@ -459,6 +542,10 @@ describe('DepenseController', () => {
     });
 
     describe('restoreExpense', () => {
+        /**
+         * Test : Vérifie que le contrôleur restaure correctement
+         * une dépense précédemment supprimée avec un ID valide
+         */
         it('devrait restaurer une dépense avec un ID valide', async () => {
             req.params = { id: '1' };
             

@@ -3,6 +3,14 @@ import DepenseService from "../services/depenseService.js";
 import ValidationService from "../services/validationService.js";
 
 class DepenseController {
+
+    /**
+     * Récupère une dépense par son ID.
+     * @param {Express.Request} req - La requête HTTP.
+     * @param {Express.Response} res - La réponse HTTP contenant les données ou les erreurs.
+     * @returns {Promise<Object>} La réponse HTTP avec la dépense trouvée ou les erreurs.
+     */
+
     static async getById(req, res){
         try {
             const id = parseInt(req.params.id);
@@ -33,6 +41,13 @@ class DepenseController {
             });
         }
     }
+
+     /**
+     * Récupère toutes les dépenses avec possibilité d'ajouter des filtres.
+     * @param {Express.Request} req - La requête HTTP.
+     * @param {Express.Response} res - La réponse HTTP contenant les données ou les erreurs.
+     * @returns {Promise<Object>} La réponse HTTP avec les dépenses trouvées ou les erreurs.
+     */
 
     static async getAll(req, res) {
         try {
@@ -107,7 +122,7 @@ class DepenseController {
 
     /**
      * Récupère les données financières pour une période spécifique
-     * La logique de validation des dates est externalisée
+     * La logique de validation des dates est externalisée dans ValidationService
      * @param {Request} req - Requête Express
      * @param {Response} res - Réponse Express
      * @returns {Response} - Données financières pour la période spécifiée

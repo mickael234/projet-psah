@@ -52,11 +52,13 @@ class ValidationService {
         };
     }
     
+    
     /**
      * Formate les informations de période pour l'affichage
      * @param {Object} periode - Objet contenant les informations de période
      * @returns {Object} - Informations de période formatées
      */
+
     static formatPeriode(periode) {
         const debutFormate = new Date(periode.dateDebut).toLocaleDateString('fr-FR', {
             day: 'numeric', month: 'long', year: 'numeric'

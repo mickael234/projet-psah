@@ -43,7 +43,7 @@ jest.mock('../../src/middleware/auth.js', () => ({
 const app = express();
 app.use(express.json());
 
-// Définition des routes directement
+// Définition des routes
 app.get('/api/depenses', 
   (req, res, next) => mockAuthenticateJWT(req, res, next),
   (req, res, next) => mockCheckRole(["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"], req, res, next),
@@ -190,6 +190,9 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('GET /api/depenses', () => {
+    /**
+     * Test: Vérifie que les middlewares d'authentification et de contrôle des rôles sont correctement appelés
+     */
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app).get('/api/depenses');
       
@@ -200,6 +203,9 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Test: Vérifie que la réponse contient bien la liste des dépenses au format attendu
+     */
     it('devrait retourner la liste des dépenses', async () => {
       const res = await request(app).get('/api/depenses');
       
@@ -213,6 +219,9 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('GET /api/depenses/rapport', () => {
+    /**
+     * Test: Vérifie que les middlewares d'authentification et de contrôle des rôles sont correctement appelés
+     */
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app).get('/api/depenses/rapport?debut=2023-01-01&fin=2023-12-31');
       
@@ -222,6 +231,10 @@ describe('Routes de gestion des dépenses', () => {
       expect(mockGetFinancialDataByPeriod).toHaveBeenCalled();
       expect(res.status).toBe(200);
     });
+
+    /**
+     * Test: Vérifie que la réponse contient bien les données financières pour la période demandée
+     */
 
     it('devrait retourner des données financières pour une période donnée', async () => {
       const res = await request(app).get('/api/depenses/rapport?debut=2023-01-01&fin=2023-12-31');
@@ -237,6 +250,10 @@ describe('Routes de gestion des dépenses', () => {
       });
     });
     
+     /**
+     * Test: Vérifie que les paramètres de requête sont correctement transmis au contrôleur
+     */
+
     it('devrait transmettre les paramètres de requête au contrôleur', async () => {
       await request(app).get('/api/depenses/rapport?debut=2023-01-01&fin=2023-12-31');
       
@@ -248,6 +265,9 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('GET /api/depenses/rapport/export', () => {
+    /**
+     * Test: Vérifie que les middlewares d'authentification et les headers PDF sont correctement gérés
+     */
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app).get('/api/depenses/rapport/export?debut=2023-01-01&fin=2023-12-31');
       
@@ -258,7 +278,11 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.header['content-disposition']).toBe('attachment; filename=rapport-depenses.pdf');
       expect(res.header['content-type']).toContain('application/pdf');
     });
-    
+
+    /**
+     * Test: Vérifie que les paramètres de date sont bien transmis au contrôleur pour le PDF
+     */
+
     it('devrait transmettre les paramètres de requête au contrôleur', async () => {
       await request(app).get('/api/depenses/rapport/export?debut=2023-01-01&fin=2023-12-31');
       
@@ -267,9 +291,15 @@ describe('Routes de gestion des dépenses', () => {
       expect(req.query.debut).toBe('2023-01-01');
       expect(req.query.fin).toBe('2023-12-31');
     });
+
   });
 
   describe('GET /api/depenses/:id', () => {
+
+     /**
+     * Test: Vérifie que les middlewares d'authentification sont appelés pour l'accès à une dépense
+     */
+
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app).get('/api/depenses/1');
       
@@ -280,6 +310,9 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Test: Vérifie que la dépense demandée est correctement retournée avec la bonne structure
+     */
     it('devrait retourner la dépense demandée', async () => {
       const res = await request(app).get('/api/depenses/1');
       
@@ -288,6 +321,10 @@ describe('Routes de gestion des dépenses', () => {
         data: { id_depense: 1, description: 'Achat fournitures', montant: 150, categorie: 'fournitures' }
       });
     });
+
+    /**
+    * Test: Vérifie que l'ID de la dépense est bien transmis au contrôleur
+    */
     
     it('devrait transmettre l\'ID au contrôleur', async () => {
       await request(app).get('/api/depenses/1');
@@ -299,6 +336,11 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('POST /api/depenses', () => {
+
+    /**
+     * Test: Vérifie que les middlewares d'authentification sont appelés lors de la création
+     */
+
     it('devrait appeler le middleware d\'authentification', async () => {
       const depenseData = {
         description: 'Nouvelle dépense',
@@ -317,6 +359,11 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(201);
     });
 
+
+    /**
+     * Test: Vérifie qu'une nouvelle dépense est créée avec les données correctes
+     */
+
     it('devrait créer une nouvelle dépense', async () => {
       const depenseData = {
         description: 'Nouvelle dépense',
@@ -333,6 +380,10 @@ describe('Routes de gestion des dépenses', () => {
         data: { id_depense: 1, ...depenseData }
       });
     });
+
+     /**
+     * Test: Vérifie que les données de la nouvelle dépense sont bien transmises au contrôleur
+     */
     
     it('devrait transmettre les données au contrôleur', async () => {
       const depenseData = {
@@ -352,6 +403,11 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('PATCH /api/depenses/description/:id', () => {
+
+    /**
+     * Test: Vérifie que les middlewares d'authentification sont appelés pour la mise à jour de description
+     */
+
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app)
         .patch('/api/depenses/description/1')
@@ -364,6 +420,11 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(200);
     });
 
+
+    /**
+     * Test: Vérifie que la description de la dépense est correctement mise à jour
+     */
+
     it('devrait mettre à jour la description de la dépense', async () => {
       const res = await request(app)
         .patch('/api/depenses/description/1')
@@ -374,6 +435,10 @@ describe('Routes de gestion des dépenses', () => {
         data: { id_depense: 1, description: 'Description mise à jour' }
       });
     });
+
+    /**
+     * Test: Vérifie que l'ID et la nouvelle description sont correctement transmis au contrôleur
+     */
     
     it('devrait transmettre l\'ID et la nouvelle description au contrôleur', async () => {
       await request(app)
@@ -388,6 +453,11 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('PATCH /api/depenses/prix/:id', () => {
+
+    /**
+     * Test: Vérifie que les middlewares d'authentification sont appelés pour la mise à jour du montant
+     */
+
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app)
         .patch('/api/depenses/prix/1')
@@ -400,6 +470,10 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Test: Vérifie que le montant de la dépense est correctement mis à jour
+     */
+
     it('devrait mettre à jour le montant de la dépense', async () => {
       const res = await request(app)
         .patch('/api/depenses/prix/1')
@@ -410,6 +484,10 @@ describe('Routes de gestion des dépenses', () => {
         data: { id_depense: 1, montant: 300 }
       });
     });
+
+    /**
+     * Test: Vérifie que l'ID et le nouveau montant sont correctement transmis au contrôleur
+     */
     
     it('devrait transmettre l\'ID et le nouveau montant au contrôleur', async () => {
       await request(app)
@@ -424,6 +502,11 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('PATCH /api/depenses/categorie/:id', () => {
+
+    /**
+     * Test: Vérifie que les middlewares d'authentification sont appelés pour la mise à jour de catégorie
+     */
+
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app)
         .patch('/api/depenses/categorie/1')
@@ -436,6 +519,10 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Test: Vérifie que la catégorie de la dépense est correctement mise à jour
+     */
+
     it('devrait mettre à jour la catégorie de la dépense', async () => {
       const res = await request(app)
         .patch('/api/depenses/categorie/1')
@@ -446,6 +533,10 @@ describe('Routes de gestion des dépenses', () => {
         data: { id_depense: 1, categorie: 'entretien' }
       });
     });
+
+    /**
+     * Test: Vérifie que l'ID et la nouvelle catégorie sont correctement transmis au contrôleur
+     */
     
     it('devrait transmettre l\'ID et la nouvelle catégorie au contrôleur', async () => {
       await request(app)
@@ -460,6 +551,11 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('PATCH /api/depenses/restaurer/:id', () => {
+
+    /**
+     * Test: Vérifie que les middlewares d'authentification sont appelés pour la restauration de dépense
+     */
+
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app).patch('/api/depenses/restaurer/1');
       
@@ -470,6 +566,10 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Test: Vérifie que la restauration d'une dépense fonctionne correctement
+     */
+
     it('devrait restaurer une dépense supprimée', async () => {
       const res = await request(app).patch('/api/depenses/restaurer/1');
       
@@ -478,6 +578,10 @@ describe('Routes de gestion des dépenses', () => {
         message: 'Dépense restaurée avec succès'
       });
     });
+
+    /**
+     * Test: Vérifie que l'ID de la dépense à restaurer est bien transmis au contrôleur
+     */
     
     it('devrait transmettre l\'ID au contrôleur', async () => {
       await request(app).patch('/api/depenses/restaurer/1');
@@ -489,6 +593,11 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('PATCH /api/depenses/supprimer/:id', () => {
+
+    /**
+     * Test: Vérifie que les middlewares d'authentification sont appelés pour la suppression de dépense
+     */
+
     it('devrait appeler le middleware d\'authentification', async () => {
       const res = await request(app).patch('/api/depenses/supprimer/1');
       
@@ -499,6 +608,10 @@ describe('Routes de gestion des dépenses', () => {
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Test: Vérifie que la suppression logique d'une dépense fonctionne correctement
+     */
+
     it('devrait supprimer une dépense', async () => {
       const res = await request(app).patch('/api/depenses/supprimer/1');
       
@@ -508,6 +621,10 @@ describe('Routes de gestion des dépenses', () => {
       });
     });
     
+    /**
+     * Test: Vérifie que l'ID de la dépense à supprimer est bien transmis au contrôleur
+     */
+
     it('devrait transmettre l\'ID au contrôleur', async () => {
       await request(app).patch('/api/depenses/supprimer/1');
       
@@ -518,6 +635,11 @@ describe('Routes de gestion des dépenses', () => {
   });
 
   describe('Gestion des erreurs', () => {
+
+    /**
+     * Test: Vérifie que l'erreur d'authentification est correctement gérée
+     */
+
     it('devrait gérer l\'erreur d\'authentification', async () => {
       // Modification temporaire pour simuler une erreur d'authentification
       mockAuthenticateJWT.mockImplementationOnce((req, res, next) => {
@@ -535,6 +657,10 @@ describe('Routes de gestion des dépenses', () => {
         message: 'Authentification requise'
       });
     });
+
+    /**
+     * Test: Vérifie que l'erreur d'autorisation (rôle non autorisé) est correctement gérée
+     */
 
     it('devrait gérer l\'erreur de rôle non autorisé', async () => {
       // Authentification réussie mais checkRole échoue
@@ -554,6 +680,10 @@ describe('Routes de gestion des dépenses', () => {
         message: 'Accès non autorisé'
       });
     });
+
+    /**
+     * Test: Vérifie que l'erreur de ressource non trouvée est correctement gérée
+     */
 
     it('devrait gérer l\'erreur de ressource non trouvée', async () => {
       // Permettre l'authentification et le contrôle de rôle d'abord
@@ -575,6 +705,10 @@ describe('Routes de gestion des dépenses', () => {
         message: 'Dépense non trouvée'
       });
     });
+
+    /**
+     * Test: Vérifie que l'erreur de validation des données est correctement gérée
+     */
 
     it('devrait gérer l\'erreur de validation des données', async () => {
       // Permettre l'authentification et le contrôle de rôle d'abord
@@ -598,6 +732,10 @@ describe('Routes de gestion des dépenses', () => {
         message: 'Les champs description, montant et categorie sont requis'
       });
     });
+
+    /**
+     * Test: Vérifie que l'erreur interne du serveur est correctement gérée
+     */
 
     it('devrait gérer l\'erreur interne', async () => {
       // Permettre l'authentification et le contrôle de rôle d'abord

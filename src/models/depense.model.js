@@ -205,10 +205,10 @@ class DepenseModel {
                 totalDepenses,
                 solde,
                 depensesParCategorie: Object.fromEntries(
-                    depensesParCategorie.map(d => [d.categorie, d._sum.montant])
+                    depensesParCategorie.map(depense => [depense.categorie, depense._sum.montant])
                 ),
                 paiementsParMethode: Object.fromEntries(
-                    paiementsParMethode.map(p => [p.methode_paiement, p._sum.montant])
+                    paiementsParMethode.map(paiement => [paiement.methode_paiement, paiement._sum.montant])
                 )
             },
             
@@ -235,9 +235,7 @@ class DepenseModel {
 
     static async create(nouvelleDepense){
         return await prisma.depense.create({
-            data : {
-                nouvelleDepense
-            }
+            data : nouvelleDepense
         })
     }
 
