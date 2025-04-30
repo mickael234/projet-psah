@@ -8,6 +8,8 @@ import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+
+
 // Obtenir __dirname en ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,10 +22,11 @@ import reservationRoutes from './routes/reservationRoutes.js';
 import paiementRoutes from './routes/paiementRoutes.js';
 import clientRoutes from './routes/clientRoutes.js';
 import avisRoutes from './routes/avisRoutes.js';
+import reponseAvisRoutes from './routes/reponseAvisRoutes.js';
 import rapportRoutes from './routes/rapportFinancierRoutes.js';
 import factureRoutes from './routes/factureRoutes.js';
 
-//  Importer aussi tes routes à toi (ton travail)
+
 import favorisRoutes from './routes/favorisRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
@@ -91,6 +94,7 @@ app.use('/api/reservations', reservationRoutes);
 app.use('/api/paiements', paiementRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/avis', avisRoutes);
+app.use('/api/reponsesavis', reponseAvisRoutes);
 app.use('/api/rapports', rapportRoutes);
 app.use('/api/factures', factureRoutes);
 

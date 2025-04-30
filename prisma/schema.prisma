@@ -439,3 +439,18 @@ model Maintenance {
 
   @@index([id_chambre])
 }
+
+model ReponseAvis {
+  id_reponse_avis Int       @id @default(autoincrement())
+  commentaire      String
+  date_reponse     DateTime @default(now())
+  
+  // Liens vers Avis
+  id_avis          Int
+  avis             Avis     @relation(fields: [id_avis], references: [id_avis])
+
+  // Liens vers Utilisateur (personnel qui répond)
+  id_personnel     Int
+  personnel        Utilisateur @relation(fields: [id_personnel], references: [id_utilisateur])
+}
+
