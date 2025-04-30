@@ -30,6 +30,8 @@ import factureRoutes from './routes/factureRoutes.js';
 import favorisRoutes from './routes/favorisRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
+import reservationsServicesRoutes from './routes/reservationsServicesRoutes.js';
+
 
 // Import des fichiers Swagger séparés (de Hassan)
 import authRouteDoc from './docs/swagger.js';
@@ -101,6 +103,7 @@ app.use('/api/factures', factureRoutes);
 
 app.use('/api/favoris', favorisRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api', reservationsServicesRoutes);
 app.use('/api', maintenanceRoutes); // /api/hebergements/:id/maintenance
 
 // Route test
