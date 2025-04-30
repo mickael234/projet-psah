@@ -158,6 +158,38 @@ class PaiementController {
                 });
             }
 
+            if (total_echeances && total_echeances > 1) {
+                const montantParEcheance = Number(montant) / total_echeances;
+                const paiementsEcheances = [];
+              
+                for (let i = 0; i < total_echeances; i++) {
+                  const dateEcheance = new Date();
+                  dateEcheance.setMonth(dateEcheance.getMonth() + i); // Par ex., échéance mensuelle
+              
+                  paiementsEcheances.push({
+                    id_reservation: Number(id_reservation),
+                    montant: montantParEcheance,
+                    methode_paiement,
+                    date_transaction: i === 0 ? new Date() : null,
+                    date_echeance: dateEcheance,
+                    numero_echeance: i + 1,
+                    total_echeances,
+                    etat: i === 0 ? 'complete' : 'en_attente',
+                  });
+                }
+              
+                await prisma.paiement.createMany({
+                  data: paiementsEcheances
+                });
+              
+                return res.status(201).json({
+                  status: "OK",
+                  message: "Paiements échelonnés créés avec succès",
+                  data: paiementsEcheances
+                });
+            }
+              
+
             // Créer le paiement
             const paiement = await prisma.paiement.create({
                 data: {
