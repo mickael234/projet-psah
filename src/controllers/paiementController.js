@@ -1,9 +1,10 @@
 import PaiementModel from '../models/paiement.model.js';
 import prisma from '../config/prisma.js';
 import path from 'path';
-import { generateRapportPDF } from '../services/paiementService.js';
+import { generateRapportPDF } from '../services/paiement.service.js';
 import fs from 'fs';
 import { RoleMapper } from "../utils/roleMapper.js"
+import PaiementService from '../services/paiement.service.js';
 
 class PaiementController {
   /**
@@ -111,135 +112,67 @@ class PaiementController {
         }
     }
 
-  /**
-   * Crée un nouveau paiement
-   * @param {Object} req - Requête Express
-   * @param {Object} res - Réponse Express
-   */
-  static async createPaiement(req, res) {
-    try {
-      // Vérifier les permissions (gestion des paiements)
-      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
-        return res.status(403).json({
-          status: "ERROR",
-          message: "Vous n'avez pas les permissions nécessaires pour créer un paiement",
-        })
-      }
+    /**
+     * Crée un nouveau paiement
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+    static async createPaiement(req, res) {
 
-      const {
-        id_reservation,
-        montant,
-        methode_paiement,
-        reference_transaction,
-        etat = "en_attente",
-        numero_echeance,
-        total_echeances,
-        notes,
-      } = req.body
-
-            // Validation des données
+        try {
+            // Vérifier les permissions 
+            if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"])) {
+                return res.status(403).json({
+                status: "ERROR",
+                message: "Vous n'avez pas les permissions nécessaires pour créer un paiement",
+                });
+            }
+        
+            const {
+                id_reservation,
+                montant,
+                methode_paiement,
+                reference_transaction,
+                etat = "en_attente",
+                numero_echeance,
+                total_echeances,
+                notes,
+            } = req.body;
+        
+            // Validation basique des champs requis
             if (!id_reservation || !montant || !methode_paiement) {
                 return res.status(400).json({
-                    status: 'ERROR',
-                    message:
-                        'ID de réservation, montant et méthode de paiement sont requis'
+                status: "ERROR",
+                message: "ID de réservation, montant et méthode de paiement sont requis",
                 });
             }
-
-            // Vérifier si la réservation existe
-            const reservation = await prisma.reservation.findUnique({
-                where: { id_reservation: Number.parseInt(id_reservation) }
+        
+            // Appel direct au service
+            const resultats = await PaiementService.createPaiementsAvecEcheances({
+                id_reservation,
+                montant,
+                methode_paiement,
+                reference_transaction,
+                etat,
+                numero_echeance,
+                total_echeances,
+                notes,
             });
-
-            if (!reservation) {
-                return res.status(404).json({
-                    status: 'ERROR',
-                    message: 'Réservation non trouvée'
-                });
-            }
-
-            if (total_echeances && total_echeances > 1) {
-                const montantParEcheance = Number(montant) / total_echeances;
-                const paiementsEcheances = [];
-              
-                for (let i = 0; i < total_echeances; i++) {
-                  const dateEcheance = new Date();
-                  dateEcheance.setMonth(dateEcheance.getMonth() + i); // Par ex., échéance mensuelle
-              
-                  paiementsEcheances.push({
-                    id_reservation: Number(id_reservation),
-                    montant: montantParEcheance,
-                    methode_paiement,
-                    date_transaction: i === 0 ? new Date() : null,
-                    date_echeance: dateEcheance,
-                    numero_echeance: i + 1,
-                    total_echeances,
-                    etat: i === 0 ? 'complete' : 'en_attente',
-                  });
-                }
-              
-                await prisma.paiement.createMany({
-                  data: paiementsEcheances
-                });
-              
-                return res.status(201).json({
-                  status: "OK",
-                  message: "Paiements échelonnés créés avec succès",
-                  data: paiementsEcheances
-                });
-            }
-              
-
-            // Créer le paiement
-            const paiement = await prisma.paiement.create({
-                data: {
-                    id_reservation: Number.parseInt(id_reservation),
-                    montant: Number.parseFloat(montant),
-                    methode_paiement,
-                    date_transaction: new Date(),
-                    etat,
-                    reference_transaction,
-                    ...(numero_echeance
-                        ? { numero_echeance: Number.parseInt(numero_echeance) }
-                        : {}),
-                    ...(total_echeances
-                        ? { total_echeances: Number.parseInt(total_echeances) }
-                        : {}),
-                    ...(notes ? { notes } : {})
-                }
-            });
-
-            // Mettre à jour l'état de paiement de la réservation
-            const totalPaiements = await prisma.paiement.aggregate({
-                where: {
-                    id_reservation: Number.parseInt(id_reservation),
-                    etat: 'complete'
-                },
-                _sum: {
-                    montant: true
-                }
-            });
-
-            const totalPaye = totalPaiements._sum.montant || 0;
-            const etatPaiement =
-                totalPaye >= reservation.prix_total ? 'complete' : 'en_attente';
-
-            await prisma.reservation.update({
-                where: { id_reservation: Number.parseInt(id_reservation) },
-                data: { etat_paiement: etatPaiement }
-            });
-
+        
             res.status(201).json({
-                status: 'OK',
-                message: 'Paiement créé avec succès',
-                data: paiement
+                status: "OK",
+                message: total_echeances && total_echeances > 1 
+                ? "Paiements échelonnés créés avec succès" 
+                : "Paiement créé avec succès",
+                data: resultats
             });
+    
         } catch (error) {
             console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors de la création du paiement',
-                error: error.message
+            
+            res.status(error.message.includes("introuvable") ? 404 : 400).json({
+                status: "ERROR",
+                message: error.message || "Erreur lors de la création du paiement",
             });
         }
     }
@@ -600,6 +533,123 @@ class PaiementController {
             });
         }
     }
+
+    /**
+     * Notifie les paiements en retard
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+
+    static async getPaiementsEnRetard(req, res){
+        try {
+
+            if (!PaiementController.verifierPermissions(req, [
+                "COMPTABILITE",
+                "SUPER_ADMIN",
+                "ADMIN_GENERAL",
+                "RESPONSABLE_HEBERGEMENT",
+              ])) {
+              return res.status(403).json({
+                status: "FORBIDDEN",
+                message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
+              })
+            }
+
+            const paiementsEnRetard = PaiementModel.findPaiementsEnRetard();
+            if(!paiementsEnRetard || paiementsEnRetard.length <= 0){
+                return res.status(404).json({
+                    status: "RESSOURCE NON TROUVEE",
+                    message: `Aucun paiement en retard n'a été trouvé.`
+                })
+            }
+
+            // Envoyer notification au comptable
+            
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({
+                status: 'ERREUR INTERNE',
+                message: 'Une erreur est survenue lors de la récuperation des paiements en retards.',
+            });
+        }
+    }
+
+    /**
+     * Modifie uniquement l'état d'un paiement 
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+    static async updatePaiementStatus(req, res) {
+        try {
+        // Vérifier les permissions
+        if (!PaiementController.verifierPermissions(req, [
+            "COMPTABILITE", 
+            "SUPER_ADMIN", 
+            "ADMIN_GENERAL",
+            "RESPONSABLE_HEBERGEMENT"
+        ])) {
+            return res.status(403).json({
+            status: "ERROR",
+            message: "Vous n'avez pas les permissions nécessaires pour modifier un paiement",
+            });
+        }
+        
+        const { id} = req.params;
+        const { etat } = req.body;
+        
+        // Validation basique
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).json({
+            status: "ERROR",
+            message: "ID de paiement invalide",
+            });
+        }
+        
+        if (!etat || !['en_attente', 'complete', 'annule'].includes(etat)) {
+            return res.status(400).json({
+            status: "ERROR",
+            message: "État de paiement invalide. Valeurs acceptées: 'en_attente', 'complete', 'annule'",
+            });
+        }
+        
+        // Appel au service dédié pour mettre à jour uniquement l'état
+        const paiementMisAJour = await PaiementService.updateEtatPaiement(
+            Number(id), 
+            etat
+        );
+
+        //console.log("Etat is " + etat)
+
+       
+        
+        res.status(200).json({
+            status: "OK",
+            message: `État du paiement mis à jour avec succès: ${etat}`,
+            data: paiementMisAJour
+        });
+        } catch (error) {
+
+        console.error(error);
+        
+        // Gestion des codes d'erreur basée sur le message d'erreur
+        let statusCode = 500;
+        
+        if (error.message.includes("non trouvé")) {
+            statusCode = 404;
+        } else if (
+            error.message.includes("L'échéance précédente") || 
+            error.message.includes("n'est pas dans un échéancier")
+        ) {
+            statusCode = 400;
+        }
+        
+        res.status(statusCode).json({
+            status: "ERROR",
+            message: error.message || "Erreur lors de la mise à jour de l'état du paiement",
+        });
+        }
+    }
+      
 
 }
 

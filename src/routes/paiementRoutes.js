@@ -14,5 +14,6 @@ router.get('/:id', authenticateJWT, PaiementController.getPaiementById);
 router.post('/', authenticateJWT, PaiementController.createPaiement);
 router.put('/:id', authenticateJWT, PaiementController.updatePaiement);
 router.post('/:id/refund', authenticateJWT, PaiementController.refundPaiement);
+router.patch('/:id/status', authenticateJWT, PaiementController.updatePaiementStatus)
 
 export default router;
