@@ -159,7 +159,7 @@ class PaiementModel {
 
     /**
      * Recupère les paiements en retard
-     * @returns {Promise<Object>} - Paiements en retard
+     * @returns {Promise<Array>} - Paiements en retard
      */
 
     static async findPaiementsEnRetard(){
@@ -172,21 +172,19 @@ class PaiementModel {
                     lt: new Date()
                 }
             },
-            include : {
-                reservation : {
-                    select : {
-                        idReservation: true,
-                        include : {
-                            client : {
-                                select : {
-                                    prenom: true,
-                                    nom: true
-                                }
-                            }
-                        }
+            include: {
+                reservation: {
+                  select: {
+                    id_reservation: true,
+                    client: {
+                      select: {
+                        prenom: true,
+                        nom: true
+                      }
                     }
+                  }
                 }
-            }
+            }  
         })
     }
 

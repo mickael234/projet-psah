@@ -10,6 +10,7 @@ router.get(
     authenticateJWT,
     PaiementController.getPaiementsByReservation
 );
+router.get('/en-retard', authenticateJWT, PaiementController.getPaiementsEnRetard)
 router.get('/:id', authenticateJWT, PaiementController.getPaiementById);
 router.post('/', authenticateJWT, PaiementController.createPaiement);
 router.put('/:id', authenticateJWT, PaiementController.updatePaiement);

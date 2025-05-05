@@ -2,6 +2,10 @@ import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import prisma from '../../src/config/prisma.js';
 import PaiementModel from '../../src/models/paiement.model.js';
 import PaiementService from '../../src/services/paiement.service.js';
+import path from 'path';
+import fs from 'fs';
+import { genererContenuEmail } from '../../src/services/paiement.service.js';
+
 
 describe("Paiement Service", () => {
     beforeEach(() => {
@@ -165,4 +169,68 @@ describe("Paiement Service", () => {
         // Vérifier que updatePaiement n'a pas été appelé
         expect(PaiementModel.updatePaiement).not.toHaveBeenCalled();
     });
+
+    it('devrait retourner les paiements en retard', async () => {
+        const paiementsFictifs = [
+            { id_paiement: 1, montant: 100, date_echeance: '2024-01-01', client: { nom: 'Doe' } }
+        ];
+    
+        // Mock la méthode du model
+        jest.spyOn(PaiementModel, 'findPaiementsEnRetard').mockResolvedValue(paiementsFictifs);
+    
+        const result = await PaiementService.getPaiementsEnRetard();
+    
+        expect(PaiementModel.findPaiementsEnRetard).toHaveBeenCalled();
+        expect(result).toEqual(paiementsFictifs);
+    });
+    
+    describe('genererContenuEmail', () => {
+        let readFileSpy;
+        let pathJoinSpy;
+      
+        beforeEach(() => {
+          // Simule une date fixe pour les jours de retard
+          jest.useFakeTimers().setSystemTime(new Date('2024-05-05T00:00:00Z'));
+      
+          // Mock de path.join
+          pathJoinSpy = jest.spyOn(path, 'join').mockReturnValue('/fake/path/template.html');
+      
+          // Mock du contenu du fichier HTML
+          readFileSpy = jest.spyOn(fs, 'readFileSync').mockReturnValue(
+            '<html><body><table>{{rows}}</table></body></html>'
+          );
+        });
+      
+        afterEach(() => {
+          jest.restoreAllMocks();
+          jest.useRealTimers();
+        });
+      
+        it('devrait insérer les lignes des paiements dans le template HTML', () => {
+          const paiements = [
+            {
+              client: { nom: 'Dupont' },
+              montant: 100,
+              date_echeance: '2024-05-01'
+            },
+            {
+              client: { nom: 'Martin' },
+              montant: 200,
+              date_echeance: '2024-05-03'
+            }
+          ];
+      
+          const result = genererContenuEmail(paiements);
+      
+          // Assertions sur les mocks
+          expect(pathJoinSpy).toHaveBeenCalled();
+          expect(readFileSpy).toHaveBeenCalledWith('/fake/path/template.html', 'utf-8');
+      
+          // Vérifie que les lignes HTML sont bien générées
+          expect(result).toContain('<td>1</td>');
+          expect(result).toContain('Dupont');
+          expect(result).toContain('4 jours'); // 2024-05-01 -> 2024-05-05
+          expect(result).toContain('2 jours'); // 2024-05-03 -> 2024-05-05
+        });
+      });
 });

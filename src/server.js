@@ -42,6 +42,8 @@ import FactureController from './controllers/factureController.js';
 import rapportFinancierRouteDoc from "./docs/rapportFinancierRouteDoc.js"
 import depenseRoutes from './routes/depenseRoutes.js'
 
+import './utils/paiementCron.js';
+
 
 
 dotenv.config();

@@ -555,17 +555,27 @@ class PaiementController {
               })
             }
 
-            const paiementsEnRetard = PaiementModel.findPaiementsEnRetard();
+            // Récupération des paiements en retard depuis le service
+            const paiementsEnRetard = await PaiementService.getPaiementsEnRetard();
+
+            // Si aucun paiement n'a été trouvé
             if(!paiementsEnRetard || paiementsEnRetard.length <= 0){
                 return res.status(404).json({
                     status: "RESSOURCE NON TROUVEE",
-                    message: `Aucun paiement en retard n'a été trouvé.`
+                    message: `Aucun paiement en retard trouvé.`
                 })
             }
 
-            // Envoyer notification au comptable
-            
+            // Réponse HTTP OK avec les données
+            res.status(200).json({
+                status: "OK",
+                data: {
+                    paiementsEnRetard
+                }
+            }); 
+
         } catch (error) {
+
             console.error(error);
             res.status(500).json({
                 status: 'ERREUR INTERNE',
@@ -618,9 +628,6 @@ class PaiementController {
             etat
         );
 
-        //console.log("Etat is " + etat)
-
-       
         
         res.status(200).json({
             status: "OK",

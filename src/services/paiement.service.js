@@ -3,6 +3,11 @@ import fs from 'fs';
 import ReservationModel from "../models/reservation.model.js"
 import PaiementModel from "../models/paiement.model.js";
 import prisma from "../config/prisma.js";
+import nodemailer from 'nodemailer';
+import path from 'path';
+
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 class PaiementService {
 
@@ -142,6 +147,16 @@ class PaiementService {
         return paiementMisAJour;
         });
     }
+
+    /**
+     * Recupère les paiements en retard
+     */
+    
+    static async getPaiementsEnRetard() {
+        const paiementsEnRetard = await PaiementModel.findPaiementsEnRetard();
+        return paiementsEnRetard;
+    }
+      
       
 }
 
@@ -185,5 +200,84 @@ export function generateRapportPDF(transactions, total, outputPath){
 
     doc.end();
 }
+
+/**
+ * Génère le contenu HTML de l'email à partir d'un template et des paiements en retard.
+ *
+ * @param {Array<Object>} paiements - Liste des paiements en retard.
+ * @returns {string} - Contenu HTML prêt à être inséré dans l'email.
+ */
+export function genererContenuEmail(paiements) {
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+
+    const templatePath = path.join(__dirname, 'utils', 'paiements-retard-template.html');
+    let template = fs.readFileSync(templatePath, 'utf-8');
+  
+    const lignes = paiements.map((p, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${p.client.nom}</td>
+        <td>${p.montant} €</td>
+        <td>${p.date_echeance}</td>
+        <td>${calculerRetard(p.date_echeance)} jours</td>
+      </tr>
+    `).join('');
+  
+    template = template.replace('{{rows}}', lignes);
+  
+    return template;
+}
+  
+/**
+ * Calcule le nombre de jours de retard entre la date d’échéance et aujourd’hui.
+ *
+ * @param {string} dateEcheanceStr - Date d’échéance (au format ISO ou YYYY-MM-DD).
+ * @returns {number} - Nombre de jours de retard (0 si la date est future ou aujourd’hui).
+ */
+export function calculerRetard(dateEcheanceStr) {
+    const aujourdHui = new Date();
+    const dateEcheance = new Date(dateEcheanceStr);
+    const diffMs = aujourdHui - dateEcheance;
+    const diffJours = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return diffJours > 0 ? diffJours : 0;
+}
+
+// Transporteur SMTP configuré pour l'envoi des emails
+export const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+  
+/**
+ * Envoie un email via le service SMTP configuré.
+ *
+ * @param {string} to - Adresse email du destinataire.
+ * @param {string} subject - Sujet de l’email.
+ * @param {string} html - Contenu HTML du corps du mail.
+ * @returns {void}
+ */
+export function sendEmail(to, subject, html) {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        html
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+        console.error('Erreur lors de l\'envoi :', error);
+        } else {
+        console.log('Email envoyé :', info.response);
+        }
+    });
+}
+  
+
 
 export default PaiementService;
