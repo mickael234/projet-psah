@@ -773,24 +773,67 @@ describe('getPaiementsEnRetard', () => {
         
         // Vérifications
         expect(PaiementModel.findPaiementsEnRetard).toHaveBeenCalled();
-        // Étant donné que la méthode semble incomplète dans le code source,
-        // nous ne pouvons pas tester la réponse exacte attendue
     });
     
-    /*it('devrait gérer le cas où aucun paiement n\'est en retard', async () => {
-        // Configuration du mock pour retourner une liste vide
-        PaiementModel.findPaiementsEnRetard = jest.fn().mockResolvedValue([]);
-        
-        // Exécution de la méthode
+
+    it('devrait retourner 403 si l\'utilisateur n\'a pas les permissions', async () => {
+        jest.spyOn(PaiementController, 'verifierPermissions').mockReturnValue(false);
+    
         await PaiementController.getPaiementsEnRetard(req, res);
-        
-        // Vérifications d'une réponse 404 attendue
+    
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(res.json).toHaveBeenCalledWith({
+          status: 'FORBIDDEN',
+          message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements"
+        });
+    });
+    
+    it('devrait retourner 404 si aucun paiement en retard trouvé', async () => {
+        jest.spyOn(PaiementController, 'verifierPermissions').mockReturnValue(true);
+        jest.spyOn(PaiementService, 'getPaiementsEnRetard').mockResolvedValue([]);
+    
+        await PaiementController.getPaiementsEnRetard(req, res);
+    
         expect(res.status).toHaveBeenCalledWith(404);
         expect(res.json).toHaveBeenCalledWith({
-            status: "RESSOURCE NON TROUVEE",
-            message: "Aucun paiement en retard n'a été trouvé."
+          status: 'RESSOURCE NON TROUVEE',
+          message: 'Aucun paiement en retard trouvé.'
         });
-    });*/
+    });
+    
+    it('devrait retourner 200 avec la liste des paiements en retard', async () => {
+        const paiementsMock = [
+          { id_paiement: 1, client: { nom: 'Toto' }, montant: 100 }
+        ];
+    
+        jest.spyOn(PaiementController, 'verifierPermissions').mockReturnValue(true);
+        jest.spyOn(PaiementService, 'getPaiementsEnRetard').mockResolvedValue(paiementsMock);
+    
+        await PaiementController.getPaiementsEnRetard(req, res);
+    
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({
+          status: 'OK',
+          data: {
+            paiementsEnRetard: paiementsMock
+          }
+        });
+    });
+    
+    it('devrait retourner 500 en cas d\'erreur inconnue', async () => {
+        jest.spyOn(PaiementController, 'verifierPermissions').mockReturnValue(true);
+        jest.spyOn(PaiementService, 'getPaiementsEnRetard').mockImplementation(() => {
+          throw new Error('Erreur test');
+        });
+    
+        await PaiementController.getPaiementsEnRetard(req, res);
+    
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({
+          status: 'ERREUR INTERNE',
+          message: 'Une erreur est survenue lors de la récuperation des paiements en retards.',
+        });
+    });
 });
 
 // Tests pour la méthode updatePaiementStatus

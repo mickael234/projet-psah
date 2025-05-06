@@ -1,64 +1,29 @@
-import PaiementModel from '../models/paiement.model.js';
-import prisma from '../config/prisma.js';
-import path from 'path';
-import { generateRapportPDF } from '../services/paiement.service.js';
-import fs from 'fs';
-import { RoleMapper } from "../utils/roleMapper.js"
 import PaiementService from '../services/paiement.service.js';
+import fs from 'fs';
 
 class PaiementController {
-  /**
-   * Vérifie si l'utilisateur a les permissions nécessaires
-   * @param {Object} req - Requête Express
-   * @param {Array} rolesAutorises - Rôles autorisés
-   * @returns {boolean} - L'utilisateur a-t-il les permissions
-   */
-  static verifierPermissions(req, rolesAutorises) {
-    if (!req.user) return false
-
-    // Utiliser le service RoleMapper pour vérifier les permissions
-    return RoleMapper.hasAuthorizedRole(req.user, rolesAutorises)
-  }
-  /**
-   * Récupère tous les paiements d'une réservation
-   * @param {Object} req - Requête Express
-   * @param {Object} res - Réponse Express
-   */
-  static async getPaiementsByReservation(req, res) {
-    try {
-      // Vérifier les permissions (consultation des paiements)
-      if (
-        !PaiementController.verifierPermissions(req, [
-          "COMPTABILITE",
-          "SUPER_ADMIN",
-          "ADMIN_GENERAL",
-          "RESPONSABLE_HEBERGEMENT",
-        ])
-      ) {
-        return res.status(403).json({
-          status: "ERROR",
-          message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
-        })
-      }
-      const { id } = req.params
-
-            const paiements = await prisma.paiement.findMany({
-                where: { id_reservation: Number.parseInt(id) },
-                orderBy: { date_transaction: 'desc' }
-            });
-
+  
+    /**
+     * Récupère tous les paiements d'une réservation
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+    static async getPaiementsByReservation(req, res) {
+        try {
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
+            const { id } = req.params;
+            
+            const paiements = await PaiementService.getPaiementsByReservation(id);
+            
             res.status(200).json({
                 status: 'OK',
                 message: 'Paiements récupérés avec succès',
                 data: paiements
             });
         } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors de la récupération des paiements',
-                error: error.message
-            });
+            this.handleError(error, res);
         }
     }
 
@@ -69,48 +34,22 @@ class PaiementController {
    */
   static async getPaiementById(req, res) {
     try {
-      // Vérifier les permissions (consultation des paiements)
-      if (
-        !PaiementController.verifierPermissions(req, [
-          "COMPTABILITE",
-          "SUPER_ADMIN",
-          "ADMIN_GENERAL",
-          "RESPONSABLE_HEBERGEMENT",
-        ])
-      ) {
-        return res.status(403).json({
-          status: "ERROR",
-          message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
-        })
-      }
-
-      const { id } = req.params
-
-            const paiement = await prisma.paiement.findUnique({
-                where: { id_paiement: Number.parseInt(id) }
-            });
-
-            if (!paiement) {
-                return res.status(404).json({
-                    status: 'ERROR',
-                    message: 'Paiement non trouvé'
-                });
-            }
-
-            res.status(200).json({
-                status: 'OK',
-                message: 'Paiement récupéré avec succès',
-                data: paiement
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors de la récupération du paiement',
-                error: error.message
-            });
-        }
+        // Vérifier les permissions
+        PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
+        const { id } = req.params;
+        
+        const paiement = await PaiementService.getById(null, id);
+        
+        res.status(200).json({
+            status: 'OK',
+            message: 'Paiement récupéré avec succès',
+            data: paiement
+        });
+    } catch (error) {
+        this.handleError(error, res);
     }
+  }
 
     /**
      * Crée un nouveau paiement
@@ -118,16 +57,10 @@ class PaiementController {
      * @param {Object} res - Réponse Express
      */
     static async createPaiement(req, res) {
-
         try {
-            // Vérifier les permissions 
-            if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"])) {
-                return res.status(403).json({
-                status: "ERROR",
-                message: "Vous n'avez pas les permissions nécessaires pour créer un paiement",
-                });
-            }
-        
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
             const {
                 id_reservation,
                 montant,
@@ -138,16 +71,7 @@ class PaiementController {
                 total_echeances,
                 notes,
             } = req.body;
-        
-            // Validation basique des champs requis
-            if (!id_reservation || !montant || !methode_paiement) {
-                return res.status(400).json({
-                status: "ERROR",
-                message: "ID de réservation, montant et méthode de paiement sont requis",
-                });
-            }
-        
-            // Appel direct au service
+            
             const resultats = await PaiementService.createPaiementsAvecEcheances({
                 id_reservation,
                 montant,
@@ -158,22 +82,16 @@ class PaiementController {
                 total_echeances,
                 notes,
             });
-        
+            
             res.status(201).json({
                 status: "OK",
                 message: total_echeances && total_echeances > 1 
-                ? "Paiements échelonnés créés avec succès" 
-                : "Paiement créé avec succès",
+                    ? "Paiements échelonnés créés avec succès" 
+                    : "Paiement créé avec succès",
                 data: resultats
             });
-    
         } catch (error) {
-            console.error(error);
-            
-            res.status(error.message.includes("introuvable") ? 404 : 400).json({
-                status: "ERROR",
-                message: error.message || "Erreur lors de la création du paiement",
-            });
+            this.handleError(error, res);
         }
     }
 
@@ -184,81 +102,23 @@ class PaiementController {
    */
   static async updatePaiement(req, res) {
     try {
-      // Vérifier les permissions (gestion des paiements)
-      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
-        return res.status(403).json({
-          status: "ERROR",
-          message: "Vous n'avez pas les permissions nécessaires pour modifier un paiement",
-        })
-      }
-
-      const { id } = req.params
-      const { etat, reference_transaction, notes } = req.body
-
-            // Vérifier si le paiement existe
-            const existingPaiement = await prisma.paiement.findUnique({
-                where: { id_paiement: Number.parseInt(id) }
-            });
-
-            if (!existingPaiement) {
-                return res.status(404).json({
-                    status: 'ERROR',
-                    message: 'Paiement non trouvé'
-                });
-            }
-
-            // Mettre à jour le paiement
-            const paiement = await prisma.paiement.update({
-                where: { id_paiement: Number.parseInt(id) },
-                data: {
-                    ...(etat ? { etat } : {}),
-                    ...(reference_transaction ? { reference_transaction } : {}),
-                    ...(notes ? { notes } : {})
-                }
-            });
-
-            // Si l'état du paiement a changé, mettre à jour l'état de paiement de la réservation
-            if (etat && etat !== existingPaiement.etat) {
-                const totalPaiements = await prisma.paiement.aggregate({
-                    where: {
-                        id_reservation: existingPaiement.id_reservation,
-                        etat: 'complete'
-                    },
-                    _sum: {
-                        montant: true
-                    }
-                });
-
-                const reservation = await prisma.reservation.findUnique({
-                    where: { id_reservation: existingPaiement.id_reservation }
-                });
-
-                const totalPaye = totalPaiements._sum.montant || 0;
-                const etatPaiement =
-                    totalPaye >= reservation.prix_total
-                        ? 'complete'
-                        : 'en_attente';
-
-                await prisma.reservation.update({
-                    where: { id_reservation: existingPaiement.id_reservation },
-                    data: { etat_paiement: etatPaiement }
-                });
-            }
-
-            res.status(200).json({
-                status: 'OK',
-                message: 'Paiement mis à jour avec succès',
-                data: paiement
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors de la mise à jour du paiement',
-                error: error.message
-            });
-        }
+        // Vérifier les permissions
+        PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"]);
+            
+        const { id } = req.params;
+        const updateData = req.body;
+        
+        const paiement = await PaiementService.updatePaiement(id, updateData);
+        
+        res.status(200).json({
+            status: 'OK',
+            message: 'Paiement mis à jour avec succès',
+            data: paiement
+        });
+    } catch (error) {
+        this.handleError(error, res);
     }
+  }
 
   /**
    * Rembourse un paiement
@@ -267,160 +127,47 @@ class PaiementController {
    */
   static async refundPaiement(req, res) {
     try {
-      // Vérifier les permissions (gestion des paiements)
-      if (!PaiementController.verifierPermissions(req, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"])) {
-        return res.status(403).json({
-          status: "ERROR",
-          message: "Vous n'avez pas les permissions nécessaires pour rembourser un paiement",
-        })
-      }
-
-      const { id } = req.params
-      const { raison } = req.body
-
-            // Vérifier si le paiement existe
-            const existingPaiement = await prisma.paiement.findUnique({
-                where: { id_paiement: Number.parseInt(id) }
-            });
-
-            if (!existingPaiement) {
-                return res.status(404).json({
-                    status: 'ERROR',
-                    message: 'Paiement non trouvé'
-                });
-            }
-
-            // Mettre à jour le paiement avec le champ notes
-            const paiement = await prisma.paiement.update({
-                where: { id_paiement: Number.parseInt(id) },
-                data: {
-                    etat: 'rembourse',
-                    notes: raison || 'Remboursement sans raison spécifiée'
-                }
-            });
-
-            // Mettre à jour l'état de paiement de la réservation
-            const totalPaiements = await prisma.paiement.aggregate({
-                where: {
-                    id_reservation: existingPaiement.id_reservation,
-                    etat: 'complete'
-                },
-                _sum: {
-                    montant: true
-                }
-            });
-
-            const reservation = await prisma.reservation.findUnique({
-                where: { id_reservation: existingPaiement.id_reservation }
-            });
-
-            const totalPaye = totalPaiements._sum.montant || 0;
-            const etatPaiement =
-                totalPaye >= reservation.prix_total ? 'complete' : 'en_attente';
-
-            await prisma.reservation.update({
-                where: { id_reservation: existingPaiement.id_reservation },
-                data: { etat_paiement: etatPaiement }
-            });
-
-            // Vérification si l'utilisateur existe avant d'ajouter une entrée dans le journal
-            let userId = 1; // Valeur par défaut
-
-            if (req.user && req.user.userId) {
-                // Vérification si l'utilisateur existe dans la base de données
-                const utilisateur = await prisma.utilisateur.findUnique({
-                    where: { id_utilisateur: req.user.userId }
-                });
-
-                if (utilisateur) {
-                    userId = req.user.userId;
-                }
-            }
-
-            // Ajout d'une entrée dans le journal des modifications
-            await prisma.journalModifications.create({
-                data: {
-                    id_utilisateur: userId, // Utilisez l'ID vérifié
-                    type_ressource: 'paiement',
-                    id_ressource: Number.parseInt(id),
-                    action: 'remboursement',
-                    details: {
-                        raison: raison || 'Remboursement sans raison spécifiée',
-                        montant: existingPaiement.montant.toString(),
-                        date: new Date().toISOString()
-                    }
-                }
-            });
-
-            res.status(200).json({
-                status: 'OK',
-                message: 'Paiement remboursé avec succès',
-                data: paiement
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERROR',
-                message: 'Erreur lors du remboursement du paiement',
-                error: error.message
-            });
-        }
+        // Vérifier les permissions
+        PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"]);
+            
+        const { id } = req.params;
+        const { raison } = req.body;
+        const userId = req.user ? req.user.userId : null;
+        
+        const paiement = await PaiementService.refundPaiement(id, { raison }, userId);
+        
+        res.status(200).json({
+            status: 'OK',
+            message: 'Paiement remboursé avec succès',
+            data: paiement
+        });
+    } catch (error) {
+        this.handleError(error, res);
     }
+  }
 
     /**
      * Génère un rapport financier selon la periode demandée
      * @param {Object} req - Requête Express
      * @param {Object} res - Réponse Express
      */
-
-    static async generateRapportFinancier(req, res){
-
+    static async generateRapportFinancier(req, res) {
         try {
-
-            if (!PaiementController.verifierPermissions(req, [
-                  "COMPTABILITE",
-                  "SUPER_ADMIN",
-                  "ADMIN_GENERAL",
-                  "RESPONSABLE_HEBERGEMENT",
-                ])) {
-                return res.status(403).json({
-                  status: "FORBIDDEN",
-                  message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
-                })
-            }
-
-            const {debut, fin} = req.query;
-
-            // Vérifie que les dates sont bien passées en paramètres
-            if(!debut || !fin){
-                return res.status(400).json({
-                    status: "MAUVAISE DEMANDE",
-                    message: "Les dates pour déterminer la période sont requises."
-                })
-            }
-
-            const result = await PaiementModel.getRapportFinancier(debut, fin);
-            if(result.totalTransactions <= 0){
-                return res.status(404).json({
-                    status: "RESSOURCE NON TROUVEE",
-                    message: `Aucune transaction n'a été trouvée pour la période allant du : ${debut} au ${fin}`
-                })
-            }
-
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
+            const { debut, fin } = req.query;
+            
+            const result = await PaiementService.getRapportFinancier(debut, fin);
+            
             res.status(200).json({
                 status: "OK",
                 data: result.data,
                 totalMontant: result.totalMontant
             });
-                
         } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERREUR INTERNE',
-                message: 'Une erreur est survenue lors de la génération du rapport financier.',
-            });
+            this.handleError(error, res);
         }
-
     }
 
     /**
@@ -428,159 +175,78 @@ class PaiementController {
      * @param {Object} req - Requête Express
      * @param {Object} res - Réponse Express
      */
-
-    static async exportRapportFinancierToPDF(req, res){
-        const { debut, fin } = req.query;
-
-        // Vérifie que les dates sont bien passées en paramètres
-        if(!debut || !fin){
-            return res.status(400).json({
-                status: "MAUVAISE DEMANDE",
-                message: "Les dates de début et de fin sont requises."
-            })
-        }
-
+    static async exportRapportFinancierToPDF(req, res) {
         try {
-
-            if (!PaiementController.verifierPermissions(req, [
-                  "COMPTABILITE",
-                  "SUPER_ADMIN",
-                  "ADMIN_GENERAL",
-                  "RESPONSABLE_HEBERGEMENT",
-                ])) {
-                return res.status(403).json({
-                  status: "FORBIDDEN",
-                  message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
-                })
-            }
-
-            const {data, totalMontant} = await PaiementModel.getRapportFinancier(debut, fin);
-
-            if(totalMontant <= 0){
-                return res.status(404).json({
-                    status: "RESSOURCE NON TROUVEE",
-                    message: `Aucune transaction n'a été trouvée pour la période allant du : ${debut} au ${fin}`
-                })
-            }
-
-            // Génère un chemin temporaire pour le PDF
-            const filePath = path.resolve(`rapport-financier-${Date.now()}.pdf`);
-
-            // Génère le PDF avec les données spécifiées
-            generateRapportPDF(data, totalMontant, filePath);
-
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
+            const { debut, fin } = req.query;
+            
+            // Génère le PDF et obtient le chemin du fichier
+            const filePath = await PaiementService.exportRapportFinancierToPDF(debut, fin);
+            
             // Pause de 500ms pour s'assurer que le fichier est bien écrit avant envoi
             setTimeout(() => {
                 res.download(filePath, (err) => {
-                  if (err) {
-                    console.error('Erreur lors du téléchargement du fichier :', err);
-                    res.status(500).json({
-                        status: 'ERREUR INTERNE',
-                        message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.',
-                    });
-                  } else {
-                    fs.unlinkSync(filePath); // Supprime le fichier temporaire après téléchargement
-                  }
+                    if (err) {
+                        console.error('Erreur lors du téléchargement du fichier :', err);
+                        res.status(500).json({
+                            status: 'ERREUR INTERNE',
+                            message: 'Une erreur est survenue lors du téléchargement du rapport PDF.',
+                        });
+                    } else {
+                        fs.unlinkSync(filePath); // Supprime le fichier temporaire après téléchargement
+                    }
                 });
             }, 500);
-
-
         } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERREUR INTERNE',
-                message: 'Une erreur est survenue lors de la génération du rapport financier au format PDF.',
-            });
-            
+            this.handleError(error, res);
         }
     }
-
-
 
     /**
      * Retourne le revenu total
      * @param {Object} req - Requête Express
      * @param {Object} res - Réponse Express
      */
-
-    static async getRevenuTotal(req, res){
+    static async getRevenuTotal(req, res) {
         try {
-            if (!PaiementController.verifierPermissions(req, [
-                  "COMPTABILITE",
-                  "SUPER_ADMIN",
-                  "ADMIN_GENERAL",
-                  "RESPONSABLE_HEBERGEMENT",
-                ])) {
-                return res.status(403).json({
-                  status: "FORBIDDEN",
-                  message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
-                })
-            }
-            const revenuTotal = await PaiementModel.getRevenuTotal();
-
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
+            const revenuTotal = await PaiementService.getRevenuTotal();
+            
             res.status(200).json({
                 status: "OK",
                 data: {
                     revenuTotal
                 }
             });
-            
         } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: 'ERREUR INTERNE',
-                message: 'Une erreur est survenue lors du calcul du revenu total.',
-            });
+            this.handleError(error, res);
         }
     }
 
     /**
-     * Notifie les paiements en retard
+     * Récupère les paiements en retard
      * @param {Object} req - Requête Express
      * @param {Object} res - Réponse Express
      */
-
-    static async getPaiementsEnRetard(req, res){
+    static async getPaiementsEnRetard(req, res) {
         try {
-
-            if (!PaiementController.verifierPermissions(req, [
-                "COMPTABILITE",
-                "SUPER_ADMIN",
-                "ADMIN_GENERAL",
-                "RESPONSABLE_HEBERGEMENT",
-              ])) {
-              return res.status(403).json({
-                status: "FORBIDDEN",
-                message: "Vous n'avez pas les permissions nécessaires pour consulter les paiements",
-              })
-            }
-
-            // Récupération des paiements en retard depuis le service
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
             const paiementsEnRetard = await PaiementService.getPaiementsEnRetard();
-
-            // Si aucun paiement n'a été trouvé
-            if(!paiementsEnRetard || paiementsEnRetard.length <= 0){
-                return res.status(404).json({
-                    status: "RESSOURCE NON TROUVEE",
-                    message: `Aucun paiement en retard trouvé.`
-                })
-            }
-
-            // Réponse HTTP OK avec les données
+            
             res.status(200).json({
                 status: "OK",
                 data: {
                     paiementsEnRetard
                 }
-            }); 
-
-        } catch (error) {
-
-            console.error(error);
-            res.status(500).json({
-                status: 'ERREUR INTERNE',
-                message: 'Une erreur est survenue lors de la récuperation des paiements en retards.',
             });
+        } catch (error) {
+            this.handleError(error, res);
         }
     }
 
@@ -591,73 +257,77 @@ class PaiementController {
      */
     static async updatePaiementStatus(req, res) {
         try {
-        // Vérifier les permissions
-        if (!PaiementController.verifierPermissions(req, [
-            "COMPTABILITE", 
-            "SUPER_ADMIN", 
-            "ADMIN_GENERAL",
-            "RESPONSABLE_HEBERGEMENT"
-        ])) {
-            return res.status(403).json({
-            status: "ERROR",
-            message: "Vous n'avez pas les permissions nécessaires pour modifier un paiement",
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            
+            const { id } = req.params;
+            const { etat } = req.body;
+            
+            const paiementMisAJour = await PaiementService.updateEtatPaiement(id, etat);
+            
+            res.status(200).json({
+                status: "OK",
+                message: `État du paiement mis à jour avec succès: ${etat}`,
+                data: paiementMisAJour
             });
-        }
-        
-        const { id} = req.params;
-        const { etat } = req.body;
-        
-        // Validation basique
-        if (!id || isNaN(Number(id))) {
-            return res.status(400).json({
-            status: "ERROR",
-            message: "ID de paiement invalide",
-            });
-        }
-        
-        if (!etat || !['en_attente', 'complete', 'annule'].includes(etat)) {
-            return res.status(400).json({
-            status: "ERROR",
-            message: "État de paiement invalide. Valeurs acceptées: 'en_attente', 'complete', 'annule'",
-            });
-        }
-        
-        // Appel au service dédié pour mettre à jour uniquement l'état
-        const paiementMisAJour = await PaiementService.updateEtatPaiement(
-            Number(id), 
-            etat
-        );
-
-        
-        res.status(200).json({
-            status: "OK",
-            message: `État du paiement mis à jour avec succès: ${etat}`,
-            data: paiementMisAJour
-        });
         } catch (error) {
-
-        console.error(error);
-        
-        // Gestion des codes d'erreur basée sur le message d'erreur
-        let statusCode = 500;
-        
-        if (error.message.includes("non trouvé")) {
-            statusCode = 404;
-        } else if (
-            error.message.includes("L'échéance précédente") || 
-            error.message.includes("n'est pas dans un échéancier")
-        ) {
-            statusCode = 400;
-        }
-        
-        res.status(statusCode).json({
-            status: "ERROR",
-            message: error.message || "Erreur lors de la mise à jour de l'état du paiement",
-        });
+            this.handleError(error, res);
         }
     }
-      
-
+    
+    /**
+     * Envoie un email de notification pour les paiements en retard
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+    static async envoyerNotificationPaiementsEnRetard(req, res) {
+        try {
+            // Vérifier les permissions
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL"]);
+            
+            const { email } = req.body;
+            
+            const envoye = await PaiementService.envoyerNotificationPaiementsEnRetard(email);
+            
+            if (envoye) {
+                res.status(200).json({
+                    status: "OK",
+                    message: "Notification envoyée avec succès",
+                });
+            } else {
+                res.status(200).json({
+                    status: "OK",
+                    message: "Aucun paiement en retard à notifier",
+                });
+            }
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    }
+    
+    /**
+     * Gère les erreurs et envoie une réponse appropriée
+     * @param {Error} error - Erreur à gérer
+     * @param {Object} res - Réponse Express
+     */
+    static handleError(error, res) {
+        console.error(error);
+        
+        // Si c'est une erreur API personnalisée avec un statut
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                status: error.errorCode || "ERROR",
+                message: error.message
+            });
+        }
+        
+        // Erreur par défaut
+        return res.status(500).json({
+            status: "ERREUR INTERNE",
+            message: "Une erreur interne est survenue",
+            error: error.message
+        });
+    }
 }
 
 export default PaiementController;

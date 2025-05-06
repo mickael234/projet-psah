@@ -20,6 +20,7 @@ class PaiementModel {
         })
     }
 
+
     /**
      * Récupère les paiements d'une réservation
      * @param {number} idReservation - ID de la réservation
@@ -30,6 +31,7 @@ class PaiementModel {
             where: { id_reservation: idReservation }
         });
     }
+
 
     /**
      * Calcule le total des paiements d'une réservation
@@ -50,6 +52,7 @@ class PaiementModel {
             .then((result) => result._sum.montant || 0);
     }
 
+
     /**
      * Vérifie si une réservation est entièrement payée
      * @param {number} idReservation - ID de la réservation
@@ -64,6 +67,7 @@ class PaiementModel {
 
         return totalPaye >= reservation.prix_total;
     }
+
 
     /**
      * Génère un rapport financier en fonction d'une période
@@ -142,6 +146,7 @@ class PaiementModel {
         };
     }
 
+
     /**
      * Calcule le revenu total 
      * @returns {Promise<number>} - Revenu total
@@ -156,6 +161,7 @@ class PaiementModel {
 
         return revenuTotal._sum.montant;
     }
+
 
     /**
      * Recupère les paiements en retard
@@ -187,6 +193,7 @@ class PaiementModel {
             }  
         })
     }
+
 
     /**
      * Crée un ou plusieurs paiements avec gestion des échéances.
@@ -258,6 +265,7 @@ class PaiementModel {
         });
     }
   
+
   
     /**
      * Met à jour l’état de paiement d’une réservation.
@@ -274,29 +282,27 @@ class PaiementModel {
                     montant: true
                 }
             });
-            console.log("Total paiements:", totalPaiements);
     
             const reservation = await transaction.reservation.findUnique({
                 where: { id_reservation: Number(id_reservation) }
             });
-            console.log("Reservation:", reservation);
+            
     
             const totalPaye = totalPaiements._sum.montant || 0;
             const nouvelEtat = totalPaye >= reservation.prix_total ? "complete" : "en_attente";
-            console.log("nouvelEtat:", nouvelEtat);
-    
-            console.log("Avant update");
+            
             await transaction.reservation.update({
                 where: { id_reservation: Number(id_reservation) },
                 data: { etat_paiement: nouvelEtat }
             });
-            console.log("Après update");
+            
         } catch (err) {
             console.error("Erreur dans mettreAJourEtatPaiement:", err);
             throw err;
         }
     }
   
+
   
     /**
      * Met à jour un paiement unique dans un échéancier
@@ -350,6 +356,7 @@ class PaiementModel {
     
         return paiementMisAJour;
     }
+    
 
     static async findEcheancePrecedente(transaction, id_reservation, numero_echeance) {
         return await transaction.paiement.findFirst({
@@ -360,7 +367,7 @@ class PaiementModel {
         });
     }
       
-      // Mettre à jour un paiement
+    // Mettre à jour un paiement
     static async updatePaiement(transaction, id_paiement, data) {
         return await transaction.paiement.update({
           where: { id_paiement },
