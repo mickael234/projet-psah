@@ -32,7 +32,10 @@ import profileRouteDoc from './docs/profileRouteDoc.js';
 import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
-import { reponseAvisRouteDoc } from './docs/reponseAvisRouteDoc.js'; // ✅ AJOUTÉ
+import { reponseAvisRouteDoc } from './docs/reponseAvisRouteDoc.js'; 
+import ajoutServiceReservationRouteDoc from './docs/ajoutServiceReservationRouteDoc.js';
+
+
 
 dotenv.config();
 
@@ -78,7 +81,8 @@ swaggerSpec.paths = {
     ...hebergementRouteDoc,
     ...reservationRouteDoc,
     ...paiementRouteDoc,
-    ...reponseAvisRouteDoc // ✅ routes /api/reponses affichées
+    ...reponseAvisRouteDoc,
+    ...ajoutServiceReservationRouteDoc,
 };
 
 // Swagger route
