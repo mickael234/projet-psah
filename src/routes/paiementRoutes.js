@@ -5,11 +5,7 @@ import { authenticateJWT } from "../middleware/auth.js"
 const router = express.Router()
 
 // Routes protégées (nécessitent une authentification)
-router.get(
-    '/reservation/:id',
-    authenticateJWT,
-    PaiementController.getPaiementsByReservation
-);
+router.get('/reservation/:id', authenticateJWT,PaiementController.getPaiementsByReservation);
 router.get('/en-retard', authenticateJWT, PaiementController.getPaiementsEnRetard)
 router.get('/:id', authenticateJWT, PaiementController.getPaiementById);
 router.post('/', authenticateJWT, PaiementController.createPaiement);

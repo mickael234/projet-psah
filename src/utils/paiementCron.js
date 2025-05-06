@@ -1,6 +1,7 @@
 import PaiementService from "../services/paiement.service.js";
-import { genererContenuEmail } from "../services/paiement.service.js";
+import { genererContenuEmail, sendEmail } from "../services/paiement.service.js";
 import cron from 'node-cron'
+const destinataire = process.env.EMAIL_DESTINATAIRE;
 
 /**
  * Tâche planifiée qui s'exécute tous les lundis à 9h pour envoyer un rapport
@@ -8,10 +9,11 @@ import cron from 'node-cron'
  */
 cron.schedule('0 9 * * 1', async () => {
     try {
+        console.log("Test mail")
         const paiementsEnRetard = await PaiementService.getPaiementsEnRetard();
         if (paiementsEnRetard.length === 0) {
             sendEmail(
-              'comptable@psah.com',
+                destinataire,
               '[PSAH] Rapport hebdo - Aucun paiement en retard',
               '<p>Tous les paiements sont à jour cette semaine. Rien à signaler.</p>'
             );
@@ -21,11 +23,11 @@ cron.schedule('0 9 * * 1', async () => {
 
         const contenu = genererContenuEmail(paiementsEnRetard);
         sendEmail(
-        'comptable@psah.com', // A modifier avec l'adresse du destinataire réel
-        '[PSAH] Rapport hebdomadaire - Paiements clients en retard',
-        contenu
+            destinataire, // A modifier avec l'adresse du destinataire réel
+            '[PSAH] Rapport hebdomadaire - Paiements clients en retard',
+            contenu
         );
     } catch (error) {
-        console.log('Aucun paiement en retard à signaler.');
+        console.error("Erreur lors de l'envoi du mail : ", error)
     }
 });

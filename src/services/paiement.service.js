@@ -537,7 +537,7 @@ class PaiementService {
             // Récupérer les paiements en retard
             const paiementsEnRetard = await this.getPaiementsEnRetard();
             
-            if (paiementsEnRetard.length === 0) {
+            if (paiementsEnRetard.length <= 0) {
                 return false; // Pas de paiements en retard, pas d'email à envoyer
             }
             
@@ -619,13 +619,13 @@ export function genererContenuEmail(paiements) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
 
-    const templatePath = path.join(__dirname, 'utils', 'paiements-retard-template.html');
+    const templatePath = path.join(__dirname, '../utils', 'paiements-retard-template.html');
     let template = fs.readFileSync(templatePath, 'utf-8');
   
     const lignes = paiements.map((p, index) => `
       <tr>
         <td>${index + 1}</td>
-        <td>${p.client.nom}</td>
+        <td>${p.reservation.client.nom}</td>
         <td>${p.montant} €</td>
         <td>${p.date_echeance}</td>
         <td>${calculerRetard(p.date_echeance)} jours</td>

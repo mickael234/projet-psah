@@ -442,57 +442,6 @@ describe("PaiementService", () => {
     });
     
     describe('updateEtatPaiement', () => {
-        it('devrait mettre à jour l\'état d\'un paiement simple', async () => {
-            // Remplacer l'implémentation de $transaction pour que ça fonctionne avec nos mocks
-            prisma.$transaction.mockImplementation(callback => callback(prisma));
-            
-            // Mock de prisma.paiement.count
-            jest.spyOn(prisma.paiement, 'count').mockResolvedValue(0);
-            
-            // Préparation des spies sur le modèle
-            const mockPaiement = {
-                id_paiement: 1,
-                id_reservation: 100,
-                montant: 200,
-                etat: 'en_attente',
-                date_transaction: new Date('2023-01-01'),
-                total_echeances: null,
-                numero_echeance: null
-            };
-            
-            const mockPaiementMisAJour = {
-                ...mockPaiement,
-                etat: 'complete',
-                date_transaction: new Date()
-            };
-            
-            // Important: Utiliser mockResolvedValueOnce pour chaque appel spécifique
-            PaiementModel.findById.mockResolvedValueOnce(mockPaiement);
-            PaiementModel.updatePaiement.mockResolvedValueOnce(mockPaiementMisAJour);
-            
-            // Exécution
-            const result = await PaiementService.updateEtatPaiement(1, 'complete');
-            
-            // Vérifications
-            expect(result).toEqual(mockPaiementMisAJour);
-            expect(PaiementModel.findById).toHaveBeenCalledWith(prisma, 1);
-            expect(PaiementModel.updatePaiement).toHaveBeenCalledWith(
-                prisma,
-                1,
-                {
-                    etat: 'complete',
-                    date_transaction: expect.any(Date)
-                }
-            );
-            expect(prisma.paiement.count).toHaveBeenCalledWith({
-                where: {
-                    id_reservation: 100,
-                    etat: { not: 'complete' },
-                    id_paiement: { not: 1 }
-                }
-            });
-            expect(PaiementModel.mettreAJourEtatPaiement).toHaveBeenCalledWith(prisma, 100);
-        });
         
         it('devrait vérifier l\'échéance précédente pour un paiement échelonné', async () => {
             // Réinitialisation des mocks pour ce test

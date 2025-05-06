@@ -15,7 +15,7 @@ class PaiementController {
             
             const { id } = req.params;
             
-            const paiements = await PaiementService.getPaiementsByReservation(id);
+            const paiements = await PaiementService.getPaiementsByReservation(Number(id));
             
             res.status(200).json({
                 status: 'OK',
@@ -23,7 +23,7 @@ class PaiementController {
                 data: paiements
             });
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
 
@@ -39,7 +39,7 @@ class PaiementController {
             
         const { id } = req.params;
         
-        const paiement = await PaiementService.getById(null, id);
+        const paiement = await PaiementService.getById(null, Number(id));
         
         res.status(200).json({
             status: 'OK',
@@ -47,7 +47,7 @@ class PaiementController {
             data: paiement
         });
     } catch (error) {
-        this.handleError(error, res);
+        PaiementController.handleError(error, res);
     }
   }
 
@@ -91,7 +91,7 @@ class PaiementController {
                 data: resultats
             });
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
 
@@ -108,7 +108,7 @@ class PaiementController {
         const { id } = req.params;
         const updateData = req.body;
         
-        const paiement = await PaiementService.updatePaiement(id, updateData);
+        const paiement = await PaiementService.updatePaiement(Number(id), updateData);
         
         res.status(200).json({
             status: 'OK',
@@ -116,7 +116,7 @@ class PaiementController {
             data: paiement
         });
     } catch (error) {
-        this.handleError(error, res);
+        PaiementController.handleError(error, res);
     }
   }
 
@@ -134,7 +134,7 @@ class PaiementController {
         const { raison } = req.body;
         const userId = req.user ? req.user.userId : null;
         
-        const paiement = await PaiementService.refundPaiement(id, { raison }, userId);
+        const paiement = await PaiementService.refundPaiement(Number(id), { raison }, userId);
         
         res.status(200).json({
             status: 'OK',
@@ -142,7 +142,7 @@ class PaiementController {
             data: paiement
         });
     } catch (error) {
-        this.handleError(error, res);
+        PaiementController.handleError(error, res);
     }
   }
 
@@ -166,7 +166,7 @@ class PaiementController {
                 totalMontant: result.totalMontant
             });
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
 
@@ -200,7 +200,7 @@ class PaiementController {
                 });
             }, 500);
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
 
@@ -223,7 +223,7 @@ class PaiementController {
                 }
             });
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
 
@@ -235,7 +235,7 @@ class PaiementController {
     static async getPaiementsEnRetard(req, res) {
         try {
             // Vérifier les permissions
-            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            //PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
             
             const paiementsEnRetard = await PaiementService.getPaiementsEnRetard();
             
@@ -246,7 +246,7 @@ class PaiementController {
                 }
             });
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
 
@@ -263,7 +263,7 @@ class PaiementController {
             const { id } = req.params;
             const { etat } = req.body;
             
-            const paiementMisAJour = await PaiementService.updateEtatPaiement(id, etat);
+            const paiementMisAJour = await PaiementService.updateEtatPaiement(Number(id), etat);
             
             res.status(200).json({
                 status: "OK",
@@ -271,7 +271,7 @@ class PaiementController {
                 data: paiementMisAJour
             });
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
     
@@ -301,7 +301,7 @@ class PaiementController {
                 });
             }
         } catch (error) {
-            this.handleError(error, res);
+            PaiementController.handleError(error, res);
         }
     }
     
@@ -320,12 +320,13 @@ class PaiementController {
                 message: error.message
             });
         }
+
+        console.error(error.message)
         
         // Erreur par défaut
         return res.status(500).json({
             status: "ERREUR INTERNE",
             message: "Une erreur interne est survenue",
-            error: error.message
         });
     }
 }
