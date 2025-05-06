@@ -1,5 +1,3 @@
-// src/server.js
-
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -7,8 +5,6 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-
 
 // Obtenir __dirname en ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -25,20 +21,18 @@ import avisRoutes from './routes/avisRoutes.js';
 import reponseAvisRoutes from './routes/reponseAvisRoutes.js';
 import rapportRoutes from './routes/rapportFinancierRoutes.js';
 import factureRoutes from './routes/factureRoutes.js';
-
-
 import favorisRoutes from './routes/favorisRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
 import reservationsServicesRoutes from './routes/reservationsServicesRoutes.js';
 
-
-// Import des fichiers Swagger séparés (de Hassan)
+// Import des fichiers Swagger
 import authRouteDoc from './docs/swagger.js';
 import profileRouteDoc from './docs/profileRouteDoc.js';
 import hebergementRouteDoc from './docs/hebergementRouteDoc.js';
 import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
+import { reponseAvisRouteDoc } from './docs/reponseAvisRouteDoc.js'; // ✅ AJOUTÉ
 
 dotenv.config();
 
@@ -76,13 +70,15 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+// Fusion des routes Swagger
 swaggerSpec.paths = {
-    ...swaggerSpec.paths,
     ...authRouteDoc,
     ...profileRouteDoc,
     ...hebergementRouteDoc,
     ...reservationRouteDoc,
     ...paiementRouteDoc,
+    ...reponseAvisRouteDoc // ✅ routes /api/reponses affichées
 };
 
 // Swagger route
@@ -99,12 +95,10 @@ app.use('/api/avis', avisRoutes);
 app.use('/api/reponsesavis', reponseAvisRoutes);
 app.use('/api/rapports', rapportRoutes);
 app.use('/api/factures', factureRoutes);
-
-
 app.use('/api/favoris', favorisRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api', reservationsServicesRoutes);
-app.use('/api', maintenanceRoutes); // /api/hebergements/:id/maintenance
+app.use('/api', maintenanceRoutes);
 
 // Route test
 app.get('/', (req, res) => res.send('Bienvenue sur l’API Hôtel - PSAH'));
