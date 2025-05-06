@@ -1,50 +1,98 @@
-import { jest, describe, it, expect, beforeEach, afterEach, afterAll } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
-// Créer des objets mock directement
-const PaiementController = {
-  getPaiementsByReservation: jest.fn(),
-  getPaiementsEnRetard: jest.fn(),
-  getPaiementById: jest.fn(),
-  createPaiement: jest.fn(),
-  updatePaiement: jest.fn(),
-  refundPaiement: jest.fn(),
-  updatePaiementStatus: jest.fn()
+// Créer des objets mock pour les composants
+const mockPaiementController = {
+  getPaiementsByReservation: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'getPaiementsByReservation appelé',
+      id: req.params.id
+    });
+  }),
+  getPaiementsEnRetard: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'getPaiementsEnRetard appelé'
+    });
+  }),
+  getPaiementById: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'getPaiementById appelé',
+      id: req.params.id
+    });
+  }),
+  createPaiement: jest.fn((req, res) => {
+    res.status(201).json({
+      message: 'createPaiement appelé',
+      body: req.body
+    });
+  }),
+  updatePaiement: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'updatePaiement appelé',
+      id: req.params.id,
+      body: req.body
+    });
+  }),
+  refundPaiement: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'refundPaiement appelé',
+      id: req.params.id,
+      body: req.body
+    });
+  }),
+  updatePaiementStatus: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'updatePaiementStatus appelé',
+      id: req.params.id,
+      body: req.body
+    });
+  }),
+  generateRapportFinancier: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'generateRapportFinancier appelé',
+      query: req.query
+    });
+  }),
+  exportRapportFinancierToPDF: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'exportRapportFinancierToPDF appelé',
+      query: req.query
+    });
+  }),
+  getRevenuTotal: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'getRevenuTotal appelé'
+    });
+  }),
+  envoyerNotificationPaiementsEnRetard: jest.fn((req, res) => {
+    res.status(200).json({
+      message: 'envoyerNotificationPaiementsEnRetard appelé',
+      body: req.body
+    });
+  })
 };
 
-const auth = {
-  authenticateJWT: jest.fn((_, __, next) => next()) // Simule un middleware d'authentification qui passe directement à la prochaine fonction
-};
+// Mock du middleware d'authentification
+const mockAuthenticateJWT = jest.fn((req, res, next) => {
+  req.user = { userId: 1, roles: ['ADMIN_GENERAL'] };
+  next();
+});
 
-// Mock des modules avec les objets créés
-jest.mock('../../src/middleware/auth.js', () => auth);
-jest.mock('../../src/controllers/paiementController.js', () => PaiementController);
-
-// Configuration de l'application Express
+// Configuration de l'application Express pour les tests
 const app = express();
 app.use(express.json());
 
-// Définir les routes pour les tests
-app.get('/api/paiements/reservation/:id', auth.authenticateJWT, (req, res) => PaiementController.getPaiementsByReservation(req, res));
-app.get('/api/paiements/en-retard', auth.authenticateJWT, (req, res) => PaiementController.getPaiementsEnRetard(req, res));
-app.get('/api/paiements/:id', auth.authenticateJWT, (req, res) => PaiementController.getPaiementById(req, res));
-app.post('/api/paiements', auth.authenticateJWT, (req, res) => PaiementController.createPaiement(req, res));
-app.put('/api/paiements/:id', auth.authenticateJWT, (req, res) => PaiementController.updatePaiement(req, res));
-app.post('/api/paiements/:id/refund', auth.authenticateJWT, (req, res) => PaiementController.refundPaiement(req, res));
-app.patch('/api/paiements/:id/status', auth.authenticateJWT, (req, res) => PaiementController.updatePaiementStatus(req, res));
+// Configuration des routes à tester
+app.get('/api/paiements/reservation/:id', mockAuthenticateJWT, mockPaiementController.getPaiementsByReservation);
+app.get('/api/paiements/en-retard', mockAuthenticateJWT, mockPaiementController.getPaiementsEnRetard);
+app.get('/api/paiements/:id', mockAuthenticateJWT, mockPaiementController.getPaiementById);
+app.post('/api/paiements', mockAuthenticateJWT, mockPaiementController.createPaiement);
+app.put('/api/paiements/:id', mockAuthenticateJWT, mockPaiementController.updatePaiement);
+app.post('/api/paiements/:id/refund', mockAuthenticateJWT, mockPaiementController.refundPaiement);
+app.patch('/api/paiements/:id/status', mockAuthenticateJWT, mockPaiementController.updatePaiementStatus);
 
-// Fermeture du serveur après tous les tests
-let server;
-beforeAll(() => {
-  server = app.listen(4000); // Lance le serveur sur un port spécifié
-});
 
-afterAll((done) => {
-  server.close(done); // Ferme le serveur après les tests
-});
-
-// Tests
 describe('Routes de paiement', () => {
   // Réinitialiser les mocks après chaque test
   afterEach(() => {
@@ -58,8 +106,9 @@ describe('Routes de paiement', () => {
         .expect(200);
 
       expect(response.body.message).toBe('getPaiementsByReservation appelé');
-      expect(PaiementController.getPaiementsByReservation).toHaveBeenCalledTimes(1);
-      expect(auth.authenticateJWT).toHaveBeenCalled();
+      expect(response.body.id).toBe('5');
+      expect(mockPaiementController.getPaiementsByReservation).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticateJWT).toHaveBeenCalled();
     });
   });
 
@@ -70,8 +119,8 @@ describe('Routes de paiement', () => {
         .expect(200);
 
       expect(response.body.message).toBe('getPaiementsEnRetard appelé');
-      expect(PaiementController.getPaiementsEnRetard).toHaveBeenCalledTimes(1);
-      expect(auth.authenticateJWT).toHaveBeenCalled();
+      expect(mockPaiementController.getPaiementsEnRetard).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticateJWT).toHaveBeenCalled();
     });
   });
 
@@ -83,8 +132,8 @@ describe('Routes de paiement', () => {
 
       expect(response.body.message).toBe('getPaiementById appelé');
       expect(response.body.id).toBe('1');
-      expect(PaiementController.getPaiementById).toHaveBeenCalledTimes(1);
-      expect(auth.authenticateJWT).toHaveBeenCalled();
+      expect(mockPaiementController.getPaiementById).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticateJWT).toHaveBeenCalled();
     });
   });
 
@@ -103,8 +152,8 @@ describe('Routes de paiement', () => {
 
       expect(response.body.message).toBe('createPaiement appelé');
       expect(response.body.body).toEqual(paiementData);
-      expect(PaiementController.createPaiement).toHaveBeenCalledTimes(1);
-      expect(auth.authenticateJWT).toHaveBeenCalled();
+      expect(mockPaiementController.createPaiement).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticateJWT).toHaveBeenCalled();
     });
   });
 
@@ -122,8 +171,8 @@ describe('Routes de paiement', () => {
       expect(response.body.message).toBe('updatePaiement appelé');
       expect(response.body.id).toBe('1');
       expect(response.body.body).toEqual(updateData);
-      expect(PaiementController.updatePaiement).toHaveBeenCalledTimes(1);
-      expect(auth.authenticateJWT).toHaveBeenCalled();
+      expect(mockPaiementController.updatePaiement).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticateJWT).toHaveBeenCalled();
     });
   });
 
@@ -140,8 +189,9 @@ describe('Routes de paiement', () => {
 
       expect(response.body.message).toBe('refundPaiement appelé');
       expect(response.body.id).toBe('1');
-      expect(PaiementController.refundPaiement).toHaveBeenCalledTimes(1);
-      expect(auth.authenticateJWT).toHaveBeenCalled();
+      expect(response.body.body).toEqual(refundData);
+      expect(mockPaiementController.refundPaiement).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticateJWT).toHaveBeenCalled();
     });
   });
 
@@ -159,15 +209,16 @@ describe('Routes de paiement', () => {
       expect(response.body.message).toBe('updatePaiementStatus appelé');
       expect(response.body.id).toBe('1');
       expect(response.body.body).toEqual(statusData);
-      expect(PaiementController.updatePaiementStatus).toHaveBeenCalledTimes(1);
-      expect(auth.authenticateJWT).toHaveBeenCalled();
+      expect(mockPaiementController.updatePaiementStatus).toHaveBeenCalledTimes(1);
+      expect(mockAuthenticateJWT).toHaveBeenCalled();
     });
   });
 
   describe('Middleware d\'authentification', () => {
     it('devrait bloquer l\'accès si l\'authentification échoue', async () => {
       // Restaurer temporairement le mock pour simuler un échec d'authentification
-      auth.authenticateJWT.mockImplementationOnce((req, res, next) => {
+      const originalImplementation = mockAuthenticateJWT.getMockImplementation();
+      mockAuthenticateJWT.mockImplementationOnce((req, res, next) => {
         return res.status(401).json({ message: 'Non autorisé' });
       });
 
@@ -176,8 +227,10 @@ describe('Routes de paiement', () => {
         .expect(401);
 
       expect(response.body.message).toBe('Non autorisé');
-      // La méthode du contrôleur ne devrait jamais être appelée
-      expect(PaiementController.getPaiementById).not.toHaveBeenCalled();
+      expect(mockPaiementController.getPaiementById).not.toHaveBeenCalled();
+
+      // Restaurer l'implémentation originale pour les autres tests
+      mockAuthenticateJWT.mockImplementation(originalImplementation);
     });
   });
 });

@@ -235,7 +235,7 @@ class PaiementController {
     static async getPaiementsEnRetard(req, res) {
         try {
             // Vérifier les permissions
-            //PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
+            PaiementService.verifierPermissions(req.user, ["COMPTABILITE", "SUPER_ADMIN", "ADMIN_GENERAL", "RESPONSABLE_HEBERGEMENT"]);
             
             const paiementsEnRetard = await PaiementService.getPaiementsEnRetard();
             
