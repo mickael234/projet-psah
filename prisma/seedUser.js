@@ -74,7 +74,7 @@ async function main() {
             where: { name: user.roleId },
         })
         if(roleObject){
-            await prisma.user.create({
+            await prisma.utilisateur.create({
                 data: { ...user, roleId: roleObject.id }
             }).then((newUser) => {
                 console.log("l'utilisateur:  " + newUser + " a été créé avec succès");
