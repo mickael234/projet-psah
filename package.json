@@ -53,7 +53,7 @@
     "jest-environment-node": "^29.7.0",
     "jest-mock-extended": "^4.0.0-beta1",
     "jsdoc": "^4.0.4",
-    "newman": "^6.2.0",
+    "newman": "^6.2.1",
     "nodemon": "^3.1.9",
     "path": "^0.12.7",
     "prettier": "^3.5.3",
