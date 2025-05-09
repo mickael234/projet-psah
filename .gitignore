@@ -3,5 +3,6 @@
 .env
 # Dossier généré lors des tests Jest
 coverage
-# Dossier contenant la documentation générée par JSDoc
-docs
+#ignore tous les docs, sauf ceux dans src/docs
+!src/docs/
+!src/docs/*
