@@ -4,6 +4,10 @@ CREATE TABLE "Maintenance" (
     "id_chambre" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "statut" TEXT NOT NULL,
+    "priorite" TEXT NOT NULL,
+    "date_fin" TIMESTAMP(3),
+    "notes" TEXT,
 
     CONSTRAINT "Maintenance_pkey" PRIMARY KEY ("id_maintenance")
 );

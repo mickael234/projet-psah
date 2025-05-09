@@ -164,6 +164,7 @@ const reservationRouteDoc = {
         }
       }
     },
+    
     '/api/reservations/{id}': {
       get: {
         summary: 'Récupérer une réservation par son ID',

@@ -1,11 +1,10 @@
 
 import HebergementModel from '../models/hebergementModel.js';
-import { PrismaClient } from '@prisma/client';
+import prisma from "../config/prisma.js";
 import { RoleMapper } from '../utils/roleMapper.js';
 import EquipementModel from '../models/equipement.model.js';
 
 
-const prisma = new PrismaClient();
 
 class HebergementController {
 

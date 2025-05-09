@@ -1,7 +1,10 @@
-import { PrismaClient } from "@prisma/client"
+// src/controllers/facture-controller.js
+import prisma from "../config/prisma.js";
 import PDFDocument from "pdfkit"
 import { RoleMapper } from "../utils/roleMapper.js"
-const prisma = new PrismaClient()
+import PreferenceUtilisateurModel from "../models/preference-utilisateur.model.js"
+
+
 
 class FactureController {
   /**
@@ -479,12 +482,9 @@ class FactureController {
 
       // Récupérer les informations de facturation du client
       const userId = reservation.client.id_utilisateur
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          billingInfo: true,
-        },
-      })
+      
+      // Utiliser PreferenceUtilisateurModel au lieu de user.billingInfo
+      const billingInfo = await PreferenceUtilisateurModel.getBillingInfo(userId);
 
       // Calculer les détails de la facture
       const detailsChambres = reservation.chambres.map((chambreRes) => {
@@ -530,7 +530,7 @@ class FactureController {
       const reste = Number(reservation.prix_total) - totalPaye
       const statutPaiement = reste <= 0 ? "Payé" : "Partiellement payé"
 
-      // Créer l'objet facture
+      // Créer l'objet facture avec les informations de facturation des préférences
       const facture = {
         numeroFacture: `F-${new Date().getFullYear()}-${id.padStart(6, "0")}`,
         dateFacture: new Date().toISOString().split("T")[0],
@@ -538,15 +538,15 @@ class FactureController {
           nom: `${reservation.client.prenom} ${reservation.client.nom}`,
           email: reservation.client.utilisateur.email,
           telephone: reservation.client.telephone || "Non spécifié",
-          adresseFacturation: user?.billingInfo
+          adresseFacturation: billingInfo && Object.keys(billingInfo).length > 0
             ? {
-                adresse: user.billingInfo.address,
-                ville: user.billingInfo.city,
-                codePostal: user.billingInfo.postalCode,
-                pays: user.billingInfo.country,
+                adresse: billingInfo.adresse || "Non spécifié",
+                ville: billingInfo.ville || "Non spécifié",
+                codePostal: billingInfo.code_postal || "Non spécifié",
+                pays: billingInfo.pays || "Non spécifié",
                 nomFacturation:
-                  user.billingInfo.billingName || `${reservation.client.prenom} ${reservation.client.nom}`,
-                numeroTVA: user.billingInfo.vatNumber || "Non spécifié",
+                  billingInfo.nom || `${reservation.client.prenom} ${reservation.client.nom}`,
+                numeroTVA: billingInfo.tva || "Non spécifié",
               }
             : "Informations de facturation non disponibles",
         },

@@ -1,0 +1,1929 @@
+{
+  "info": {
+    "name": "API Gestion Hôtelière",
+    "description": "Collection pour tester l'API de gestion hôtelière",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentification",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@gmail.com\",\n  \"mot_de_passe\": \"Admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Statut 200\", function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Token reçu\", function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token).to.exist;",
+                  "    pm.environment.set(\"authToken\", jsonData.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Communication",
+      "item": [
+        {
+          "name": "Créer un nouveau message [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Créer un nouveau message [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer les messages non lus [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications/non-lus:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications",
+                "non-lus:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer les messages d'un département [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications/departement/{{departement}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications",
+                "departement",
+                "{{departement}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer un message par son ID [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications/{{id}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications",
+                "{{id}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Répondre à un message [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications/{{id}}/repondre:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications",
+                "{{{id}}}",
+                "repondre:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Marquer un message comme lu [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications/{{id}}/lu:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications",
+                "{{{id}}}",
+                "lu:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Favoris",
+      "item": [
+        {
+          "name": "Ajouter une chambre aux favoris [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/favoris:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favoris:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Supprimer un favori [DELETE]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/favoris:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favoris:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer les favoris d’un utilisateur [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/favoris/{{id_utilisateur}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "favoris",
+                "{{id_utilisateur}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fourniture",
+      "item": [
+        {
+          "name": "Récupère toutes les fournitures [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fournitures:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fournitures:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Crée une nouvelle fourniture [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fournitures:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fournitures:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Enregistre l'utilisation d'une fourniture [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fournitures/{{id_fourniture}}/utilisation:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fournitures",
+                "{{{id_fourniture}}}",
+                "utilisation:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Crée une commande de fournitures [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fournitures/commande:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fournitures",
+                "commande:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Met à jour le statut d'une commande [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fournitures/commande/{{id_commande}}/statut:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fournitures",
+                "commande",
+                "{{{id_commande}}}",
+                "statut:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hebergement",
+      "item": [
+        {
+          "name": "Recherche des chambres disponibles selon les critères [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chambres/recherche:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chambres",
+                "recherche:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maintenance",
+      "item": [
+        {
+          "name": "Créer une maintenance pour une chambre [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hebergements/{{id}}/maintenance:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hebergements",
+                "{{{id}}}",
+                "maintenance:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Créer une maintenance pour une chambre [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hebergements/{{id}}/maintenance:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hebergements",
+                "{{{id}}}",
+                "maintenance:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage",
+      "item": [
+        {
+          "name": "Enregistre une opération de nettoyage pour un hébergement [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/nettoyage/hebergements/{{id_chambre}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "nettoyage",
+                "hebergements",
+                "{{id_chambre}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupère l'historique des nettoyages pour un hébergement [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/nettoyage/hebergements/{{id_chambre}}/historique:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "nettoyage",
+                "hebergements",
+                "{{{id_chambre}}}",
+                "historique:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planning",
+      "item": [
+        {
+          "name": "Créer une nouvelle tâche planifiée [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Créer une nouvelle tâche planifiée [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer les tâches d'un responsable [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning/responsable/{{id_responsable}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning",
+                "responsable",
+                "{{id_responsable}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer les tâches d'une chambre [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning/chambre/{{id_chambre}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning",
+                "chambre",
+                "{{id_chambre}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer une tâche par son ID [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning/{{id}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning",
+                "{{id}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Récupérer une tâche par son ID [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning/{{id}}:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning",
+                "{{id}}:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Mettre à jour le statut d'une tâche [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning/{{id}}/statut:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning",
+                "{{{id}}}",
+                "statut:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Ajouter un commentaire à une tâche [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/maintenance/planning/{{id}}/commentaire:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "maintenance",
+                "planning",
+                "{{{id}}}",
+                "commentaire:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservation",
+      "item": [
+        {
+          "name": "Enregistrer l'arrivée d'un client (Check-in) [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservations/{{id}}/checkin:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                "{{{id}}}",
+                "checkin:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Enregistrer le départ d'un client (Check-out) [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservations/{{id}}/checkout:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                "{{{id}}}",
+                "checkout:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service",
+      "item": [
+        {
+          "name": "Créer un service [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/services:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Créer un service [POST]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/services:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Créer un service [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/services:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Créer un service [DELETE]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/services:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Status",
+      "item": [
+        {
+          "name": "Récupère le statut de tous les hébergements [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hebergements/status:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hebergements",
+                "status:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Met à jour le statut d'un hébergement [PUT]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hebergements/{{id}}/status:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hebergements",
+                "{{{id}}}",
+                "status:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,13 +1,10 @@
-// src/routes/hebergementRoutes.js
+import express from "express"
+import prisma from "../config/prisma.js"
+import HebergementController from "../controllers/hebergementController.js"
+import { authenticateJWT } from "../middleware/auth.js"
+import { upload } from "../utils/fileUpload.js"
 
-import express from 'express';
-import { PrismaClient } from '@prisma/client';
-import HebergementController from '../controllers/hebergementController.js';
-import { authenticateJWT } from '../middleware/auth.js';
-import { upload } from '../utils/fileUpload.js';
-
-const router = express.Router();
-const prisma = new PrismaClient();
+const router = express.Router()
 
 /**
  * @swagger
@@ -58,29 +55,19 @@ const prisma = new PrismaClient();
  *       500:
  *         description: Erreur serveur
  */
-router.get('/recherche', async (req, res) => {
+router.get("/recherche", async (req, res) => {
   try {
-    const {
-      date_arrivee,
-      date_depart,
-      prix_max,
-      nb_personnes,
-      equipements,
-    } = req.query;
+    const { date_arrivee, date_depart, prix_max, nb_personnes, equipements } = req.query
 
     if (!date_arrivee || !date_depart || !prix_max) {
-      return res.status(400).json({ message: 'Champs requis manquants.' });
+      return res.status(400).json({ message: "Champs requis manquants." })
     }
 
-    const parsedEquipements = equipements
-      ? Array.isArray(equipements)
-        ? equipements
-        : [equipements]
-      : [];
+    const parsedEquipements = equipements ? (Array.isArray(equipements) ? equipements : [equipements]) : []
 
     let chambres = await prisma.chambre.findMany({
       where: {
-        prix_par_nuit: { lte: parseFloat(prix_max) },
+        prix_par_nuit: { lte: Number.parseFloat(prix_max) },
         reservations: {
           none: {
             OR: [
@@ -91,15 +78,16 @@ router.get('/recherche', async (req, res) => {
             ],
           },
         },
-        equipements: parsedEquipements.length > 0
-          ? {
-              some: {
-                equipement: {
-                  nom: { in: parsedEquipements },
+        equipements:
+          parsedEquipements.length > 0
+            ? {
+                some: {
+                  equipement: {
+                    nom: { in: parsedEquipements },
+                  },
                 },
-              },
-            }
-          : undefined,
+              }
+            : undefined,
       },
       include: {
         equipements: {
@@ -108,49 +96,47 @@ router.get('/recherche', async (req, res) => {
           },
         },
       },
-    });
+    })
 
     if (nb_personnes) {
-      chambres = chambres.filter(chambre =>
-        chambre.description?.toLowerCase().includes(`${nb_personnes} personne`)
-      );
+      chambres = chambres.filter((chambre) => chambre.description?.toLowerCase().includes(`${nb_personnes} personne`))
     }
 
-    res.status(200).json(chambres);
+    res.status(200).json(chambres)
   } catch (error) {
-    console.error('Erreur GET /chambres/recherche :', error);
-    res.status(500).json({ message: 'Erreur serveur.' });
+    console.error("Erreur GET /chambres/recherche :", error)
+    res.status(500).json({ message: "Erreur serveur." })
   }
-});
+})
 
 // --------------------------------------------------------
 // Routes Hassan (HebergementController)
 // --------------------------------------------------------
 
-// Routes publiques
-router.get('/', HebergementController.getAllHebergements);
-router.get('/search', HebergementController.searchAvailableHebergements);
-router.get('/:id', HebergementController.getHebergementById);
-router.get('/:id/availability', HebergementController.checkAvailability);
+// IMPORTANT: Routes spécifiques d'abord (sans paramètres dynamiques)
+// --------------------------------------------------------
+// Routes publiques spécifiques
+router.get("/", HebergementController.getAllHebergements)
+router.get("/search", HebergementController.searchAvailableHebergements)
+
+// --------------------------------------------------------
+// ENSUITE: Routes avec paramètres dynamiques
+// --------------------------------------------------------
+// Routes publiques avec paramètres
+router.get("/:id", HebergementController.getHebergementById)
+router.get("/:id/availability", HebergementController.checkAvailability)
 
 // Routes protégées (nécessitent une authentification)
-router.post('/', authenticateJWT, HebergementController.createHebergement);
-router.post('/:id/equipements', authenticateJWT, HebergementController.addEquipementToChambre);
-router.put('/:id', authenticateJWT, HebergementController.updateHebergement);
-router.delete('/:id', authenticateJWT, HebergementController.deleteHebergement);
-router.delete('/:id/equipements/:equipementId', authenticateJWT, HebergementController.removeEquipementFromChambre);
-router.put('/:id/tarifs', authenticateJWT, HebergementController.updatePriceHebergement);
-router.put('/:id/disponibilite', authenticateJWT, HebergementController.updateAvailabilityHebergement);
+router.post("/", authenticateJWT, HebergementController.createHebergement)
+router.post("/:id/equipements", authenticateJWT, HebergementController.addEquipementToChambre)
+router.put("/:id", authenticateJWT, HebergementController.updateHebergement)
+router.delete("/:id", authenticateJWT, HebergementController.deleteHebergement)
+router.delete("/:id/equipements/:equipementId", authenticateJWT, HebergementController.removeEquipementFromChambre)
+router.put("/:id/tarifs", authenticateJWT, HebergementController.updatePriceHebergement)
+router.put("/:id/disponibilite", authenticateJWT, HebergementController.updateAvailabilityHebergement)
+
 // Routes pour les médias
-router.post(
-  '/:id/media',
-  authenticateJWT,
-  upload.single('media'),
-  HebergementController.addMedia
-);
-router.delete(
-  '/:id/media/:mediaId',
-  authenticateJWT,
-  HebergementController.removeMedia
-);
-export default router;
+router.post("/:id/media", authenticateJWT, upload.single("media"), HebergementController.addMedia)
+router.delete("/:id/media/:mediaId", authenticateJWT, HebergementController.removeMedia)
+
+export default router

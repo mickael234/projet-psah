@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client"
+import prisma from "../config/prisma.js";
 import { RoleMapper } from "../utils/roleMapper.js"
-const prisma = new PrismaClient()
-import { authenticateJWT } from '../middleware/auth.js';
+import { authenticateJWT } from "../middleware/auth.js"
+import ReservationModel from '../models/reservation.model.js'
 
-import ReservationModel from '../models/reservation.model.js';
 
 class ReservationController {
   /**

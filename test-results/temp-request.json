@@ -1,0 +1,63 @@
+{
+  "info": {
+    "name": "API Gestion Hôtelière",
+    "description": "Collection pour tester l'API de gestion hôtelière",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Créer un nouveau message [GET]",
+      "item": [
+        {
+          "name": "Créer un nouveau message [GET]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/communications:",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communications:"
+              ]
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test(\"Statut 2XX\", function() {",
+                    "    pm.response.to.be.success;",
+                    "});",
+                    "",
+                    "pm.test(\"Temps de réponse acceptable\", function() {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                    "});",
+                    "",
+                    "pm.test(\"Format de réponse valide\", function() {",
+                    "    pm.response.to.be.json;",
+                    "    const jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('object');",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

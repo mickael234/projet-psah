@@ -1,6 +1,6 @@
 // src/controllers/profileController.js
 import Profile from '../models/profileModel.js';
-import User from '../models/userModel.js';
+import UtilisateurModel from '../models/utilisateur.model.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { uploadFile } from '../utils/fileUpload.js';
@@ -20,8 +20,9 @@ class ProfileController {
             }
 
             // Ne pas renvoyer le mot de passe et les informations sensibles
-            const { password, twoFactorSecret, ...safeProfile } = profile;
-
+            const { ...safeProfile } = profile;
+            delete safeProfile.mot_de_passe;
+            delete safeProfile.secret_deux_facteurs;
             res.status(200).json({
                 status: 'OK',
                 message: 'Profil récupéré avec succès',
@@ -60,8 +61,8 @@ class ProfileController {
 
             // Vérifier si l'email est déjà utilisé par un autre utilisateur
             if (email) {
-                const existingUser = await User.findByEmail(email);
-                if (existingUser && existingUser.id !== userId) {
+                const existingUser = await UtilisateurModel.trouverParEmail(email);
+                if (existingUser && existingUser.id_utilisateur !== userId) {
                     return res.status(400).json({
                         status: 'ERROR',
                         message:
@@ -71,21 +72,21 @@ class ProfileController {
             }
 
             const updatedProfile = await Profile.updateProfile(userId, {
-                fullName,
-                phoneNumber,
+                nom_utilisateur: fullName,
+                telephone: phoneNumber,
                 email,
-                updatedAt: new Date()
+                date_modification: new Date()
             });
 
             res.status(200).json({
                 status: 'OK',
                 message: 'Profil mis à jour avec succès',
                 data: {
-                    userId: updatedProfile.id,
-                    fullName: updatedProfile.fullName,
+                    userId: updatedProfile.id_utilisateur,
+                    fullName: updatedProfile.nom_utilisateur,
                     email: updatedProfile.email,
-                    phoneNumber: updatedProfile.phoneNumber,
-                    updatedAt: updatedProfile.updatedAt
+                    phoneNumber: updatedProfile.telephone,
+                    updatedAt: updatedProfile.date_modification
                 }
             });
         } catch (error) {
@@ -112,10 +113,8 @@ class ProfileController {
             const photoUrl = await uploadFile(req.file, `profiles/${userId}`);
 
             // Mettre à jour l'URL de la photo dans la base de données
-            const updatedProfile = await Profile.updateProfilePhoto(
-                userId,
-                photoUrl
-            );
+            const updatedProfile = await Profile.updateProfilePhoto(userId, photoUrl);
+            console.log("Profil mis à jour:", updatedProfile);
 
             res.status(200).json({
                 status: 'OK',
@@ -229,7 +228,7 @@ class ProfileController {
 
             // Récupérer la clé secrète temporaire
             const profile = await Profile.getProfile(userId);
-            const secret = profile.twoFactorSecret;
+            const secret = profile.secret_deux_facteurs;
 
             if (!secret) {
                 return res.status(400).json({
@@ -278,9 +277,9 @@ class ProfileController {
 
             // Vérifier le mot de passe pour des raisons de sécurité
             const profile = await Profile.getProfile(userId);
-            const isPasswordValid = await User.verifyPassword(
+            const isPasswordValid = await UtilisateurModel.verifierMotDePasse(
                 password,
-                profile.password
+                profile.mot_de_passe
             );
 
             if (!isPasswordValid) {
