@@ -5,3 +5,4 @@
 coverage
 # Dossier contenant la documentation générée par JSDoc
 docs
+package-lock.json
