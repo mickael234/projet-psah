@@ -37,18 +37,18 @@ import testRoutes from "./routes/testRoutes.js"
 
 // Import des fichiers Swagger séparés (de Hassan)
 import authRouteDoc from "./docs/swagger.js"
-//import profileRouteDoc from "./docs/profileRouteDoc.js"
+import profileRouteDoc from "./docs/profileRouteDoc.js"
 import hebergementRouteDoc from "./docs/hebergementRouteDoc.js"
 import reservationRouteDoc from "./docs/reservationRouteDoc.js"
 import paiementRouteDoc from "./docs/paiementRouteDoc.js"
-//import statusRouteDoc from "./docs/statusRouteDoc.js"
-//import permissionRouteDoc from "./docs/permissionRouteDoc.js"
-//import favorisRouteDoc from "./docs/favorisRouteDoc.js"
-//import serviceRouteDoc from "./docs/serviceRouteDoc.js"
-//import nettoyageRouteDoc from "./docs/nettoyageRouteDoc.js"
-//import maintenanceRouteDoc from "./docs/maintenanceRouteDoc.js"
-//import planningRouteDoc from "./docs/planningRouteDoc.js"
-//import fournitureRouteDoc from "./docs/fournitureRouteDoc.js"
+import statusRouteDoc from "./docs/statusRouteDoc.js"
+import permissionRouteDoc from "./docs/permissionRouteDoc.js"
+import favorisRouteDoc from "./docs/favorisRouteDoc.js"
+import serviceRouteDoc from "./docs/serviceRouteDoc.js"
+import nettoyageRouteDoc from "./docs/nettoyageRouteDoc.js"
+import maintenanceRouteDoc from "./docs/maintenanceRouteDoc.js"
+import planningRouteDoc from "./docs/planningRouteDoc.js"
+import fournitureRouteDoc from "./docs/fournitureRouteDoc.js"
 
 
 dotenv.config()
@@ -88,18 +88,18 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions)
 swaggerSpec.paths = {
   ...swaggerSpec.paths,
   ...authRouteDoc,
-  //...profileRouteDoc,
+  ...profileRouteDoc,
   ...hebergementRouteDoc,
   ...reservationRouteDoc,
   ...paiementRouteDoc,
-  //...statusRouteDoc,
-  //...permissionRouteDoc,
-  //...favorisRouteDoc,
-  //...serviceRouteDoc,
-  //...nettoyageRouteDoc,
-  //...maintenanceRouteDoc,
-  //...planningRouteDoc,
-  //...fournitureRouteDoc,
+  ...statusRouteDoc,
+  ...permissionRouteDoc,
+  ...favorisRouteDoc,
+  ...serviceRouteDoc,
+  ...nettoyageRouteDoc,
+  ...maintenanceRouteDoc,
+  ...planningRouteDoc,
+  ...fournitureRouteDoc,
 }
 
 // Swagger route
