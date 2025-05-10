@@ -1,7 +1,8 @@
-node_modules/
-package-lock.json
+/node_modules/
 # Fichier contenant les variables d'environnement 
 .env
 # Dossier généré lors des tests Jest
 coverage
-# Dossier contenant la documentation générée par JSDoc
+#ignore tous les docs, sauf ceux dans src/docs
+!src/docs/
+!src/docs/*
