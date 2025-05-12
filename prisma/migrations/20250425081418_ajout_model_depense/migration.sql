@@ -10,6 +10,7 @@ CREATE TABLE "Depense" (
     "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "date_modification" TIMESTAMP(3),
     "date_suppression" TIMESTAMP(3),
+      "description" TEXT,
 
     CONSTRAINT "Depense_pkey" PRIMARY KEY ("id_depense")
 );

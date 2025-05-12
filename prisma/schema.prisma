@@ -114,9 +114,10 @@ model Client {
   consentement_marketing Boolean   @default(false)
   supprime_le            DateTime?
 
-  utilisateur  Utilisateur   @relation(fields: [id_utilisateur], references: [id_utilisateur])
-  reservations Reservation[]
-  fidelite     Fidelite?
+  utilisateur     Utilisateur     @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  reservations    Reservation[]
+  fidelite        Fidelite?
+  ticket_supports TicketSupport[] @relation("ClientTickets")
 
   @@index([id_utilisateur])
 }
@@ -129,7 +130,8 @@ model Personnel {
   poste          String?
   date_embauche  DateTime?
 
-  utilisateur Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  utilisateur      Utilisateur     @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  tickets_assigned TicketSupport[] @relation("PersonnelTickets")
 }
 
 model Chambre {
@@ -472,4 +474,45 @@ model Maintenance {
   chambre Chambre @relation(fields: [id_chambre], references: [id_chambre])
 
   @@index([id_chambre])
+}
+
+model TicketSupport {
+  id_ticket     Int                 @id @default(autoincrement())
+  sujet         String
+  type          TypeTicketSupport
+  statut        StatutTicketSupport @default(en_attente)
+  description   String
+  date_creation DateTime            @default(now())
+
+  id_client    Int
+  id_personnel Int?
+
+  client         Client         @relation("ClientTickets", fields: [id_client], references: [id_client])
+  personnel      Personnel?     @relation("PersonnelTickets", fields: [id_personnel], references: [id_personnel])
+  emails_envoyes EmailSupport[] // emails associés à ce ticket
+}
+
+model EmailSupport {
+  id_email           Int      @id @default(autoincrement())
+  id_ticket          Int
+  email_client       String
+  email_destinataire String
+  sujet              String
+  message            String
+  date_envoi         DateTime @default(now())
+
+  ticket TicketSupport @relation(fields: [id_ticket], references: [id_ticket])
+}
+
+enum TypeTicketSupport {
+  technique
+  service
+  autre
+}
+
+enum StatutTicketSupport {
+  en_attente
+  en_cours
+  resolu
+  ferme
 }

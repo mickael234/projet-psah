@@ -311,7 +311,7 @@ class PaiementController {
      * @param {Object} res - Réponse Express
      */
     static handleError(error, res) {
-        console.error(error);
+        //console.error(error);
         
         // Si c'est une erreur API personnalisée avec un statut
         if (error.statusCode) {

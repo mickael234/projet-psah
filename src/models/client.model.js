@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import utilisateurModel from './utilisateur.model.js';
 import { RoleMapper } from '../utils/roleMapper.js';
 
-const prisma = new PrismaClient(); // Une seule instance de PrismaClient [^1]
+import prisma from '../config/prisma.js';
 
 class ClientModel {
     /**
@@ -10,7 +10,7 @@ class ClientModel {
      * @param {number} id - ID du client
      * @returns {Promise<Object>} - Le client avec ses relations
      */
-    async getWithRelations(id) {
+    static async getWithRelations(id) {
         return prisma.client.findUnique({
             where: { id_client: id },
             include: {

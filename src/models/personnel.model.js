@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
 
 class PersonnelModel {
     /**
@@ -39,4 +38,4 @@ class PersonnelModel {
     }
 }
 
-module.exports = PersonnelModel;
+export default PersonnelModel;

@@ -41,8 +41,11 @@ import avisRouteDoc from './docs/avisRouteDoc.js';
 import FactureController from './controllers/factureController.js';
 import rapportFinancierRouteDoc from "./docs/rapportFinancierRouteDoc.js"
 import depenseRoutes from './routes/depenseRoutes.js'
+import emailSupportRoutes from './routes/emailSupportRoutes.js';
+import ticketRoutes from './routes/ticketSupportRoutes.js'
 
 import './utils/paiementCron.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 
 
@@ -106,6 +109,8 @@ app.use('/api/avis', avisRoutes);
 app.use('/api/rapports', rapportRoutes);
 app.use('/api/depenses', depenseRoutes);
 app.use('/api/factures', factureRoutes);
+app.use('/api/tickets', ticketRoutes)
+app.use('/api/emails', emailSupportRoutes)
 
 
 app.use('/api/favoris', favorisRoutes);
@@ -120,4 +125,5 @@ if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => console.log(`✅ Serveur démarré sur http://localhost:${PORT}`));
 }
 
+app.use(errorHandler);
 export default app;
