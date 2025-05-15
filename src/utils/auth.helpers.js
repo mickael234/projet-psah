@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js'
+import prisma from '../config/prisma.js';
 import { PermissionError, NotFoundError } from '../errors/apiError.js';
 import TicketSupportService from '../services/ticketSupport.service.js';
 
@@ -31,12 +31,14 @@ export async function getClientIdFromUser(userEmail) {
  */
 export async function getPersonnelIdFromUser(userEmail) {
     const utilisateur = await prisma.utilisateur.findUnique({
-      where: { email: userEmail },
-      include: { personnel: true }
+        where: { email: userEmail },
+        include: { personnel: true }
     });
 
     if (!utilisateur?.personnel) {
-      throw new PermissionError("Accès refusé : vous n'êtes pas un membre du personnel.");
+        throw new PermissionError(
+            "Accès refusé : vous n'êtes pas un membre du personnel."
+        );
     }
 
     return utilisateur.personnel.id_personnel;
@@ -52,24 +54,24 @@ export async function getPersonnelIdFromUser(userEmail) {
  */
 export async function checkTicketBelongsToClient(ticketId, userEmail) {
     const utilisateur = await prisma.utilisateur.findUnique({
-      where: { email: userEmail },
-      include: { client: true }
+        where: { email: userEmail },
+        include: { client: true }
     });
-  
+
     if (!utilisateur?.client) {
-      throw new PermissionError("Accès refusé : vous n'êtes pas un client.");
+        throw new PermissionError("Accès refusé : vous n'êtes pas un client.");
     }
-  
+
     const clientId = utilisateur.client.id_client;
-  
+
     const ticket = await TicketSupportService.getTicketById(ticketId);
     if (!ticket) {
-      throw new NotFoundError("Le ticket n'existe pas.");
+        throw new NotFoundError("Le ticket n'existe pas.");
     }
-  
+
     if (ticket.id_client !== clientId) {
-      throw new PermissionError("Ce ticket ne vous appartient pas.");
+        throw new PermissionError('Ce ticket ne vous appartient pas.');
     }
-  
+
     return ticket;
 }

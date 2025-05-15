@@ -80,6 +80,7 @@ model Client {
   fidelite               Fidelite?
   reservations           Reservation[]
   ticket_supports        TicketSupport[] @relation("ClientTickets")
+  demandesCourse         DemandeCourse[] // une relation 1:N
 
   @@index([id_utilisateur])
 }
@@ -93,6 +94,7 @@ model Personnel {
   date_embauche    DateTime?
   utilisateur      Utilisateur     @relation(fields: [id_utilisateur], references: [id_utilisateur])
   tickets_assigned TicketSupport[] @relation("PersonnelTickets")
+  trajets          Trajet[] // une relation 1:N
 }
 
 model Chambre {
@@ -481,4 +483,47 @@ enum StatutTicketSupport {
   en_cours
   resolu
   ferme
+}
+
+model DemandeCourse {
+  id_demande_course Int                 @id @default(autoincrement())
+  lieu_depart       String
+  lieu_arrivee      String
+  date_demande      DateTime            @default(now())
+  statut            StatutDemandeCourse @default(en_attente)
+
+  id_client Int
+  client    Client @relation(fields: [id_client], references: [id_client])
+
+  trajet Trajet?
+
+  @@index([id_client])
+}
+
+model Trajet {
+  id_trajet            Int          @id @default(autoincrement())
+  date_prise_en_charge DateTime
+  date_depose          DateTime
+  statut               StatutTrajet @default(en_attente)
+
+  id_personnel Int
+  personnel    Personnel @relation(fields: [id_personnel], references: [id_personnel])
+
+  id_demande_course Int           @unique
+  demandeCourse     DemandeCourse @relation(fields: [id_demande_course], references: [id_demande_course])
+
+  @@index([id_personnel])
+}
+
+enum StatutDemandeCourse {
+  en_attente
+  acceptee
+  refusee
+  annulee
+}
+
+enum StatutTrajet {
+  en_attente
+  en_cours
+  termine
 }

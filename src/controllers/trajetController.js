@@ -1,0 +1,142 @@
+import TrajetService from '../services/trajet.service.js';
+import * as AuthHelpers from '../utils/auth.helpers.js';
+
+
+class TrajetController {
+    /**
+     * Récupérer un trajet par son ID
+     * @route GET /trajets/:id
+     */
+    static async getById(req, res, next) {
+        try {
+            const trajetId = Number(req.params.id);
+            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);
+            const trajet = await TrajetService.getById(trajetId, personnelId);
+
+            res.status(200).json({
+                status: 'OK',
+                message: 'Trajet récupéré avec succès.',
+                data: trajet
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Récupérer les trajets du chauffeur connecté
+     * @route GET /trajets/me
+     */
+    static async getMyTrajets(req, res, next) {
+        try {
+            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);(req.user.email);
+
+            const filters = {
+                ...(req.query.statut && { statut: req.query.statut }),
+                ...(req.query.dateMin && { dateMin: req.query.dateMin }),
+                ...(req.query.dateMax && { dateMax: req.query.dateMax })
+            };
+
+            const trajets = await TrajetService.getByChauffeur(personnelId, filters);
+
+            res.status(200).json({
+                status: 'OK',
+                message: 'Trajets du chauffeur récupérés avec succès.',
+                data: trajets
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Récupérer le planning des trajets groupés par jour
+     * @route GET /trajets/planning
+     */
+    static async getPlanning(req, res, next) {
+        try {
+            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);
+            const { dateMin, dateMax } = req.query;
+
+            const trajets = await TrajetService.getPlanningParJour(personnelId, dateMin, dateMax);
+
+            res.status(200).json({
+                status: 'OK',
+                message: 'Planning des trajets récupéré avec succès.',
+                data: trajets
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Créer un nouveau trajet
+     * @route POST /trajets
+     */
+    static async create(req, res, next) {
+        try {
+            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);
+            const trajet = await TrajetService.creerTrajet(personnelId, req.body);
+            
+            res.status(201).json({
+                status: 'CREATED',
+                message: 'Trajet créé avec succès.',
+                data: trajet
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Modifier les horaires d’un trajet (client)
+     * @route PATCH /trajets/:id/horaires
+     */
+    static async updateHoraires(req, res, next) {
+        try {
+            const trajetId = Number(req.params.id);
+            const { date_prise_en_charge, date_depose } = req.body;
+            const clientId = await AuthHelpers.getClientIdFromUser(req.user.email);
+
+            const trajet = await TrajetService.modifierHoraires(
+                trajetId,
+                clientId,
+                date_prise_en_charge,
+                date_depose
+            );
+
+            res.status(200).json({
+                status: 'OK',
+                message: 'Horaires du trajet mis à jour avec succès.',
+                data: trajet
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Modifier le statut d’un trajet
+     * @route PATCH /trajets/:id/statut
+     */
+    static async updateStatut(req, res, next) {
+        try {
+            const trajetId = Number(req.params.id);
+            const { statut } = req.body;
+            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);
+
+            const trajet = await TrajetService.changerStatut(trajetId, statut, personnelId);
+
+            res.status(200).json({
+                status: 'OK',
+                message: `Statut du trajet mis à jour : ${statut}`,
+                data: trajet
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+}
+
+export default TrajetController;

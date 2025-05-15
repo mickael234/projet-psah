@@ -45,6 +45,8 @@ import rapportFinancierRouteDoc from "./docs/rapportFinancierRouteDoc.js"
 import depenseRoutes from './routes/depenseRoutes.js'
 import emailSupportRoutes from './routes/emailSupportRoutes.js';
 import ticketRoutes from './routes/ticketSupportRoutes.js'
+import demandeCourseRoutes from "./routes/demandeCourseRoute.js"
+import trajetRoutes from "./routes/trajetRoutes.js"
 
 import './utils/paiementCron.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -115,7 +117,8 @@ app.use('/api/depenses', depenseRoutes);
 app.use('/api/factures', factureRoutes);
 app.use('/api/tickets', ticketRoutes)
 app.use('/api/emails', emailSupportRoutes)
-
+app.use('/api/demandes', demandeCourseRoutes)
+app.use('/api/trajets', trajetRoutes)
 
 app.use('/api/favoris', favorisRoutes);
 app.use('/api/services', serviceRoutes);
