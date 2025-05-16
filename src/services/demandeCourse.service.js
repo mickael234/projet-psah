@@ -24,6 +24,7 @@ class DemandeCourseService {
      * Liste des demandes d’un client
      * @param {number} clientId
      * @param {Object} filters
+     * @returns {Promise<Array>} Liste des demandes du client
      */
     static async getByClient(clientId, filters = {}) {
         if (!clientId) throw new ValidationError('ID du client requis.');
@@ -40,7 +41,9 @@ class DemandeCourseService {
     }
 
     /**
-     * Liste des demandes en attente (chauffeur)
+     * Récupère les demandes en attente (chauffeur)
+     * @param {Object} filters - Filtres optionnels (dateMin, dateMax, etc.)
+     * @returns {Promise<Array>} Liste des demandes en attente
      */
     static async getEnAttente(filters = {}) {
         const demandes = await DemandeCourseModel.findPending(filters);
@@ -79,7 +82,10 @@ class DemandeCourseService {
 
     
     /**
-     * Met à jour une demande (lieu ou horaire) si statut = en_attente
+     * Met à jour une demande (lieu ou horaire) si son statut est "en_attente"
+     * @param {number} id - ID de la demande à modifier
+     * @param {Object} updateData - Données à mettre à jour
+     * @returns {Promise<Object>} La demande mise à jour
      */
     static async modifierDemande(id, updateData) {
         const demande = await DemandeCourseModel.findById(id);
@@ -118,8 +124,12 @@ class DemandeCourseService {
     }
 
     /**
-     * Supprime une demande
+     * Supprime une demande par son ID
+     * @param {number} id - ID de la demande à supprimer
+     * @returns {Promise<Object>} La demande supprimée
+     * @throws {NotFoundError} Si la demande n'existe pas
      */
+
     static async supprimer(id) {
         const demande = await DemandeCourseModel.findById(id);
         if (!demande) throw new NotFoundError();

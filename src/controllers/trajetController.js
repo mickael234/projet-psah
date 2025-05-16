@@ -5,7 +5,12 @@ import * as AuthHelpers from '../utils/auth.helpers.js';
 class TrajetController {
     /**
      * Récupérer un trajet par son ID
+     * 
      * @route GET /trajets/:id
+     * @param {import('express').Request} req - Requête contenant l'ID du trajet
+     * @param {import('express').Response} res - Réponse à retourner
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async getById(req, res, next) {
         try {
@@ -25,7 +30,12 @@ class TrajetController {
 
     /**
      * Récupérer les trajets du chauffeur connecté
+     * 
      * @route GET /trajets/me
+     * @param {import('express').Request} req - Requête contenant les informations de l'utilisateur
+     * @param {import('express').Response} res - Réponse à retourner
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async getMyTrajets(req, res, next) {
         try {
@@ -49,9 +59,14 @@ class TrajetController {
         }
     }
 
-    /**
+     /**
      * Récupérer le planning des trajets groupés par jour
+     * 
      * @route GET /trajets/planning
+     * @param {import('express').Request} req - Requête contenant les dates de filtre
+     * @param {import('express').Response} res - Réponse à retourner
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async getPlanning(req, res, next) {
         try {
@@ -72,7 +87,12 @@ class TrajetController {
 
     /**
      * Créer un nouveau trajet
+     * 
      * @route POST /trajets
+     * @param {import('express').Request} req - Requête contenant les données du trajet
+     * @param {import('express').Response} res - Réponse à retourner
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async create(req, res, next) {
         try {
@@ -90,8 +110,13 @@ class TrajetController {
     }
 
     /**
-     * Modifier les horaires d’un trajet (client)
+     * Modifier les horaires d’un trajet (pour le client)
+     * 
      * @route PATCH /trajets/:id/horaires
+     * @param {import('express').Request} req - Requête contenant les nouvelles dates
+     * @param {import('express').Response} res - Réponse à retourner
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async updateHoraires(req, res, next) {
         try {
@@ -118,7 +143,12 @@ class TrajetController {
 
     /**
      * Modifier le statut d’un trajet
+     * 
      * @route PATCH /trajets/:id/statut
+     * @param {import('express').Request} req - Requête contenant l'ID du trajet et le nouveau statut
+     * @param {import('express').Response} res - Réponse à retourner
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async updateStatut(req, res, next) {
         try {

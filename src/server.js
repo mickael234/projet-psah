@@ -38,6 +38,8 @@ import paiementRouteDoc from './docs/paiementRouteDoc.js';
 import depenseRouteDoc from "./docs/depenseRouteDoc.js";
 import ticketSupportRouteDoc from './docs/ticketSupportRouteDoc.js';
 import emailSupportRouteDoc from './docs/emailSupportRouteDoc.js';
+import trajetRouteDoc from './docs/trajetRouteDoc.js';
+import demandeCourseRouteDoc from './docs/demandeCourseRouteDoc.js';
 
 import avisRouteDoc from './docs/avisRouteDoc.js';
 import FactureController from './controllers/factureController.js';
@@ -98,7 +100,9 @@ swaggerSpec.paths = {
     ...paiementRouteDoc,
     ...depenseRouteDoc,
     ...ticketSupportRouteDoc,
-    ...emailSupportRouteDoc
+    ...emailSupportRouteDoc,
+    ...trajetRouteDoc,
+    ...demandeCourseRouteDoc
 };
 
 // Swagger route

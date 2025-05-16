@@ -1,11 +1,18 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import request from 'supertest';
 
+/**
+ * Mock des fonctions d’authentification
+ */
+
 jest.unstable_mockModule('../../src/utils/auth.helpers.js', () => ({
     getPersonnelIdFromUser: jest.fn().mockResolvedValue(123),
     getClientIdFromUser: jest.fn().mockResolvedValue(456)
 }));
 
+/**
+ * Mock du service DemandeCourse
+ */
 jest.unstable_mockModule('../../src/services/demandeCourse.service.js', () => ({
     default: {
         getById: jest.fn(),
@@ -17,6 +24,11 @@ jest.unstable_mockModule('../../src/services/demandeCourse.service.js', () => ({
         supprimer: jest.fn()
     }
 }));
+
+
+/**
+ * Mock du middleware d’authentification avec gestion des rôles
+ */
 
 jest.unstable_mockModule('../../src/middleware/auth.js', () => ({
     authenticateJWT: (req, res, next) => {
@@ -40,6 +52,10 @@ jest.unstable_mockModule('../../src/middleware/auth.js', () => ({
 
 let app, DemandeCourseService, AuthHelpers;
 
+/**
+ * Réinitialisation et configuration de l'application avant chaque test
+ */
+
 beforeEach(async () => {
     jest.resetModules();
 
@@ -58,6 +74,11 @@ beforeEach(async () => {
 });
 
 describe('DemandeCourse Routes', () => {
+
+    /**
+     * Vérifie que l’on peut récupérer une demande par son ID
+     */
+
     it('GET /demandes/:id - devrait retourner une demande', async () => {
         DemandeCourseService.getById.mockResolvedValue({ id_demande: 1 });
 
@@ -70,6 +91,10 @@ describe('DemandeCourse Routes', () => {
         expect(response.body.data.id_demande).toBe(1);
     });
 
+    /**
+     * Vérifie que le client peut récupérer ses propres demandes
+     */
+
     it('GET /demandes/me - devrait retourner les demandes du client', async () => {
         DemandeCourseService.getByClient.mockResolvedValue([]);
 
@@ -81,6 +106,10 @@ describe('DemandeCourse Routes', () => {
         expect(DemandeCourseService.getByClient).toHaveBeenCalled();
     });
 
+    /**
+     * Vérifie que le client peut récupérer ses propres demandes
+     */
+
     it('GET /demandes/en-attente - devrait retourner les demandes en attente', async () => {
         DemandeCourseService.getEnAttente.mockResolvedValue([]);
 
@@ -91,6 +120,10 @@ describe('DemandeCourse Routes', () => {
         expect(response.status).toBe(200);
         expect(DemandeCourseService.getEnAttente).toHaveBeenCalled();
     });
+
+    /**
+     * Vérifie que la création d’une demande fonctionne
+     */
 
     it('POST /demandes - devrait créer une demande', async () => {
         DemandeCourseService.creerDemande.mockResolvedValue({
@@ -106,6 +139,10 @@ describe('DemandeCourse Routes', () => {
         expect(DemandeCourseService.creerDemande).toHaveBeenCalled();
     });
 
+    /**
+     * Vérifie que la modification d’une demande fonctionne
+     */
+
     it('PATCH /demandes/:id - devrait modifier une demande', async () => {
         DemandeCourseService.modifierDemande.mockResolvedValue({
             id_demande: 22
@@ -120,6 +157,10 @@ describe('DemandeCourse Routes', () => {
         expect(DemandeCourseService.modifierDemande).toHaveBeenCalled();
     });
 
+    /**
+     * Vérifie que le changement de statut d’une demande fonctionne
+     */
+    
     it('PATCH /demandes/:id/statut - devrait changer le statut de la demande', async () => {
         DemandeCourseService.changerStatut.mockResolvedValue({
             id_demande: 88,

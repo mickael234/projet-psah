@@ -74,6 +74,7 @@ class TrajetModel {
      * @param {number} personnelId 
      * @param {Date} dateDebut 
      * @param {Date} dateFin 
+     * @returns {Promise<Array>} - Liste des trajets
      */
     static async getPlanningParJour(personnelId, dateDebut, dateFin) {
         return await prisma.trajet.findMany({

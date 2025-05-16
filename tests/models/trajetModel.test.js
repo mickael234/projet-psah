@@ -10,6 +10,9 @@ import prisma from '../../src/config/prisma.js';
 import TrajetModel from '../../src/models/trajet.model.js';
 
 describe('Trajet Model', () => {
+    /**
+     * Mocke les méthodes Prisma avant chaque test
+     */
     beforeEach(() => {
         jest.spyOn(prisma.trajet, 'findUnique').mockImplementation(() =>
             Promise.resolve({})
@@ -25,11 +28,17 @@ describe('Trajet Model', () => {
         );
     });
 
+    /**
+     * Nettoie tous les mocks après chaque test
+     */
     afterEach(() => {
         jest.clearAllMocks();
     });
 
     describe('findById', () => {
+        /**
+         * Vérifie que findById appelle prisma.trajet.findUnique avec les bons paramètres
+         */
         it('doit appeler prisma.trajet.findUnique avec les bons paramètres', async () => {
             const id = 101;
             const mockResult = { id_trajet: id, statut: 'en_attente' };
@@ -48,6 +57,9 @@ describe('Trajet Model', () => {
             expect(result).toEqual(mockResult);
         });
 
+        /**
+         * Vérifie que l'erreur est bien propagée si Prisma échoue
+         */
         it("doit propager l'erreur si prisma.trajet.findUnique échoue", async () => {
             const id = 101;
             const mockError = new Error('Erreur DB');
@@ -58,6 +70,9 @@ describe('Trajet Model', () => {
     });
 
     describe('findAllByChauffeur', () => {
+        /**
+         * Vérifie que findAllByChauffeur passe bien les bons filtres à Prisma
+         */
         it('doit appeler prisma.trajet.findMany avec les bons filtres', async () => {
             const id_personnel = 5;
             const filters = {
@@ -83,6 +98,9 @@ describe('Trajet Model', () => {
     });
 
     describe('create', () => {
+        /**
+         * Vérifie que create appelle prisma.trajet.create avec les bonnes données
+         */
         it('doit appeler prisma.trajet.create avec les bonnes données', async () => {
             const data = {
                 id_personnel: 1,
@@ -101,6 +119,9 @@ describe('Trajet Model', () => {
     });
 
     describe('updateStatut', () => {
+        /**
+         * Vérifie que updateStatut met à jour le statut du trajet correctement
+         */
         it('doit appeler prisma.trajet.update avec le bon statut', async () => {
             const id = 11;
             const statut = 'termine';
@@ -115,6 +136,9 @@ describe('Trajet Model', () => {
     });
 
     describe('updateHoraires', () => {
+        /**
+         * Vérifie que updateHoraires met bien à jour les dates de prise en charge et de dépose
+         */
         it('doit appeler prisma.trajet.update avec les nouvelles horaires', async () => {
             const id = 22;
             const date1 = new Date('2024-05-15T10:00:00');

@@ -10,11 +10,17 @@ import {
 } from '../../src/errors/apiError.js';
 
 describe('TrajetService', () => {
+    /**
+     * Nettoyage des mocks après chaque test
+     */
     afterEach(() => {
         jest.clearAllMocks();
     });
 
     describe('getById', () => {
+        /**
+         * Vérifie que getById retourne un trajet valide si l’utilisateur est autorisé
+         */
         it("retourne un trajet si l'utilisateur est le bon chauffeur", async () => {
             const id = 1;
             const idPersonnel = 10;
@@ -26,12 +32,18 @@ describe('TrajetService', () => {
             expect(result).toEqual(mockTrajet);
         });
 
+        /**
+         * Vérifie que getById rejette si l'ID est invalide
+         */
         it("lance une erreur si l'ID est invalide", async () => {
             await expect(TrajetService.getById(null, 1)).rejects.toThrow(
                 ValidationError
             );
         });
 
+        /**
+         * Vérifie que getById rejette si le trajet n'existe pas
+         */
         it('lance une NotFoundError si le trajet est introuvable', async () => {
             jest.spyOn(TrajetModel, 'findById').mockResolvedValue(null);
             await expect(TrajetService.getById(1, 1)).rejects.toThrow(
@@ -39,6 +51,9 @@ describe('TrajetService', () => {
             );
         });
 
+        /**
+         * Vérifie que getById rejette si l’utilisateur n’est pas le propriétaire
+         */
         it("lance une PermissionError si ce n'est pas son trajet", async () => {
             jest.spyOn(TrajetModel, 'findById').mockResolvedValue({
                 id_trajet: 1,
@@ -51,6 +66,9 @@ describe('TrajetService', () => {
     });
 
     describe('creerTrajet', () => {
+        /**
+         * Vérifie que creerTrajet fonctionne si la demande est acceptée
+         */
         it('crée un trajet pour une demande acceptée', async () => {
             const idPersonnel = 1;
             
@@ -76,7 +94,10 @@ describe('TrajetService', () => {
             
             expect(result).toMatchObject({ id_personnel: 1 });
         });
-    
+
+        /**
+         * Vérifie que creerTrajet rejette si la demande est refusée
+         */
         it("rejette les trajets si la demande n'est pas acceptée", async () => {
             const idPersonnel = 1;
             const data = {
@@ -98,6 +119,9 @@ describe('TrajetService', () => {
     });
 
     describe('changerStatut', () => {
+        /**
+         * Vérifie que changerStatut fonctionne si les conditions sont réunies
+         */
         it('modifie le statut si tout est valide', async () => {
             const trajet = { id_trajet: 1, id_personnel: 5 };
             jest.spyOn(TrajetModel, 'findById').mockResolvedValue(trajet);
@@ -110,6 +134,9 @@ describe('TrajetService', () => {
             expect(result).toMatchObject({ statut: 'en_cours' });
         });
 
+        /**
+         * Vérifie que changerStatut échoue si le trajet n’appartient pas à l’utilisateur
+         */
         it("rejette si le chauffeur n'est pas le bon", async () => {
             jest.spyOn(TrajetModel, 'findById').mockResolvedValue({
                 id_trajet: 1,
@@ -120,6 +147,9 @@ describe('TrajetService', () => {
             ).rejects.toThrow(PermissionError);
         });
 
+        /**
+         * Vérifie que changerStatut échoue si le statut fourni est invalide
+         */
         it('rejette si le statut est invalide', async () => {
             jest.spyOn(TrajetModel, 'findById').mockResolvedValue({
                 id_trajet: 1,

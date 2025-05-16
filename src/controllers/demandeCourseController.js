@@ -2,9 +2,14 @@ import DemandeCourseService from '../services/demandeCourse.service.js';
 import * as AuthHelpers from '../utils/auth.helpers.js';
 
 class DemandeCourseController {
-    /**
+     /**
      * Récupérer une demande de course par son ID
+     * 
      * @route GET /demandes/:id
+     * @param {import('express').Request} req - Requête Express contenant l'ID de la demande
+     * @param {import('express').Response} res - Réponse Express
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async getById(req, res, next) {
         try {
@@ -23,7 +28,12 @@ class DemandeCourseController {
 
     /**
      * Récupérer les demandes du client connecté
+     * 
      * @route GET /demandes/me
+     * @param {import('express').Request} req - Requête Express avec utilisateur connecté
+     * @param {import('express').Response} res - Réponse Express
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async getMesDemandes(req, res, next) {
         try {
@@ -52,7 +62,12 @@ class DemandeCourseController {
 
     /**
      * Récupérer toutes les demandes en attente pour un chauffeur
+     * 
      * @route GET /demandes/en-attente
+     * @param {import('express').Request} req - Requête Express avec filtres optionnels
+     * @param {import('express').Response} res - Réponse Express
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async getEnAttente(req, res, next) {
         try {
@@ -75,7 +90,12 @@ class DemandeCourseController {
 
     /**
      * Créer une nouvelle demande de course
+     * 
      * @route POST /demandes
+     * @param {import('express').Request} req - Requête Express contenant les données de la demande
+     * @param {import('express').Response} res - Réponse Express
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async create(req, res, next) {
         try {
@@ -97,9 +117,14 @@ class DemandeCourseController {
         }
     }
 
-    /**
-     * Modifier une demande (lieu, horaire)
+     /**
+     * Modifier une demande existante (lieu, horaire)
+     * 
      * @route PATCH /demandes/:id
+     * @param {import('express').Request} req - Requête Express contenant l'ID de la demande et les données à modifier
+     * @param {import('express').Response} res - Réponse Express
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async update(req, res, next) {
         try {
@@ -120,8 +145,13 @@ class DemandeCourseController {
     }
 
     /**
-     * Changer le statut de la demande (accepter, refuser, annuler)
+     * Changer le statut d'une demande (acceptee, refusee, annulee)
+     * 
      * @route PATCH /demandes/:id/statut
+     * @param {import('express').Request} req - Requête Express contenant l'ID de la demande et le nouveau statut
+     * @param {import('express').Response} res - Réponse Express
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async updateStatut(req, res, next) {
         try {
@@ -143,9 +173,14 @@ class DemandeCourseController {
         }
     }
 
-    /**
-     * Supprimer une demande
+     /**
+     * Supprimer une demande de course
+     * 
      * @route DELETE /demandes/:id
+     * @param {import('express').Request} req - Requête Express contenant l'ID de la demande
+     * @param {import('express').Response} res - Réponse Express
+     * @param {Function} next - Fonction de gestion des erreurs
+     * @returns {Promise<void>}
      */
     static async delete(req, res, next) {
         try {

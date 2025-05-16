@@ -1,13 +1,17 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import request from 'supertest';
 
-// Mock des fonctions utilitaires d'authentification
+/**
+ * Mock des fonctions utilitaires d'authentification
+ */
 jest.unstable_mockModule('../../src/utils/auth.helpers.js', () => ({
     getPersonnelIdFromUser: jest.fn().mockResolvedValue(123),
     getClientIdFromUser: jest.fn().mockResolvedValue(456)
 }));
 
-// Mock complet du service
+/**
+ * Mock complet du service Trajet
+ */
 jest.unstable_mockModule('../../src/services/trajet.service.js', () => ({
     default: {
         getById: jest.fn(),
@@ -19,7 +23,9 @@ jest.unstable_mockModule('../../src/services/trajet.service.js', () => ({
     }
 }));
 
-// Mock du middleware d'authentification
+/**
+ * Mock du middleware d'authentification avec différents rôles
+ */
 jest.unstable_mockModule('../../src/middleware/auth.js', () => ({
     authenticateJWT: (req, res, next) => {
         req.user = { email: 'test@example.com', role: 'CHAUFFEUR' };
@@ -42,6 +48,10 @@ jest.unstable_mockModule('../../src/middleware/auth.js', () => ({
 
 let app, TrajetService, AuthHelpers;
 
+/**
+ * Configuration de l'application Express avant chaque test
+ */
+
 beforeEach(async () => {
     jest.resetModules();
 
@@ -62,6 +72,9 @@ beforeEach(async () => {
 });
 
 describe('Trajet Routes', () => {
+    /**
+     * Vérifie que le chauffeur peut récupérer ses trajets
+     */
     it('GET /trajets/me - devrait retourner les trajets du chauffeur', async () => {
         // Préparation du mock
         const mockTrajets = [{ id_trajet: 1 }, { id_trajet: 2 }];
@@ -80,6 +93,10 @@ describe('Trajet Routes', () => {
         expect(TrajetService.getByChauffeur).toHaveBeenCalledWith(123, {});
         expect(response.body.data).toEqual(mockTrajets);
     });
+
+    /**
+     * Vérifie que le planning peut être récupéré par un chauffeur
+     */
 
     it('GET /trajets/planning - devrait retourner le planning', async () => {
         // Préparation du mock
@@ -105,6 +122,10 @@ describe('Trajet Routes', () => {
         expect(response.body.data).toEqual(mockPlanning);
     });
 
+    /**
+     * Vérifie que l'on peut récupérer un trajet par ID
+     */
+
     it('GET /trajets/:id - devrait retourner un trajet', async () => {
         // Préparation du mock
         const mockTrajet = { id_trajet: 1, statut: 'en_cours' };
@@ -123,6 +144,10 @@ describe('Trajet Routes', () => {
         expect(TrajetService.getById).toHaveBeenCalledWith(1, 123);
         expect(response.body.data).toEqual(mockTrajet);
     });
+
+    /**
+     * Vérifie que l'on peut créer un trajet
+     */
 
     it('POST /trajets - devrait créer un trajet', async () => {
         // Préparation du mock
@@ -146,6 +171,10 @@ describe('Trajet Routes', () => {
         expect(TrajetService.creerTrajet).toHaveBeenCalledWith(personnelId, mockTrajetData);
         expect(response.body.data).toEqual(mockTrajetCreated);
     });
+
+    /**
+     * Vérifie que le client peut modifier les horaires d’un trajet
+     */
 
     it('PATCH /trajets/:id/horaires - client peut modifier horaires', async () => {
         // Préparation du mock
@@ -175,6 +204,10 @@ describe('Trajet Routes', () => {
         );
         expect(response.body.data).toEqual(mockTrajetModified);
     });
+
+    /**
+     * Vérifie que le chauffeur peut modifier le statut d’un trajet
+     */
 
     it('PATCH /trajets/:id/statut - chauffeur peut modifier le statut', async () => {
         // Préparation du mock
