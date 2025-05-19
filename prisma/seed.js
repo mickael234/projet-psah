@@ -1,11 +1,41 @@
-import prisma from "../config/prisma.js";;
-
-;
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 async function main() {
-    console.log('Début de l\'initialisation des permissions...');
+    console.log('Début de l\'initialisation des rôles et permissions...');
 
-    // 1. Créer les permissions
+    // 1. Créer les rôles
+    const roles = [
+        { code: 'SUPER_ADMIN', nom: 'Super Administrateur', description: 'Accès complet à toutes les fonctionnalités' },
+        { code: 'ADMIN_GENERAL', nom: 'Administrateur Général', description: 'Accès à la plupart des fonctionnalités administratives' },
+        { code: 'RESPONSABLE_HEBERGEMENT', nom: 'Responsable Hébergement', description: 'Gestion des chambres et réservations' },
+        { code: 'RECEPTIONNISTE', nom: 'Réceptionniste', description: 'Gestion des réservations et accueil clients' },
+        { code: 'MAINTENANCE', nom: 'Maintenance', description: 'Gestion des tâches de maintenance' },
+        { code: 'PROPRIETAIRE', nom: 'Propriétaire', description: 'Propriétaire d\'hébergement' },
+        { code: 'CLIENT', nom: 'Client', description: 'Utilisateur client' },
+        { code: 'CHAUFFEUR', nom: 'Chauffeur', description: 'Service de transport' },
+        { code: 'COMPTABILITE', nom: 'Comptabilité', description: 'Gestion financière' }
+    ];
+
+    // Créer les rôles dans la base de données
+    for (const role of roles) {
+        try {
+            await prisma.role.upsert({
+                where: { code: role.code },
+                update: {},
+                create: {
+                    code: role.code,
+                    nom: role.nom,
+                    description: role.description,
+                }
+            });
+            console.log(`Rôle créé: ${role.code}`);
+        } catch (error) {
+            console.error(`Erreur lors de la création du rôle ${role.code}:`, error);
+        }
+    }
+
+    // 2. Créer les permissions
     const permissions = [
         { code: 'MANAGE_USERS', nom: 'Gérer les utilisateurs', description: 'Permet de créer, modifier et supprimer des utilisateurs' },
         { code: 'MANAGE_ROLES', nom: 'Gérer les rôles', description: 'Permet de créer, modifier et supprimer des rôles' },
@@ -37,7 +67,7 @@ async function main() {
         }
     }
 
-    // 2. Récupérer les IDs des rôles
+    // 3. Récupérer les IDs des rôles
     const superAdminRole = await prisma.role.findUnique({
         where: { code: 'SUPER_ADMIN' }
     });
@@ -58,14 +88,14 @@ async function main() {
         where: { code: 'MAINTENANCE' }
     });
 
-    // 3. Récupérer les IDs des permissions
+    // 4. Récupérer les IDs des permissions
     const allPermissions = await prisma.permission.findMany();
     const permissionMap = allPermissions.reduce((map, perm) => {
         map[perm.code] = perm.id_permission;
         return map;
     }, {});
 
-    // 4. Associer les permissions aux rôles
+    // 5. Associer les permissions aux rôles
     
     // SUPER_ADMIN a toutes les permissions
     if (superAdminRole) {
@@ -206,12 +236,12 @@ async function main() {
         }
     }
 
-    console.log('Initialisation des permissions terminée avec succès');
+    console.log('Initialisation des rôles et permissions terminée avec succès');
 }
 
 main()
     .catch((e) => {
-        console.error('Erreur lors de l\'initialisation des permissions:', e);
+        console.error('Erreur lors de l\'initialisation des rôles et permissions:', e);
         process.exit(1);
     })
     .finally(async () => {
