@@ -1,75 +1,36 @@
-// src/routes/maintenanceRoutes.js
-import express from 'express';
+import express from "express"
 import {
   creerMaintenance,
-  listerMaintenancesParChambre
-} from '../controllers/maintenanceController.js';
+  listerMaintenancesParChambre,
+  obtenirNotificationsMaintenance,
+  marquerNotificationsCommeLues,
+  mettreAJourStatutMaintenance,
+  trouverPersonnelParUtilisateur,
+  verifierRoleMaintenance,
+} from "../controllers/maintenanceController.js"
+import { authenticateJWT } from "../middleware/auth.js"
 
-const router = express.Router();
+const router = express.Router()
 
 /**
- * @swagger
- * tags:
- *   name: Maintenance
- *   description: Gestion des maintenances des chambres
+ * Middleware d'authentification et de vérification des rôles
  */
+router.use(authenticateJWT)
+router.use(verifierRoleMaintenance)
 
 /**
- * @swagger
- * /api/hebergements/{id}/maintenance:
- *   post:
- *     summary: Créer une maintenance pour une chambre
- *     tags: [Maintenance]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID de la chambre concernée
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - description
- *               - date_debut
- *               - date_fin
- *             properties:
- *               description:
- *                 type: string
- *               date_debut:
- *                 type: string
- *                 format: date-time
- *               date_fin:
- *                 type: string
- *                 format: date-time
- *     responses:
- *       201:
- *         description: Maintenance créée avec succès
- *       500:
- *         description: Erreur lors de la création de la maintenance
- *
- *   get:
- *     summary: Obtenir les maintenances d’une chambre
- *     tags: [Maintenance]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID de la chambre
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Liste des maintenances
- *       500:
- *         description: Erreur lors de la récupération des maintenances
+ * Route pour trouver l'ID du personnel par l'ID utilisateur
  */
+router.get("/find-personnel/:userId", trouverPersonnelParUtilisateur)
 
-router.post('/hebergements/:id/maintenance', creerMaintenance);
-router.get('/hebergements/:id/maintenance', listerMaintenancesParChambre);
+/**
+ * Routes pour la gestion des maintenances
+ */
+router.post("/hebergements/:id/maintenance", creerMaintenance)
+router.get("/hebergements/:id/maintenance", listerMaintenancesParChambre)
+router.get("/notifications", obtenirNotificationsMaintenance)
+router.put("/notifications/marquer-comme-lues", marquerNotificationsCommeLues)
+router.put("/:idMaintenance/statut", mettreAJourStatutMaintenance)
 
-export default router;
+export default router
+

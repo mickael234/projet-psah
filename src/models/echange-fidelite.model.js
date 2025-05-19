@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
+
 
 class EchangeFideliteModel {
     /**
@@ -221,4 +221,4 @@ class EchangeFideliteModel {
     }
 }
 
-module.exports = EchangeFideliteModel;
+export defaultEchangeFideliteModel;

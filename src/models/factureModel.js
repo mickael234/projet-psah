@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import prisma from "../config/prisma.js";
 const prisma = new PrismaClient()
 
 class FactureModel {

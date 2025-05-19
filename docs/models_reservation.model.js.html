@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: models/reservation.model.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: models/reservation.model.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+class ReservationModel {
+    /**
+     * Récupère une réservation avec ses relations
+     * @param {number} id - ID de la réservation
+     * @returns {Promise&lt;Object>} - La réservation avec ses relations
+     */
+    static getWithRelations(id) {
+        return prisma.reservation.findUnique({
+            where: { id_reservation: id },
+            include: {
+                client: true,
+                chambres: {
+                    include: {
+                        chambre: true
+                    }
+                },
+                services: {
+                    include: {
+                        service: true
+                    }
+                },
+                paiements: true,
+                avis: true
+            }
+        });
+    }
+
+    /**
+     * Vérifie la disponibilité des chambres pour une période donnée
+     * @param {Date} dateArrivee - Date d'arrivée
+     * @param {Date} dateDepart - Date de départ
+     * @param {number} capacite - Capacité minimale requise
+     * @returns {Promise&lt;Array>} - Liste des chambres disponibles
+     */
+    static checkAvailability(dateArrivee, dateDepart, capacite = null) {
+        // Récupérer les IDs des chambres déjà réservées pour cette période
+        return prisma.$transaction(async (tx) => {
+            const reservedRooms = await tx.reservationsChambre.findMany({
+                where: {
+                    OR: [
+                        {
+                            AND: [
+                                { date_arrivee: { lte: dateArrivee } },
+                                { date_depart: { gt: dateArrivee } }
+                            ]
+                        },
+                        {
+                            AND: [
+                                { date_arrivee: { lt: dateDepart } },
+                                { date_depart: { gte: dateDepart } }
+                            ]
+                        },
+                        {
+                            AND: [
+                                { date_arrivee: { gte: dateArrivee } },
+                                { date_depart: { lte: dateDepart } }
+                            ]
+                        }
+                    ],
+                    reservation: {
+                        etat: {
+                            notIn: ['annulee']
+                        }
+                    }
+                },
+                select: {
+                    id_chambre: true
+                }
+            });
+
+            const reservedRoomIds = reservedRooms.map(
+                (room) => room.id_chambre
+            );
+
+            // Trouver les chambres disponibles
+            return tx.chambre.findMany({
+                where: {
+                    id_chambre: { notIn: reservedRoomIds },
+                    etat: 'disponible',
+                    ...(capacite ? { capacite: { gte: capacite } } : {})
+                },
+                include: {
+                    medias: true
+                }
+            });
+        });
+    }
+
+    /**
+     * Récupère les réservations pour une période donnée
+     * @param {Date} debut - Date de début
+     * @param {Date} fin - Date de fin
+     * @returns {Promise&lt;Array>} - Liste des réservations
+     */
+    static findByPeriod(debut, fin) {
+        return prisma.reservation.findMany({
+            where: {
+                chambres: {
+                    some: {
+                        OR: [
+                            {
+                                AND: [
+                                    { date_arrivee: { lte: debut } },
+                                    { date_depart: { gt: debut } }
+                                ]
+                            },
+                            {
+                                AND: [
+                                    { date_arrivee: { lt: fin } },
+                                    { date_depart: { gte: fin } }
+                                ]
+                            },
+                            {
+                                AND: [
+                                    { date_arrivee: { gte: debut } },
+                                    { date_depart: { lte: fin } }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                supprime_le: null
+            },
+            include: {
+                client: true,
+                chambres: {
+                    include: {
+                        chambre: true
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Récupère toutes les réservations actuelles d'un client.
+     * @param {number} clientId - L'identifiant du client.
+     * @returns {Promise&lt;Array>} - Promesse contenant la liste des réservations actuelles avec les informations du client et des chambres.
+     */
+
+    static async findAllPresentReservations(clientId) {
+        const today = new Date();
+        return prisma.reservation.findMany({
+            where: {
+                id_client: clientId,
+                OR: [
+                    {
+                        etat: {
+                            in: ['en_attente', 'confirmee', 'enregistree']
+                        },
+                        chambres: {
+                            some: {
+                                date_depart: { gte: today }
+                            }
+                        }
+                    },
+                    {
+                        etat: 'enregistree',
+                        chambres: {
+                            some: {
+                                date_arrivee: { lte: today },
+                                date_depart: { gte: today }
+                            }
+                        }
+                    }
+                ]
+            },
+            include: {
+                client: true,
+                chambres: {
+                    include: {
+                        chambre: true
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Récupère toutes les réservations passées d'un client.
+     *
+     * @param {number} clientId - L'identifiant du client.
+     * @returns {Promise&lt;Array>} - Promesse contenant la liste des réservations passées avec les informations du client et des chambres.
+     */
+
+    static async findAllPastReservations(clientId) {
+        const today = new Date();
+        return prisma.reservation.findMany({
+            where: {
+                id_client: clientId,
+                OR: [
+                    { etat: { in: ['depart', 'annulee'] } },
+                    {
+                        etat: {
+                            in: ['en_attente', 'confirmee', 'enregistree']
+                        },
+                        chambres: {
+                            every: {
+                                date_depart: { lt: today }
+                            }
+                        }
+                    }
+                ]
+            },
+            include: {
+                client: true,
+                chambres: {
+                    include: {
+                        chambre: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+export default ReservationModel;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#clientAuth">clientAuth</a></li><li><a href="global.html#uploadFile">uploadFile</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 09 2025 15:11:23 GMT+0200 (heure d’été d’Europe centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

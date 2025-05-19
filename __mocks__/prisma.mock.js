@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { jest } from "@jest/globals"
 
 const prismaMock = {
   reservation: {
@@ -6,14 +6,14 @@ const prismaMock = {
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn()
+    delete: jest.fn(),
   },
   avis: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn()
+    delete: jest.fn(),
   },
   chambre: {
     findMany: jest.fn(),
@@ -21,19 +21,18 @@ const prismaMock = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
-    getWithRelations: jest.fn()
+    getWithRelations: jest.fn(),
   },
   client: {
     findUnique: jest.fn(),
-    findMany: jest.fn()
+    findMany: jest.fn(),
   },
   utilisateur: {
-    findUnique: jest.fn()
+    findUnique: jest.fn(),
   },
-  paiement : {
-    findMany: jest.fn()
-  }
-};
+  paiement: {
+    findMany: jest.fn(),
+  },
+}
 
-export default prismaMock;
-
+export default prismaMock

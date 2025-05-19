@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: models/utilisateur.model.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: models/utilisateur.model.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const bcrypt = require('bcrypt');
+
+class UtilisateurModel {
+    /**
+     * Crée un nouvel utilisateur
+     * @param {Object} userData - Données de l'utilisateur
+     * @returns {Promise&lt;Object>} - L'utilisateur créé
+     */
+    async create(userData) {
+        // Hachage du mot de passe
+        const hashedPassword = await bcrypt.hash(userData.mot_de_passe, 10);
+
+        return prisma.utilisateur.create({
+            data: {
+                ...userData,
+                mot_de_passe: hashedPassword
+            }
+        });
+    }
+
+    /**
+     * Récupère un utilisateur par son ID
+     * @param {number} id - ID de l'utilisateur
+     * @returns {Promise&lt;Object>} - L'utilisateur trouvé
+     */
+    async findById(id) {
+        return prisma.utilisateur.findUnique({
+            where: { id_utilisateur: id },
+            include: {
+                client: true,
+                personnel: true
+            }
+        });
+    }
+
+    /**
+     * Récupère un utilisateur avec ses relations
+     * @param {number} id - ID de l'utilisateur
+     * @returns {Promise&lt;Object>} - L'utilisateur avec ses relations
+     */
+    static getWithRelations(id) {
+        return prisma.utilisateur.findUnique({
+            where: { id_utilisateur: id },
+            include: {
+                client: true,
+                personnel: true
+            }
+        });
+    }
+
+    /**
+     * Récupère un utilisateur par son email
+     * @param {string} email - Email de l'utilisateur
+     * @returns {Promise&lt;Object>} - L'utilisateur trouvé
+     */
+    static findByEmail(email) {
+        return prisma.utilisateur.findUnique({
+            where: { email }
+        });
+    }
+
+    /**
+     * Récupère un utilisateur par son nom d'utilisateur
+     * @param {string} username - Nom d'utilisateur
+     * @returns {Promise&lt;Object>} - L'utilisateur trouvé
+     */
+    static findByUsername(username) {
+        return prisma.utilisateur.findUnique({
+            where: { nom_utilisateur: username }
+        });
+    }
+
+    /**
+     * Récupère tous les utilisateurs
+     * @param {Object} filters - Filtres optionnels
+     * @returns {Promise&lt;Array>} - Liste des utilisateurs
+     */
+    async findAll(filters = {}) {
+        return prisma.utilisateur.findMany({
+            where: {
+                ...filters,
+                supprime_le: null // Exclure les utilisateurs supprimés
+            },
+            include: {
+                client: true,
+                personnel: true
+            }
+        });
+    }
+
+    /**
+     * Met à jour un utilisateur
+     * @param {number} id - ID de l'utilisateur
+     * @param {Object} userData - Nouvelles données
+     * @returns {Promise&lt;Object>} - L'utilisateur mis à jour
+     */
+    async update(id, userData) {
+        // Si le mot de passe est fourni, le hacher
+        if (userData.mot_de_passe) {
+            userData.mot_de_passe = await bcrypt.hash(
+                userData.mot_de_passe,
+                10
+            );
+        }
+
+        return prisma.utilisateur.update({
+            where: { id_utilisateur: id },
+            data: userData
+        });
+    }
+
+    /**
+     * Suppression logique d'un utilisateur
+     * @param {number} id - ID de l'utilisateur
+     * @returns {Promise&lt;Object>} - L'utilisateur supprimé
+     */
+    async delete(id) {
+        return prisma.utilisateur.update({
+            where: { id_utilisateur: id },
+            data: { supprime_le: new Date() }
+        });
+    }
+
+    /**
+     * Authentifie un utilisateur
+     * @param {string} email - Email de l'utilisateur
+     * @param {string} password - Mot de passe
+     * @returns {Promise&lt;Object|null>} - L'utilisateur authentifié ou null
+     */
+    async authenticate(email, password) {
+        const user = await UtilisateurModel.findByEmail(email);
+
+        if (!user || user.supprime_le) {
+            return null;
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.mot_de_passe);
+
+        return passwordMatch ? user : null;
+    }
+
+    /**
+     * Vérifie si un utilisateur a un rôle spécifique
+     * @param {number} id - ID de l'utilisateur
+     * @param {string} role - Rôle à vérifier
+     * @returns {Promise&lt;boolean>} - True si l'utilisateur a le rôle
+     */
+    async hasRole(id, role) {
+        const user = await this.findById(id);
+        return user &amp;&amp; user.role === role;
+    }
+}
+
+module.exports = UtilisateurModel;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#clientAuth">clientAuth</a></li><li><a href="global.html#uploadFile">uploadFile</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 09 2025 15:11:23 GMT+0200 (heure d’été d’Europe centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

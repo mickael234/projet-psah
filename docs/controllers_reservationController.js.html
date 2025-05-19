@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: controllers/reservationController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: controllers/reservationController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { authenticateJWT } from '../middleware/auth.js';
+import ReservationModel from '../models/reservation.model.js';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+class ReservationController {
+    /**
+     * Récupère toutes les réservations passées d'un client.
+     *
+     * @param {Express.Request} req - Requête contenant `clientId` dans les paramètres.
+     * @param {Express.Response} res - Réponse pour renvoyer les données ou les erreurs.
+     * @returns {Promise&lt;void>}
+     */
+    static async getAllUserPastReservations(req, res) {
+        try {
+            const clientId = Number(req.params.clientId);
+
+            const reservations =
+                await ReservationModel.findAllPastReservations(clientId);
+            if (!reservations) {
+                return res.status(404).json({
+                    status: 'NOT FOUND',
+                    message: "Aucune réservation passée n'a été trouvé"
+                });
+            }
+
+            res.status(200).json({
+                status: 'OK',
+                data: {
+                    reservations
+                }
+            });
+        } catch (error) {
+            console.error('Une erreur est survenue : ' + error);
+            res.status(500).json({
+                status: 'INTERNAL SERVER ERROR',
+                message: 'Une erreur interne est survenue.'
+            });
+        }
+    }
+
+    /**
+     * Récupère toutes les réservations actuelles d'un client.
+     * @param {Express.Request} req - Requête contenant `clientId` dans les paramètres.
+     * @param {Express.Response} res - Réponse pour renvoyer les données ou les erreurs.
+     * @returns {Promise&lt;void>}
+     */
+    static async getAllUserPresentReservations(req, res) {
+        try {
+            const clientId = Number(req.params.clientId);
+
+            const reservations =
+                await ReservationModel.findAllPresentReservations(clientId);
+            if (!reservations) {
+                return res.status(404).json({
+                    status: 'NOT FOUND',
+                    message: "Aucune réservation actuelle n'a été trouvé"
+                });
+            }
+
+            res.status(200).json({
+                status: 'OK',
+                data: {
+                    reservations
+                }
+            });
+        } catch (error) {
+            console.error('Une erreur est survenue : ' + error);
+            res.status(500).json({
+                status: 'INTERNAL SERVER ERROR',
+                message: 'Une erreur interne est survenue.'
+            });
+        }
+    }
+}
+
+/**
+ * Vérifie que le clientId est un nombre valide et que l'utilisateur authentifié correspond bien au client ciblé.
+ *
+ * @type {Express.RequestHandler[]}
+ */
+export const clientAuth = [
+    authenticateJWT,
+
+    /**
+     * Vérifie l'identité du client et l'association avec l'utilisateur authentifié.
+     *
+     * @param {Express.Request} req - Requête contenant `clientId` dans les paramètres.
+     * @param {Express.Response} res - Réponse pour envoyer les erreurs le cas échéant.
+     * @param {Express.NextFunction} next - Fonction suivante dans la chaîne de middleware.
+     * @returns {Promise&lt;void>}
+     */
+    async (req, res, next) => {
+        const clientId = Number(req.params.clientId);
+
+        if (isNaN(clientId)) {
+            return res.status(400).json({
+                status: 'BAD REQUEST',
+                message: "L'id du client n'est pas valide."
+            });
+        }
+
+        try {
+            const client = await prisma.client.findUnique({
+                where: { id_client: clientId },
+                select: { id_utilisateur: true }
+            });
+
+            if (!client || client.id_utilisateur !== req.user.id) {
+                return res.status(403).json({
+                    status: 'FORBIDDEN',
+                    message: 'Accès non autorisé.'
+                });
+            }
+
+            next();
+        } catch (error) {
+            console.error('Une erreur interne est survenue: ' + error);
+            res.status(500).json({
+                status: 'INTERNAL SERVER ERROR',
+                message: 'Une erreur interne est survenue.'
+            });
+        }
+    }
+];
+
+export default ReservationController;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#clientAuth">clientAuth</a></li><li><a href="global.html#uploadFile">uploadFile</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 09 2025 15:11:23 GMT+0200 (heure d’été d’Europe centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

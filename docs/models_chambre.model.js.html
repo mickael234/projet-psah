@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: models/chambre.model.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: models/chambre.model.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+class ChambreModel {
+    /**
+     * Récupère une chambre avec ses relations
+     * @param {number} id - ID de la chambre
+     * @returns {Promise&lt;Object>} - La chambre avec ses relations
+     */
+    static getWithRelations(id) {
+        return prisma.chambre.findUnique({
+            where: { id_chambre: id },
+            include: {
+                equipements: {
+                    include: {
+                        equipement: true
+                    }
+                },
+                medias: true
+            }
+        });
+    }
+
+    /**
+     * Récupère les chambres par type
+     * @param {string} type - Type de chambre
+     * @returns {Promise&lt;Array>} - Liste des chambres
+     */
+    static findByType(type) {
+        return prisma.chambre.findMany({
+            where: { type_chambre: type }
+        });
+    }
+
+    /**
+     * Récupère les chambres disponibles
+     * @returns {Promise&lt;Array>} - Liste des chambres disponibles
+     */
+    static findAvailable() {
+        return prisma.chambre.findMany({
+            where: { etat: 'disponible' }
+        });
+    }
+
+    /**
+     * Crée une nouvelle chambre
+     * @param {Object} chambreData - Données de la chambre
+     * @param {Array} equipements - IDs des équipements
+     * @returns {Promise&lt;Object>} - La chambre créée
+     */
+    async create(chambreData, equipements = []) {
+        // Créer la chambre
+        const chambre = await prisma.chambre.create({
+            data: chambreData
+        });
+
+        // Ajouter les équipements
+        if (equipements.length > 0) {
+            for (const idEquipement of equipements) {
+                await prisma.chambresEquipements.create({
+                    data: {
+                        id_chambre: chambre.id_chambre,
+                        id_equipement: idEquipement
+                    }
+                });
+            }
+        }
+
+        return ChambreModel.getWithRelations(chambre.id_chambre);
+    }
+
+    /**
+     * Récupère une chambre par son ID
+     * @param {number} id - ID de la chambre
+     * @returns {Promise&lt;Object>} - La chambre trouvée
+     */
+    async findById(id) {
+        return ChambreModel.getWithRelations(id);
+    }
+
+    /**
+     * Récupère toutes les chambres
+     * @param {Object} filters - Filtres optionnels
+     * @returns {Promise&lt;Array>} - Liste des chambres
+     */
+    async findAll(filters = {}) {
+        return prisma.chambre.findMany({
+            where: filters,
+            include: {
+                equipements: {
+                    include: {
+                        equipement: true
+                    }
+                },
+                medias: true
+            }
+        });
+    }
+
+    /**
+     * Met à jour une chambre
+     * @param {number} id - ID de la chambre
+     * @param {Object} chambreData - Nouvelles données
+     * @returns {Promise&lt;Object>} - La chambre mise à jour
+     */
+    async update(id, chambreData) {
+        return prisma.chambre.update({
+            where: { id_chambre: id },
+            data: chambreData
+        });
+    }
+
+    /**
+     * Supprime une chambre
+     * @param {number} id - ID de la chambre
+     * @returns {Promise&lt;Object>} - La chambre supprimée
+     */
+    async delete(id) {
+        // Supprimer d'abord les relations
+        await prisma.chambresEquipements.deleteMany({
+            where: { id_chambre: id }
+        });
+
+        await prisma.media.deleteMany({
+            where: { id_chambre: id }
+        });
+
+        return prisma.chambre.delete({
+            where: { id_chambre: id }
+        });
+    }
+
+    /**
+     * Met à jour l'état d'une chambre
+     * @param {number} id - ID de la chambre
+     * @param {string} etat - Nouvel état
+     * @returns {Promise&lt;Object>} - La chambre mise à jour
+     */
+    async updateEtat(id, etat) {
+        return prisma.chambre.update({
+            where: { id_chambre: id },
+            data: { etat }
+        });
+    }
+
+    /**
+     * Ajoute un équipement à une chambre
+     * @param {number} idChambre - ID de la chambre
+     * @param {number} idEquipement - ID de l'équipement
+     * @returns {Promise&lt;Object>} - La relation créée
+     */
+    async addEquipement(idChambre, idEquipement) {
+        return prisma.chambresEquipements.create({
+            data: {
+                id_chambre: idChambre,
+                id_equipement: idEquipement
+            }
+        });
+    }
+
+    /**
+     * Supprime un équipement d'une chambre
+     * @param {number} idChambre - ID de la chambre
+     * @param {number} idEquipement - ID de l'équipement
+     * @returns {Promise&lt;Object>} - La relation supprimée
+     */
+    async removeEquipement(idChambre, idEquipement) {
+        return prisma.chambresEquipements.delete({
+            where: {
+                id_chambre_id_equipement: {
+                    id_chambre: idChambre,
+                    id_equipement: idEquipement
+                }
+            }
+        });
+    }
+
+    /**
+     * Récupère les chambres par type
+     * @param {string} type - Type de chambre
+     * @returns {Promise&lt;Array>} - Liste des chambres
+     */
+    /*async findByType(type) {
+    return prisma.chambre.findMany({
+      where: { type_chambre: type },
+      include: {
+        equipements: {
+          include: {
+            equipement: true
+          }
+        },
+        medias: true
+      }
+    });
+  }*/
+
+    /**
+     * Récupère les chambres disponibles
+     * @returns {Promise&lt;Array>} - Liste des chambres disponibles
+     */
+    /*async findAvailable() {
+    return prisma.chambre.findMany({
+      where: { etat: 'disponible' },
+      include: {
+        equipements: {
+          include: {
+            equipement: true
+          }
+        },
+        medias: true
+      }
+    });
+  }*/
+
+    /**
+     * Met à jour le prix d'une chambre et enregistre l'historique
+     * @param {number} id - ID de la chambre
+     * @param {number} nouveauPrix - Nouveau prix
+     * @param {string} modifiePar - Qui a modifié le prix
+     * @returns {Promise&lt;Object>} - La chambre mise à jour
+     */
+    async updatePrix(id, nouveauPrix, modifiePar) {
+        const chambre = await this.findById(id);
+
+        // Enregistrer l'historique
+        await prisma.historiquePrix.create({
+            data: {
+                id_chambre: id,
+                ancien_prix: chambre.prix_par_nuit,
+                nouveau_prix: nouveauPrix,
+                modifie_par: modifiePar
+            }
+        });
+
+        // Mettre à jour le prix
+        return prisma.chambre.update({
+            where: { id_chambre: id },
+            data: { prix_par_nuit: nouveauPrix }
+        });
+    }
+}
+
+export default ChambreModel;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#clientAuth">clientAuth</a></li><li><a href="global.html#uploadFile">uploadFile</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 09 2025 15:11:23 GMT+0200 (heure d’été d’Europe centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "name": "Environnement Hôtel",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "enabled": true
+    },
+    {
+      "key": "authToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM1LCJyb2xlIjoiU1VQRVJfQURNSU4iLCJlbWFpbCI6InN1cGVyYWRtaW5AZ21haWwuY29tIiwiY2xpZW50SWQiOm51bGwsInBlcm1pc3Npb25zIjpbIk1BTkFHRV9VU0VSUyIsIk1BTkFHRV9ST0xFUyIsIk1BTkFHRV9QRVJNSVNTSU9OUyIsIk1BTkFHRV9SRVNFUlZBVElPTlMiLCJNQU5BR0VfUk9PTVMiLCJNQU5BR0VfU0VSVklDRVMiLCJNQU5BR0VfQklMTElORyIsIk1BTkFHRV9DT01NVU5JQ0FUSU9OUyIsIlZJRVdfUkVQT1JUUyIsIk1BTkFHRV9NQUlOVEVOQU5DRSJdLCJpYXQiOjE3NDY1ODAzNjEsImV4cCI6MTc0NjU4Mzk2MX0.ac8SZ5uPgmEgNljvLdQdr0cE9ZqmCuex7Rgjbc2CldA",
+      "enabled": true
+    },
+    {
+      "key": "chambreId",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "clientId",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "reservationId",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "fournitureId",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "communicationId",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "key": "tacheId",
+      "value": "1",
+      "enabled": true
+    }
+  ]
+}

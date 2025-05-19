@@ -30,7 +30,38 @@ model RolePermission {
   @@index([id_permission])
 }
 
+// ===== MODÈLES =====
+
+model Permission {
+  id_permission Int              @id @default(autoincrement())
+  nom           String
+  description   String?
+  code          String           @unique
+  date_creation DateTime         @default(now())
+  roles         RolePermission[]
+}
+
+model RolePermission {
+  id_role_permission Int        @id @default(autoincrement())
+  id_role            Int
+  id_permission      Int
+  permission         Permission @relation(fields: [id_permission], references: [id_permission])
+  role               Role       @relation(fields: [id_role], references: [id_role])
+
+  @@unique([id_role, id_permission])
+  @@index([id_role])
+  @@index([id_permission])
+}
+
 model Role {
+  id_role       Int              @id @default(autoincrement())
+  nom           String
+  description   String?
+  code          String           @unique
+  date_creation DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  permissions   RolePermission[]
+  utilisateurs  Utilisateur[]
   id_role       Int              @id @default(autoincrement())
   nom           String
   description   String?
@@ -85,9 +116,12 @@ model Utilisateur {
 
   @@index([email])
   @@index([id_role])
+  @@index([id_role])
 }
 
 model Client {
+  id_client              Int             @id @default(autoincrement())
+  id_utilisateur         Int             @unique
   id_client              Int             @id @default(autoincrement())
   id_utilisateur         Int             @unique
   prenom                 String
@@ -95,7 +129,13 @@ model Client {
   telephone              String?
   statut_membre          String?
   consentement_marketing Boolean         @default(false)
+  consentement_marketing Boolean         @default(false)
   supprime_le            DateTime?
+  utilisateur            Utilisateur     @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  fidelite               Fidelite?
+  reservations           Reservation[]
+  ticket_supports        TicketSupport[] @relation("ClientTickets")
+  demandesCourse         DemandeCourse[]
   utilisateur            Utilisateur     @relation(fields: [id_utilisateur], references: [id_utilisateur])
   fidelite               Fidelite?
   reservations           Reservation[]
@@ -106,6 +146,21 @@ model Client {
 }
 
 model Personnel {
+  id_personnel        Int             @id @default(autoincrement())
+  id_utilisateur      Int             @unique
+  prenom              String
+  nom                 String
+  poste               String?
+  date_embauche       DateTime?
+  utilisateur         Utilisateur     @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  tickets_assigned    TicketSupport[] @relation("PersonnelTickets")
+  trajets             Trajet[]
+  permis_url          String?
+  piece_identite_url  String?
+  documents_verifies  Boolean         @default(false)
+  date_expiration_permis DateTime?
+  est_actif           Boolean         @default(true)
+  formations          FormationsChauffeur[]
   id_personnel        Int             @id @default(autoincrement())
   id_utilisateur      Int             @unique
   prenom              String
@@ -142,9 +197,35 @@ model Chambre {
   taches                   TachePlanifiee[]
   utilisations_fournitures UtilisationFourniture[]
   statistiques             StatistiquePropriete[]
+  id_chambre               Int                     @id @default(autoincrement())
+  numero_chambre           String
+  type_chambre             String
+  prix_par_nuit            Decimal                 @db.Decimal(10, 2)
+  etat                     EtatChambre
+  description              String?
+  date_modification        DateTime?
+  modifie_par              Int?
+  equipements              ChambresEquipements[]
+  favoris                  Favori[]
+  historique_prix          HistoriquePrix[]
+  maintenances             Maintenance[]
+  medias                   Media[]
+  nettoyages               Nettoyage[]
+  reservations             ReservationsChambre[]
+  taches                   TachePlanifiee[]
+  utilisations_fournitures UtilisationFourniture[]
+  statistiques             StatistiquePropriete[]
 }
 
 model JournalModifications {
+  id_journal     Int         @id @default(autoincrement())
+  id_utilisateur Int
+  type_ressource String
+  id_ressource   Int
+  action         String
+  details        Json?
+  date           DateTime    @default(now())
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
   id_journal     Int         @id @default(autoincrement())
   id_utilisateur Int
   type_ressource String
@@ -157,7 +238,9 @@ model JournalModifications {
 
 model Equipement {
   id_equipement Int                   @id @default(autoincrement())
+  id_equipement Int                   @id @default(autoincrement())
   nom           String
+  chambres      ChambresEquipements[]
   chambres      ChambresEquipements[]
 }
 
@@ -166,17 +249,23 @@ model ChambresEquipements {
   id_equipement Int
   chambre       Chambre    @relation(fields: [id_chambre], references: [id_chambre])
   equipement    Equipement @relation(fields: [id_equipement], references: [id_equipement])
+  chambre       Chambre    @relation(fields: [id_chambre], references: [id_chambre])
+  equipement    Equipement @relation(fields: [id_equipement], references: [id_equipement])
 
   @@id([id_chambre, id_equipement])
 }
 
 model Facture {
   id_facture     Int         @id @default(autoincrement())
+  id_facture     Int         @id @default(autoincrement())
   id_reservation Int
+  montant_total  Decimal     @db.Decimal(10, 2)
+  date_creation  DateTime    @default(now())
   montant_total  Decimal     @db.Decimal(10, 2)
   date_creation  DateTime    @default(now())
   date_envoi     DateTime?
   date_paiement  DateTime?
+  etat           String      @default("en_attente")
   etat           String      @default("en_attente")
   details        Json?
   notes          String?
@@ -187,14 +276,24 @@ model Facture {
 
 model Reservation {
   id_reservation         Int                          @id @default(autoincrement())
+  id_reservation         Int                          @id @default(autoincrement())
   id_client              Int
   date_reservation       DateTime                     @default(now())
+  date_reservation       DateTime                     @default(now())
   etat                   EtatReservation
+  prix_total             Decimal?                     @db.Decimal(10, 2)
   prix_total             Decimal?                     @db.Decimal(10, 2)
   etat_paiement          EtatPaiement?
   source_reservation     String?
   id_reservation_externe String?
   supprime_le            DateTime?
+  avis                   Avis?
+  factures               Facture[]
+  paiements              Paiement[]
+  client                 Client                       @relation(fields: [id_client], references: [id_client])
+  chambres               ReservationsChambre[]
+  services               ReservationsServices[]
+  services_locaux        ReservationsServicesLocaux[]
   avis                   Avis?
   factures               Facture[]
   paiements              Paiement[]
@@ -213,6 +312,8 @@ model ReservationsChambre {
   date_depart    DateTime
   chambre        Chambre     @relation(fields: [id_chambre], references: [id_chambre])
   reservation    Reservation @relation(fields: [id_reservation], references: [id_reservation])
+  chambre        Chambre     @relation(fields: [id_chambre], references: [id_chambre])
+  reservation    Reservation @relation(fields: [id_reservation], references: [id_reservation])
 
   @@id([id_reservation, id_chambre])
   @@index([date_arrivee])
@@ -224,6 +325,10 @@ model Service {
   nom          String
   description  String?
   prix         Decimal                @db.Decimal(10, 2)
+  id_service   Int                    @id @default(autoincrement())
+  nom          String
+  description  String?
+  prix         Decimal                @db.Decimal(10, 2)
   reservations ReservationsServices[]
 }
 
@@ -231,6 +336,9 @@ model ReservationsServices {
   id_reservation Int
   id_service     Int
   date_demande   DateTime
+  quantite       Int         @default(1)
+  reservation    Reservation @relation(fields: [id_reservation], references: [id_reservation])
+  service        Service     @relation(fields: [id_service], references: [id_service])
   quantite       Int         @default(1)
   reservation    Reservation @relation(fields: [id_reservation], references: [id_reservation])
   service        Service     @relation(fields: [id_service], references: [id_service])
@@ -251,6 +359,18 @@ model Paiement {
   notes                 String?
   date_echeance         DateTime?
   reservation           Reservation  @relation(fields: [id_reservation], references: [id_reservation])
+  id_paiement           Int          @id @default(autoincrement())
+  id_reservation        Int
+  montant               Decimal      @db.Decimal(10, 2)
+  methode_paiement      String?
+  date_transaction      DateTime     @default(now())
+  etat                  EtatPaiement
+  reference_transaction String?
+  numero_echeance       Int?
+  total_echeances       Int?
+  notes                 String?
+  date_echeance         DateTime?
+  reservation           Reservation  @relation(fields: [id_reservation], references: [id_reservation])
 
   @@index([id_reservation])
 }
@@ -258,13 +378,28 @@ model Paiement {
 model Avis {
   id_avis        Int           @id @default(autoincrement())
   id_reservation Int           @unique
+  id_avis        Int           @id @default(autoincrement())
+  id_reservation Int           @unique
   note           Int?
   commentaire    String?
   date_avis      DateTime      @default(now())
   reservation    Reservation   @relation(fields: [id_reservation], references: [id_reservation])
   reponses       ReponseAvis[]
+  date_avis      DateTime      @default(now())
+  reservation    Reservation   @relation(fields: [id_reservation], references: [id_reservation])
+  reponses       ReponseAvis[]
 
   @@index([id_reservation])
+}
+
+model ReponseAvis {
+  id_reponse_avis Int         @id @default(autoincrement())
+  commentaire     String
+  date_reponse    DateTime    @default(now())
+  id_avis         Int
+  id_personnel    Int
+  avis            Avis        @relation(fields: [id_avis], references: [id_avis])
+  personnel       Utilisateur @relation(fields: [id_personnel], references: [id_utilisateur])
 }
 
 model ReponseAvis {
@@ -285,11 +420,19 @@ model Media {
   titre       String?
   description String?
   chambre     Chambre   @relation(fields: [id_chambre], references: [id_chambre])
+  chambre     Chambre   @relation(fields: [id_chambre], references: [id_chambre])
 
   @@index([id_chambre])
 }
 
 model Fidelite {
+  id_fidelite          Int                   @id @default(autoincrement())
+  id_client            Int                   @unique
+  solde_points         Int                   @default(0)
+  derniere_mise_a_jour DateTime              @default(now())
+  echanges             EchangeFidelite[]
+  client               Client                @relation(fields: [id_client], references: [id_client])
+  transactions         TransactionFidelite[]
   id_fidelite          Int                   @id @default(autoincrement())
   id_client            Int                   @unique
   solde_points         Int                   @default(0)
@@ -308,9 +451,15 @@ model TransactionFidelite {
   raison            String?
   date_transaction  DateTime @default(now())
   fidelite          Fidelite @relation(fields: [id_fidelite], references: [id_fidelite])
+  fidelite          Fidelite @relation(fields: [id_fidelite], references: [id_fidelite])
 }
 
 model ServiceLocal {
+  id_service   Int                          @id @default(autoincrement())
+  nom          String
+  description  String?
+  contact      String?
+  categorie    String?
   id_service   Int                          @id @default(autoincrement())
   nom          String
   description  String?
@@ -324,11 +473,13 @@ model PreferenceUtilisateur {
   type_preference String
   valeur          String?
   utilisateur     Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  utilisateur     Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
 
   @@id([id_utilisateur, type_preference])
 }
 
 model Notification {
+  id_notification Int         @id @default(autoincrement())
   id_notification Int         @id @default(autoincrement())
   id_utilisateur  Int
   type            String
@@ -336,13 +487,18 @@ model Notification {
   etat            String
   envoye_le       DateTime    @default(now())
   utilisateur     Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  envoye_le       DateTime    @default(now())
+  utilisateur     Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
 }
 
 model JournalChatbot {
   id_journal     Int         @id @default(autoincrement())
+  id_journal     Int         @id @default(autoincrement())
   id_utilisateur Int
   requete        String?
   reponse        String?
+  horodatage     DateTime    @default(now())
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
   horodatage     DateTime    @default(now())
   utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
 }
@@ -355,9 +511,11 @@ model HistoriquePrix {
   modifie_par  String?
   modifie_le   DateTime @default(now())
   chambre      Chambre  @relation(fields: [id_chambre], references: [id_chambre])
+  chambre      Chambre  @relation(fields: [id_chambre], references: [id_chambre])
 }
 
 model ReservationsServicesLocaux {
+  id_reservation_service Int          @id @default(autoincrement())
   id_reservation_service Int          @id @default(autoincrement())
   id_reservation         Int
   id_service_local       Int
@@ -365,13 +523,18 @@ model ReservationsServicesLocaux {
   etat                   String?
   reservation            Reservation  @relation(fields: [id_reservation], references: [id_reservation])
   service_local          ServiceLocal @relation(fields: [id_service_local], references: [id_service])
+  reservation            Reservation  @relation(fields: [id_reservation], references: [id_reservation])
+  service_local          ServiceLocal @relation(fields: [id_service_local], references: [id_service])
 }
 
 model ActiviteUtilisateur {
   id_activite    Int         @id @default(autoincrement())
+  id_activite    Int         @id @default(autoincrement())
   id_utilisateur Int
   action         String
   details        Json?
+  horodatage     DateTime    @default(now())
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
   horodatage     DateTime    @default(now())
   utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
 
@@ -380,17 +543,23 @@ model ActiviteUtilisateur {
 
 model CatalogueRecompense {
   id_recompense Int               @id @default(autoincrement())
+  id_recompense Int               @id @default(autoincrement())
   nom           String
   points_requis Int
   description   String?
+  echanges      EchangeFidelite[]
   echanges      EchangeFidelite[]
 }
 
 model EchangeFidelite {
   id_echange      Int                 @id @default(autoincrement())
+  id_echange      Int                 @id @default(autoincrement())
   id_fidelite     Int
   id_recompense   Int
   points_utilises Int
+  date_echange    DateTime            @default(now())
+  fidelite        Fidelite            @relation(fields: [id_fidelite], references: [id_fidelite])
+  recompense      CatalogueRecompense @relation(fields: [id_recompense], references: [id_recompense])
   date_echange    DateTime            @default(now())
   fidelite        Fidelite            @relation(fields: [id_fidelite], references: [id_fidelite])
   recompense      CatalogueRecompense @relation(fields: [id_recompense], references: [id_recompense])
@@ -420,10 +589,29 @@ model Depense {
   @@index([categorie])
 }
 
+model Depense {
+  id_depense        Int              @id @default(autoincrement())
+  id_utilisateur    Int
+  montant           Decimal          @db.Decimal(10, 2)
+  categorie         CategorieDepense
+  date_creation     DateTime         @default(now())
+  date_modification DateTime?
+  date_suppression  DateTime?
+  description       String?
+  utilisateur       Utilisateur      @relation(fields: [id_utilisateur], references: [id_utilisateur])
+
+  @@index([date_creation])
+  @@index([categorie])
+}
+
 model Favori {
+  id_favori      Int         @id @default(autoincrement())
   id_favori      Int         @id @default(autoincrement())
   id_utilisateur Int
   id_chambre     Int
+  ajoute_le      DateTime    @default(now())
+  chambre        Chambre     @relation(fields: [id_chambre], references: [id_chambre])
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
   ajoute_le      DateTime    @default(now())
   chambre        Chambre     @relation(fields: [id_chambre], references: [id_chambre])
   utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
@@ -433,8 +621,15 @@ model Favori {
 
 model Maintenance {
   id_maintenance Int       @id @default(autoincrement())
+  id_maintenance Int       @id @default(autoincrement())
   id_chambre     Int
   description    String
+  date           DateTime  @default(now())
+  statut         String    // EN_ATTENTE, EN_COURS, TERMINEE, ANNULEE
+  priorite       String    // BASSE, NORMALE, HAUTE, URGENTE
+  date_fin       DateTime?
+  notes          String?
+  chambre        Chambre   @relation(fields: [id_chambre], references: [id_chambre])
   date           DateTime  @default(now())
   statut         String    // EN_ATTENTE, EN_COURS, TERMINEE, ANNULEE
   priorite       String    // BASSE, NORMALE, HAUTE, URGENTE

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: models/service-local.model.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: models/service-local.model.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+class ServiceLocalModel {
+    /**
+     * Crée un nouveau service local
+     * @param {Object} serviceData - Données du service
+     * @returns {Promise&lt;Object>} - Le service créé
+     */
+    async create(serviceData) {
+        return prisma.serviceLocal.create({
+            data: serviceData
+        });
+    }
+
+    /**
+     * Récupère un service local par son ID
+     * @param {number} id - ID du service
+     * @returns {Promise&lt;Object>} - Le service trouvé
+     */
+    async findById(id) {
+        return prisma.serviceLocal.findUnique({
+            where: { id_service: id }
+        });
+    }
+
+    /**
+     * Récupère tous les services locaux
+     * @param {Object} filters - Filtres optionnels
+     * @returns {Promise&lt;Array>} - Liste des services
+     */
+    async findAll(filters = {}) {
+        return prisma.serviceLocal.findMany({
+            where: filters
+        });
+    }
+
+    /**
+     * Met à jour un service local
+     * @param {number} id - ID du service
+     * @param {Object} serviceData - Nouvelles données
+     * @returns {Promise&lt;Object>} - Le service mis à jour
+     */
+    async update(id, serviceData) {
+        return prisma.serviceLocal.update({
+            where: { id_service: id },
+            data: serviceData
+        });
+    }
+
+    /**
+     * Supprime un service local
+     * @param {number} id - ID du service
+     * @returns {Promise&lt;Object>} - Le service supprimé
+     */
+    async delete(id) {
+        // Vérifier si le service est utilisé dans des réservations
+        const reservations = await prisma.reservationsServicesLocaux.findMany({
+            where: { id_service_local: id }
+        });
+
+        if (reservations.length > 0) {
+            throw new Error(
+                'Ce service est utilisé dans des réservations et ne peut pas être supprimé'
+            );
+        }
+
+        return prisma.serviceLocal.delete({
+            where: { id_service: id }
+        });
+    }
+
+    /**
+     * Récupère les services locaux par catégorie
+     * @param {string} categorie - Catégorie recherchée
+     * @returns {Promise&lt;Array>} - Liste des services
+     */
+    static findByCategorie(categorie) {
+        return prisma.serviceLocal.findMany({
+            where: { categorie }
+        });
+    }
+
+    /**
+     * Réserve un service local pour une réservation
+     * @param {number} idReservation - ID de la réservation
+     * @param {number} idService - ID du service local
+     * @param {Object} reservationData - Données de la réservation
+     * @returns {Promise&lt;Object>} - La réservation créée
+     */
+    async reserveService(idReservation, idService, reservationData) {
+        return prisma.reservationsServicesLocaux.create({
+            data: {
+                id_reservation: idReservation,
+                id_service_local: idService,
+                heure_reservation: reservationData.heure_reservation,
+                etat: reservationData.etat || 'en_attente'
+            }
+        });
+    }
+
+    /**
+     * Annule une réservation de service local
+     * @param {number} idReservationService - ID de la réservation de service
+     * @returns {Promise&lt;Object>} - La réservation annulée
+     */
+    async cancelReservation(idReservationService) {
+        return prisma.reservationsServicesLocaux.update({
+            where: { id_reservation_service: idReservationService },
+            data: { etat: 'annulee' }
+        });
+    }
+
+    /**
+     * Récupère les réservations d'un service local
+     * @param {number} idService - ID du service local
+     * @returns {Promise&lt;Array>} - Liste des réservations
+     */
+    static getReservations(idService) {
+        return prisma.reservationsServicesLocaux.findMany({
+            where: { id_service_local: idService },
+            include: {
+                reservation: {
+                    include: {
+                        client: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+module.exports = ServiceLocalModel;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#clientAuth">clientAuth</a></li><li><a href="global.html#uploadFile">uploadFile</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 09 2025 15:11:23 GMT+0200 (heure d’été d’Europe centrale)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
