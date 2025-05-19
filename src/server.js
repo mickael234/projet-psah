@@ -25,6 +25,11 @@ import favorisRoutes from './routes/favorisRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
 import reservationsServicesRoutes from './routes/reservationsServicesRoutes.js';
+import statistiqueRoutes from './routes/statistiqueRoutes.js';
+import fideliteRoutes from './routes/fideliteRoutes.js';
+
+
+
 
 // Import des fichiers Swagger
 import authRouteDoc from './docs/swagger.js';
@@ -34,6 +39,7 @@ import reservationRouteDoc from './docs/reservationRouteDoc.js';
 import paiementRouteDoc from './docs/paiementRouteDoc.js';
 import { reponseAvisRouteDoc } from './docs/reponseAvisRouteDoc.js'; 
 import ajoutServiceReservationRouteDoc from './docs/ajoutServiceReservationRouteDoc.js';
+import statistiqueRouteDoc from './docs/statistiqueRouteDoc.js';
 
 
 
@@ -83,6 +89,7 @@ swaggerSpec.paths = {
     ...paiementRouteDoc,
     ...reponseAvisRouteDoc,
     ...ajoutServiceReservationRouteDoc,
+    ...statistiqueRouteDoc,
 };
 
 // Swagger route
@@ -95,6 +102,7 @@ app.use('/api/hebergements', hebergementRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/paiements', paiementRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api', fideliteRoutes);
 app.use('/api/avis', avisRoutes);
 app.use('/api/reponsesavis', reponseAvisRoutes);
 app.use('/api/rapports', rapportRoutes);
@@ -103,6 +111,8 @@ app.use('/api/favoris', favorisRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api', reservationsServicesRoutes);
 app.use('/api', maintenanceRoutes);
+app.use('/api', statistiqueRoutes);
+
 
 // Route test
 app.get('/', (req, res) => res.send('Bienvenue sur l’API Hôtel - PSAH'));

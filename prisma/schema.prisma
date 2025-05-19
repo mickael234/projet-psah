@@ -454,3 +454,18 @@ model ReponseAvis {
   personnel        Utilisateur @relation(fields: [id_personnel], references: [id_utilisateur])
 }
 
+model StatistiquePropriete {
+  id_statistique   Int       @id @default(autoincrement())
+  id_utilisateur   Int
+  id_hebergement   Int
+  revenus_total    Decimal   @db.Decimal(10, 2)
+  taux_occupation  Float     @default(0) // en pourcentage
+  nombre_reservations Int   @default(0)
+  date_mise_a_jour DateTime @default(now())
+
+  utilisateur   Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  hebergement   Chambre     @relation(fields: [id_hebergement], references: [id_chambre])
+
+  @@index([id_utilisateur])
+  @@index([id_hebergement])
+}

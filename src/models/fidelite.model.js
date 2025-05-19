@@ -1,4 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 class FideliteModel {
@@ -85,7 +86,6 @@ class FideliteModel {
      * @returns {Promise<Object>} - Le programme mis à jour
      */
     async addPoints(idClient, points, raison) {
-        // Récupérer ou créer le programme de fidélité
         let fidelite = await FideliteModel.findByClient(idClient);
 
         if (!fidelite) {
@@ -95,7 +95,6 @@ class FideliteModel {
             });
         }
 
-        // Créer la transaction
         await prisma.transactionFidelite.create({
             data: {
                 id_fidelite: fidelite.id_fidelite,
@@ -104,7 +103,6 @@ class FideliteModel {
             }
         });
 
-        // Mettre à jour le solde
         return prisma.fidelite.update({
             where: { id_fidelite: fidelite.id_fidelite },
             data: {
@@ -121,14 +119,12 @@ class FideliteModel {
      * @returns {Promise<Object>} - L'échange créé
      */
     async usePoints(idClient, idRecompense) {
-        // Récupérer le programme de fidélité
         const fidelite = await FideliteModel.findByClient(idClient);
 
         if (!fidelite) {
             throw new Error('Programme de fidélité non trouvé');
         }
 
-        // Récupérer la récompense
         const recompense = await prisma.catalogueRecompense.findUnique({
             where: { id_recompense: idRecompense }
         });
@@ -137,12 +133,10 @@ class FideliteModel {
             throw new Error('Récompense non trouvée');
         }
 
-        // Vérifier si le client a assez de points
         if (fidelite.solde_points < recompense.points_requis) {
             throw new Error('Points insuffisants');
         }
 
-        // Créer l'échange
         const echange = await prisma.echangeFidelite.create({
             data: {
                 id_fidelite: fidelite.id_fidelite,
@@ -151,7 +145,6 @@ class FideliteModel {
             }
         });
 
-        // Créer la transaction
         await prisma.transactionFidelite.create({
             data: {
                 id_fidelite: fidelite.id_fidelite,
@@ -160,7 +153,6 @@ class FideliteModel {
             }
         });
 
-        // Mettre à jour le solde
         await prisma.fidelite.update({
             where: { id_fidelite: fidelite.id_fidelite },
             data: {
@@ -212,4 +204,4 @@ class FideliteModel {
     }
 }
 
-module.exports = FideliteModel;
+export default FideliteModel;
