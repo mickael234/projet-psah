@@ -1,4 +1,4 @@
-import prisma from "../config/prisma.js";
+import prisma from '../config/prisma.js';
 
 class PersonnelModel {
     /**
@@ -36,6 +36,37 @@ class PersonnelModel {
             where: { poste }
         });
     }
+
+    /**
+     * Récupère le personnel avec ses documents et formations
+     * @param {number} id
+     * @returns {Promise<Object>}
+     */
+    static getWithDocumentsAndFormations(id) {
+        return prisma.personnel.findUnique({
+            where: { id_personnel: id },
+            include: {
+                documents: true,
+                formations: true,
+                utilisateur: true
+            }
+        });
+    }
+
+    /**
+     * Désactive un chauffeur qui a un permis invalide
+     * @returns 
+     */
+    static async desactiverChauffeursAvecPermisExpire() {
+    return prisma.personnel.updateMany({
+        where: {
+            date_expiration_permis: { lt: new Date() },
+            est_actif: true
+        },
+        data: { est_actif: false }
+    });
+}
+
 }
 
 export default PersonnelModel;

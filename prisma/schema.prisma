@@ -95,6 +95,12 @@ model Personnel {
   utilisateur      Utilisateur     @relation(fields: [id_utilisateur], references: [id_utilisateur])
   tickets_assigned TicketSupport[] @relation("PersonnelTickets")
   trajets          Trajet[] // une relation 1:N
+  permis_url        String?
+  piece_identite_url String?
+  documents_verifies Boolean @default(false)
+  date_expiration_permis DateTime?
+  est_actif               Boolean   @default(true)
+
 }
 
 model Chambre {
@@ -527,3 +533,52 @@ enum StatutTrajet {
   en_cours
   termine
 }
+
+model Formation {
+  id           Int      @id @default(autoincrement())
+  titre        String
+  description  String?
+  obligatoire  Boolean  @default(false)
+  active       Boolean  @default(true)
+}
+
+
+model FormationsChauffeur {
+  id               Int         @id @default(autoincrement())
+  id_personnel     Int
+  id_formation     Int
+  completee        Boolean     @default(false)
+  date_completion  DateTime?
+
+  personnel        Personnel   @relation(fields: [id_personnel], references: [id_personnel])
+  formation        Formation   @relation(fields: [id_formation], references: [id])
+}
+
+model Incident {
+  id_incident     Int       @id @default(autoincrement())
+  id_utilisateur  Int
+  id_trajet       Int?
+  type            TypeIncident
+  description     String?
+  date            DateTime  @default(now())
+  statut          StatutIncident @default(ouvert)
+  trajet          Trajet?   @relation(fields: [id_trajet], references: [id_trajet])
+  utilisateur     Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+}
+
+
+enum StatutIncident {
+  ouvert
+  en_cours
+  traite
+  ferme
+}
+
+enum TypeIncident {
+  accident
+  agression
+  panne
+  autre
+}
+
+

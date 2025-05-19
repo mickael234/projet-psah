@@ -15,7 +15,7 @@ class TrajetController {
     static async getById(req, res, next) {
         try {
             const trajetId = Number(req.params.id);
-            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);
+            const personnelId = await AuthHelpers.assertChauffeurAutorise(req.user.email);
             const trajet = await TrajetService.getById(trajetId, personnelId);
 
             res.status(200).json({
@@ -39,7 +39,7 @@ class TrajetController {
      */
     static async getMyTrajets(req, res, next) {
         try {
-            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);(req.user.email);
+            const personnelId = await AuthHelpers.assertChauffeurAutorise(req.user.email);
 
             const filters = {
                 ...(req.query.statut && { statut: req.query.statut }),
@@ -70,7 +70,7 @@ class TrajetController {
      */
     static async getPlanning(req, res, next) {
         try {
-            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);
+            const personnelId = await AuthHelpers.assertChauffeurAutorise(req.user.email);
             const { dateMin, dateMax } = req.query;
 
             const trajets = await TrajetService.getPlanningParJour(personnelId, dateMin, dateMax);
@@ -96,7 +96,7 @@ class TrajetController {
      */
     static async create(req, res, next) {
         try {
-            const personnelId = await AuthHelpers.getPersonnelIdFromUser(req.user.email);
+            const personnelId = await AuthHelpers.assertChauffeurAutorise(req.user.email);
             const trajet = await TrajetService.creerTrajet(personnelId, req.body);
             
             res.status(201).json({

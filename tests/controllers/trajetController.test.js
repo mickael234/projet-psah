@@ -9,7 +9,8 @@ import {
 
 jest.unstable_mockModule('../../src/utils/auth.helpers.js', () => ({
     getPersonnelIdFromUser: jest.fn(),
-    getClientIdFromUser: jest.fn()
+    getClientIdFromUser: jest.fn(),
+    assertChauffeurAutorise: jest.fn()
 }));
 
 let TrajetController, TrajetService, AuthHelpers;
@@ -56,7 +57,7 @@ describe('TrajetController', () => {
     describe('getById', () => {
         it('devrait retourner un trajet existant', async () => {
             req.params.id = '1';
-            AuthHelpers.getPersonnelIdFromUser.mockResolvedValue(2);
+            AuthHelpers.assertChauffeurAutorise.mockResolvedValue(2);
 
             await TrajetController.getById(req, res, next);
 
@@ -67,7 +68,7 @@ describe('TrajetController', () => {
 
     describe('getMyTrajets', () => {
         it('devrait retourner les trajets du chauffeur connecté', async () => {
-            AuthHelpers.getPersonnelIdFromUser.mockResolvedValue(3);
+            AuthHelpers.assertChauffeurAutorise.mockResolvedValue(3);
             req.query = { statut: 'en_cours' };
 
             await TrajetController.getMyTrajets(req, res, next);
@@ -81,7 +82,7 @@ describe('TrajetController', () => {
 
     describe('getPlanning', () => {
         it('devrait retourner le planning des trajets par jour', async () => {
-            AuthHelpers.getPersonnelIdFromUser.mockResolvedValue(4);
+            AuthHelpers.assertChauffeurAutorise.mockResolvedValue(4);
             req.query = { dateMin: '2025-01-01', dateMax: '2025-01-07' };
 
             await TrajetController.getPlanning(req, res, next);
@@ -113,7 +114,7 @@ describe('TrajetController', () => {
             
             const next = jest.fn();
             
-            AuthHelpers.getPersonnelIdFromUser.mockResolvedValue(123)
+            AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
             
             const mockTrajet = {
                 id: 1,
