@@ -34,6 +34,9 @@ import communicationRoutes from "./routes/communicationRoutes.js"
 import planningRoutes from "./routes/planningRoutes.js"
 import permissionRoutes from "./routes/permissionRoutes.js"
 import testRoutes from "./routes/testRoutes.js"
+import securityRoutes from "./routes/securityRoutes.js"
+import testEmailRoutes from "./routes/testEmailRoutes.js"
+
 
 // Import des fichiers Swagger séparés (de Hassan)
 import authRouteDoc from "./docs/swagger.js"
@@ -136,6 +139,8 @@ app.get("/api/diagnostic", authenticateJWT, (req, res) => {
         "/api/services",
         "/api/permissions",
         "/api/test",
+        "/api/security",
+        "/api/test-email",
       ],
     },
   })
@@ -163,7 +168,8 @@ app.use("/api/services", serviceRoutes)
 app.use("/api", maintenanceRoutes) // /api/hebergements/:id/maintenance
 app.use("/api/permissions", permissionRoutes)
 app.use("/api/test", testRoutes)
-
+app.use("/api/security", securityRoutes)
+app.use("/api/test-email", testEmailRoutes)
 // Route test
 app.get("/", (req, res) => res.send("Bienvenue sur l'API Hôtel - PSAH"))
 

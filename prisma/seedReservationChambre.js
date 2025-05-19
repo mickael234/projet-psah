@@ -1,7 +1,8 @@
 // prisma/seedReservationChambre.js
-import { PrismaClient } from '@prisma/client';
+import prisma from "../config/prisma.js";
 
-const prisma = new PrismaClient();
+
+
 
 async function main() {
   // Ajout d'une réservation de chambre

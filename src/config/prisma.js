@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client"
+// config/prisma.js
+import { PrismaClient } from '@prisma/client';
 
-// Créer une instance unique de PrismaClient
-const prisma = new PrismaClient()
-
-export default prisma
+const prisma = new PrismaClient();
+export default prisma;

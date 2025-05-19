@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
+
 
 class JournalChatbotModel {
     /**
@@ -35,4 +35,4 @@ class JournalChatbotModel {
     }
 }
 
-module.exports = JournalChatbotModel;
+export defaultJournalChatbotModel;

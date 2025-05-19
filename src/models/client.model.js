@@ -1,8 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from "../config/prisma.js";
+
 import utilisateurModel from './utilisateur.model.js';
 import { RoleMapper } from '../utils/roleMapper.js';
 
-const prisma = new PrismaClient(); // Une seule instance de PrismaClient [^1]
+ // Une seule instance de PrismaClient [^1]
 
 class ClientModel {
     /**

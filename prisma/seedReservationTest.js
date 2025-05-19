@@ -1,6 +1,7 @@
 // seed.js
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
+
+
 
 async function main() {
   // Créer ou récupérer un utilisateur

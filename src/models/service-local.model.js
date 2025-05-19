@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
+
 
 class ServiceLocalModel {
     /**
@@ -130,4 +130,4 @@ class ServiceLocalModel {
     }
 }
 
-module.exports = ServiceLocalModel;
+export defaultServiceLocalModel;

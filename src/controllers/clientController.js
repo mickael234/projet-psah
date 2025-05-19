@@ -1,8 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from "../config/prisma.js";
+
 import ClientModel from '../models/client.model.js';
 
 const clientModel = new ClientModel();
-const prisma = new PrismaClient();
+
 
 class ClientController {
     static async getAllClients(req, res) {

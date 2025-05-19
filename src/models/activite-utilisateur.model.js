@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
+
 
 class ActiviteUtilisateurModel {
     /**
@@ -52,4 +52,4 @@ class ActiviteUtilisateurModel {
     }
 }
 
-module.exports = ActiviteUtilisateurModel;
+export defaultActiviteUtilisateurModel;

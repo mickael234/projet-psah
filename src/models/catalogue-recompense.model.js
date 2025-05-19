@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
+
 
 class CatalogueRecompenseModel {
     /**
@@ -84,4 +84,4 @@ class CatalogueRecompenseModel {
     }
 }
 
-module.exports = CatalogueRecompenseModel;
+export defaultCatalogueRecompenseModel;

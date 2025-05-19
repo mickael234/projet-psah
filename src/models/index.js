@@ -24,7 +24,7 @@ const TransactionFideliteModel = require('./transaction-fidelite.model');
 const EchangeFideliteModel = require('./echange-fidelite.model');
 const ConfigurationSystemeModel = require('./configuration-systeme.model');
 
-module.exports = {
+export default{
     UtilisateurModel,
     ClientModel,
     PersonnelModel,

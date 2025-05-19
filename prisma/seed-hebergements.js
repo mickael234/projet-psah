@@ -1,6 +1,6 @@
 // prisma/seed-hebergements.js
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.js";
+
 
 async function main() {
     // Créer des équipements
