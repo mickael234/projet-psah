@@ -8,15 +8,15 @@
     "dev": "nodemon src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "seed": "node prisma/seed.js",
     "test": "jest",
     "docs": "jsdoc -c jsdoc.conf.json",
     "format": "prettier --write .",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "seed": "node prisma/seedReservationChambre.js"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seedReservationChambre.js"
   },
   "keywords": [],
   "author": "",

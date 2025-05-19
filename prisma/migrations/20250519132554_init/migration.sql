@@ -13,6 +13,27 @@ CREATE TYPE "EtatPaiement" AS ENUM ('en_attente', 'complete', 'echoue', 'rembour
 -- CreateEnum
 CREATE TYPE "TypeMedia" AS ENUM ('image', 'video', 'visite_360', 'apercu_ar');
 
+-- CreateEnum
+CREATE TYPE "CategorieDepense" AS ENUM ('maintenance', 'personnel', 'services', 'transport', 'communication', 'logiciel', 'marketing', 'admin', 'equipement', 'autre');
+
+-- CreateEnum
+CREATE TYPE "TypeTicketSupport" AS ENUM ('technique', 'service', 'autre');
+
+-- CreateEnum
+CREATE TYPE "StatutTicketSupport" AS ENUM ('en_attente', 'en_cours', 'resolu', 'ferme');
+
+-- CreateEnum
+CREATE TYPE "StatutDemandeCourse" AS ENUM ('en_attente', 'acceptee', 'refusee', 'annulee');
+
+-- CreateEnum
+CREATE TYPE "StatutTrajet" AS ENUM ('en_attente', 'en_cours', 'termine');
+
+-- CreateEnum
+CREATE TYPE "StatutIncident" AS ENUM ('ouvert', 'en_cours', 'traite', 'ferme');
+
+-- CreateEnum
+CREATE TYPE "TypeIncident" AS ENUM ('accident', 'agression', 'panne', 'autre');
+
 -- CreateTable
 CREATE TABLE "Permission" (
     "id_permission" SERIAL NOT NULL,
@@ -56,11 +77,13 @@ CREATE TABLE "Utilisateur" (
     "id_auth_externe" TEXT,
     "supprime_le" TIMESTAMP(3),
     "id_role" INTEGER,
-    "photo_profil" TEXT,
     "authentification_deux_facteurs" BOOLEAN NOT NULL DEFAULT false,
-    "secret_deux_facteurs" TEXT,
     "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "date_modification" TIMESTAMP(3) NOT NULL,
+    "photo_profil" TEXT,
+    "secret_deux_facteurs" TEXT,
+    "date_modification_mdp" TIMESTAMP(3),
+    "derniere_connexion" TIMESTAMP(3),
 
     CONSTRAINT "Utilisateur_pkey" PRIMARY KEY ("id_utilisateur")
 );
@@ -87,6 +110,11 @@ CREATE TABLE "Personnel" (
     "nom" TEXT NOT NULL,
     "poste" TEXT,
     "date_embauche" TIMESTAMP(3),
+    "permis_url" TEXT,
+    "piece_identite_url" TEXT,
+    "documents_verifies" BOOLEAN NOT NULL DEFAULT false,
+    "date_expiration_permis" TIMESTAMP(3),
+    "est_actif" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "Personnel_pkey" PRIMARY KEY ("id_personnel")
 );
@@ -206,6 +234,7 @@ CREATE TABLE "Paiement" (
     "numero_echeance" INTEGER,
     "total_echeances" INTEGER,
     "notes" TEXT,
+    "date_echeance" TIMESTAMP(3),
 
     CONSTRAINT "Paiement_pkey" PRIMARY KEY ("id_paiement")
 );
@@ -219,6 +248,17 @@ CREATE TABLE "Avis" (
     "date_avis" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Avis_pkey" PRIMARY KEY ("id_avis")
+);
+
+-- CreateTable
+CREATE TABLE "ReponseAvis" (
+    "id_reponse_avis" SERIAL NOT NULL,
+    "commentaire" TEXT NOT NULL,
+    "date_reponse" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "id_avis" INTEGER NOT NULL,
+    "id_personnel" INTEGER NOT NULL,
+
+    CONSTRAINT "ReponseAvis_pkey" PRIMARY KEY ("id_reponse_avis")
 );
 
 -- CreateTable
@@ -365,6 +405,130 @@ CREATE TABLE "ConfigurationSysteme" (
 );
 
 -- CreateTable
+CREATE TABLE "Depense" (
+    "id_depense" SERIAL NOT NULL,
+    "id_utilisateur" INTEGER NOT NULL,
+    "montant" DECIMAL(10,2) NOT NULL,
+    "categorie" "CategorieDepense" NOT NULL,
+    "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "date_modification" TIMESTAMP(3),
+    "date_suppression" TIMESTAMP(3),
+    "description" TEXT,
+
+    CONSTRAINT "Depense_pkey" PRIMARY KEY ("id_depense")
+);
+
+-- CreateTable
+CREATE TABLE "Favori" (
+    "id_favori" SERIAL NOT NULL,
+    "id_utilisateur" INTEGER NOT NULL,
+    "id_chambre" INTEGER NOT NULL,
+    "ajoute_le" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Favori_pkey" PRIMARY KEY ("id_favori")
+);
+
+-- CreateTable
+CREATE TABLE "Maintenance" (
+    "id_maintenance" SERIAL NOT NULL,
+    "id_chambre" INTEGER NOT NULL,
+    "description" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "statut" TEXT NOT NULL,
+    "priorite" TEXT NOT NULL,
+    "date_fin" TIMESTAMP(3),
+    "notes" TEXT,
+
+    CONSTRAINT "Maintenance_pkey" PRIMARY KEY ("id_maintenance")
+);
+
+-- CreateTable
+CREATE TABLE "TicketSupport" (
+    "id_ticket" SERIAL NOT NULL,
+    "sujet" TEXT NOT NULL,
+    "type" "TypeTicketSupport" NOT NULL,
+    "statut" "StatutTicketSupport" NOT NULL DEFAULT 'en_attente',
+    "description" TEXT NOT NULL,
+    "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "id_client" INTEGER NOT NULL,
+    "id_personnel" INTEGER,
+
+    CONSTRAINT "TicketSupport_pkey" PRIMARY KEY ("id_ticket")
+);
+
+-- CreateTable
+CREATE TABLE "EmailSupport" (
+    "id_email" SERIAL NOT NULL,
+    "id_ticket" INTEGER NOT NULL,
+    "email_client" TEXT NOT NULL,
+    "email_destinataire" TEXT NOT NULL,
+    "sujet" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "date_envoi" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "EmailSupport_pkey" PRIMARY KEY ("id_email")
+);
+
+-- CreateTable
+CREATE TABLE "DemandeCourse" (
+    "id_demande_course" SERIAL NOT NULL,
+    "lieu_depart" TEXT NOT NULL,
+    "lieu_arrivee" TEXT NOT NULL,
+    "date_demande" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "statut" "StatutDemandeCourse" NOT NULL DEFAULT 'en_attente',
+    "id_client" INTEGER NOT NULL,
+
+    CONSTRAINT "DemandeCourse_pkey" PRIMARY KEY ("id_demande_course")
+);
+
+-- CreateTable
+CREATE TABLE "Trajet" (
+    "id_trajet" SERIAL NOT NULL,
+    "date_prise_en_charge" TIMESTAMP(3) NOT NULL,
+    "date_depose" TIMESTAMP(3) NOT NULL,
+    "statut" "StatutTrajet" NOT NULL DEFAULT 'en_attente',
+    "id_personnel" INTEGER NOT NULL,
+    "id_demande_course" INTEGER NOT NULL,
+
+    CONSTRAINT "Trajet_pkey" PRIMARY KEY ("id_trajet")
+);
+
+-- CreateTable
+CREATE TABLE "Formation" (
+    "id" SERIAL NOT NULL,
+    "titre" TEXT NOT NULL,
+    "description" TEXT,
+    "obligatoire" BOOLEAN NOT NULL DEFAULT false,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+
+    CONSTRAINT "Formation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "FormationsChauffeur" (
+    "id" SERIAL NOT NULL,
+    "id_personnel" INTEGER NOT NULL,
+    "id_formation" INTEGER NOT NULL,
+    "completee" BOOLEAN NOT NULL DEFAULT false,
+    "date_completion" TIMESTAMP(3),
+
+    CONSTRAINT "FormationsChauffeur_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Incident" (
+    "id_incident" SERIAL NOT NULL,
+    "id_utilisateur" INTEGER NOT NULL,
+    "id_trajet" INTEGER,
+    "type" "TypeIncident" NOT NULL,
+    "description" TEXT,
+    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "statut" "StatutIncident" NOT NULL DEFAULT 'ouvert',
+
+    CONSTRAINT "Incident_pkey" PRIMARY KEY ("id_incident")
+);
+
+-- CreateTable
 CREATE TABLE "Communication" (
     "id_communication" SERIAL NOT NULL,
     "sujet" TEXT NOT NULL,
@@ -410,20 +574,6 @@ CREATE TABLE "TachePlanifiee" (
     "date_modification" TIMESTAMP(3),
 
     CONSTRAINT "TachePlanifiee_pkey" PRIMARY KEY ("id_tache")
-);
-
--- CreateTable
-CREATE TABLE "Maintenance" (
-    "id_maintenance" SERIAL NOT NULL,
-    "id_chambre" INTEGER NOT NULL,
-    "description" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "statut" TEXT NOT NULL,
-    "priorite" TEXT NOT NULL,
-    "date_fin" TIMESTAMP(3),
-    "notes" TEXT,
-
-    CONSTRAINT "Maintenance_pkey" PRIMARY KEY ("id_maintenance")
 );
 
 -- CreateTable
@@ -512,6 +662,54 @@ CREATE TABLE "NettoyageFourniture" (
     CONSTRAINT "NettoyageFourniture_pkey" PRIMARY KEY ("id_nettoyage","id_fourniture")
 );
 
+-- CreateTable
+CREATE TABLE "OAuthState" (
+    "id" SERIAL NOT NULL,
+    "state" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "date_expiration" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "OAuthState_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ResetPassword" (
+    "id" SERIAL NOT NULL,
+    "id_utilisateur" INTEGER NOT NULL,
+    "token" TEXT NOT NULL,
+    "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "date_expiration" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ResetPassword_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SecuriteLog" (
+    "id" SERIAL NOT NULL,
+    "id_utilisateur" INTEGER NOT NULL,
+    "type_activite" TEXT NOT NULL,
+    "adresse_ip" TEXT,
+    "user_agent" TEXT,
+    "details" TEXT,
+    "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SecuriteLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "StatistiquePropriete" (
+    "id_statistique" SERIAL NOT NULL,
+    "id_utilisateur" INTEGER NOT NULL,
+    "id_hebergement" INTEGER NOT NULL,
+    "revenus_total" DECIMAL(10,2) NOT NULL,
+    "taux_occupation" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "nombre_reservations" INTEGER NOT NULL DEFAULT 0,
+    "date_mise_a_jour" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "StatistiquePropriete_pkey" PRIMARY KEY ("id_statistique")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_code_key" ON "Permission"("code");
 
@@ -585,6 +783,27 @@ CREATE INDEX "ActiviteUtilisateur_id_utilisateur_idx" ON "ActiviteUtilisateur"("
 CREATE UNIQUE INDEX "ConfigurationSysteme_cle_key" ON "ConfigurationSysteme"("cle");
 
 -- CreateIndex
+CREATE INDEX "Depense_date_creation_idx" ON "Depense"("date_creation");
+
+-- CreateIndex
+CREATE INDEX "Depense_categorie_idx" ON "Depense"("categorie");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Favori_id_utilisateur_id_chambre_key" ON "Favori"("id_utilisateur", "id_chambre");
+
+-- CreateIndex
+CREATE INDEX "Maintenance_id_chambre_idx" ON "Maintenance"("id_chambre");
+
+-- CreateIndex
+CREATE INDEX "DemandeCourse_id_client_idx" ON "DemandeCourse"("id_client");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Trajet_id_demande_course_key" ON "Trajet"("id_demande_course");
+
+-- CreateIndex
+CREATE INDEX "Trajet_id_personnel_idx" ON "Trajet"("id_personnel");
+
+-- CreateIndex
 CREATE INDEX "Communication_id_expediteur_idx" ON "Communication"("id_expediteur");
 
 -- CreateIndex
@@ -601,9 +820,6 @@ CREATE INDEX "TachePlanifiee_id_chambre_idx" ON "TachePlanifiee"("id_chambre");
 
 -- CreateIndex
 CREATE INDEX "TachePlanifiee_id_responsable_idx" ON "TachePlanifiee"("id_responsable");
-
--- CreateIndex
-CREATE INDEX "Maintenance_id_chambre_idx" ON "Maintenance"("id_chambre");
 
 -- CreateIndex
 CREATE INDEX "CommentaireTache_id_tache_idx" ON "CommentaireTache"("id_tache");
@@ -641,11 +857,23 @@ CREATE INDEX "NettoyageFourniture_id_nettoyage_idx" ON "NettoyageFourniture"("id
 -- CreateIndex
 CREATE INDEX "NettoyageFourniture_id_fourniture_idx" ON "NettoyageFourniture"("id_fourniture");
 
--- AddForeignKey
-ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_id_role_fkey" FOREIGN KEY ("id_role") REFERENCES "Role"("id_role") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "OAuthState_state_key" ON "OAuthState"("state");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ResetPassword_token_key" ON "ResetPassword"("token");
+
+-- CreateIndex
+CREATE INDEX "StatistiquePropriete_id_utilisateur_idx" ON "StatistiquePropriete"("id_utilisateur");
+
+-- CreateIndex
+CREATE INDEX "StatistiquePropriete_id_hebergement_idx" ON "StatistiquePropriete"("id_hebergement");
 
 -- AddForeignKey
 ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_id_permission_fkey" FOREIGN KEY ("id_permission") REFERENCES "Permission"("id_permission") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_id_role_fkey" FOREIGN KEY ("id_role") REFERENCES "Role"("id_role") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Utilisateur" ADD CONSTRAINT "Utilisateur_id_role_fkey" FOREIGN KEY ("id_role") REFERENCES "Role"("id_role") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -690,6 +918,12 @@ ALTER TABLE "Paiement" ADD CONSTRAINT "Paiement_id_reservation_fkey" FOREIGN KEY
 ALTER TABLE "Avis" ADD CONSTRAINT "Avis_id_reservation_fkey" FOREIGN KEY ("id_reservation") REFERENCES "Reservation"("id_reservation") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ReponseAvis" ADD CONSTRAINT "ReponseAvis_id_avis_fkey" FOREIGN KEY ("id_avis") REFERENCES "Avis"("id_avis") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReponseAvis" ADD CONSTRAINT "ReponseAvis_id_personnel_fkey" FOREIGN KEY ("id_personnel") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Media" ADD CONSTRAINT "Media_id_chambre_fkey" FOREIGN KEY ("id_chambre") REFERENCES "Chambre"("id_chambre") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -726,10 +960,52 @@ ALTER TABLE "EchangeFidelite" ADD CONSTRAINT "EchangeFidelite_id_fidelite_fkey" 
 ALTER TABLE "EchangeFidelite" ADD CONSTRAINT "EchangeFidelite_id_recompense_fkey" FOREIGN KEY ("id_recompense") REFERENCES "CatalogueRecompense"("id_recompense") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Communication" ADD CONSTRAINT "Communication_id_expediteur_fkey" FOREIGN KEY ("id_expediteur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Depense" ADD CONSTRAINT "Depense_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Favori" ADD CONSTRAINT "Favori_id_chambre_fkey" FOREIGN KEY ("id_chambre") REFERENCES "Chambre"("id_chambre") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Favori" ADD CONSTRAINT "Favori_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Maintenance" ADD CONSTRAINT "Maintenance_id_chambre_fkey" FOREIGN KEY ("id_chambre") REFERENCES "Chambre"("id_chambre") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TicketSupport" ADD CONSTRAINT "TicketSupport_id_client_fkey" FOREIGN KEY ("id_client") REFERENCES "Client"("id_client") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TicketSupport" ADD CONSTRAINT "TicketSupport_id_personnel_fkey" FOREIGN KEY ("id_personnel") REFERENCES "Personnel"("id_personnel") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EmailSupport" ADD CONSTRAINT "EmailSupport_id_ticket_fkey" FOREIGN KEY ("id_ticket") REFERENCES "TicketSupport"("id_ticket") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DemandeCourse" ADD CONSTRAINT "DemandeCourse_id_client_fkey" FOREIGN KEY ("id_client") REFERENCES "Client"("id_client") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Trajet" ADD CONSTRAINT "Trajet_id_personnel_fkey" FOREIGN KEY ("id_personnel") REFERENCES "Personnel"("id_personnel") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Trajet" ADD CONSTRAINT "Trajet_id_demande_course_fkey" FOREIGN KEY ("id_demande_course") REFERENCES "DemandeCourse"("id_demande_course") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FormationsChauffeur" ADD CONSTRAINT "FormationsChauffeur_id_personnel_fkey" FOREIGN KEY ("id_personnel") REFERENCES "Personnel"("id_personnel") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FormationsChauffeur" ADD CONSTRAINT "FormationsChauffeur_id_formation_fkey" FOREIGN KEY ("id_formation") REFERENCES "Formation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Incident" ADD CONSTRAINT "Incident_id_trajet_fkey" FOREIGN KEY ("id_trajet") REFERENCES "Trajet"("id_trajet") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Incident" ADD CONSTRAINT "Incident_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Communication" ADD CONSTRAINT "Communication_id_destinataire_fkey" FOREIGN KEY ("id_destinataire") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Communication" ADD CONSTRAINT "Communication_id_expediteur_fkey" FOREIGN KEY ("id_expediteur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ReponseCommunication" ADD CONSTRAINT "ReponseCommunication_id_communication_fkey" FOREIGN KEY ("id_communication") REFERENCES "Communication"("id_communication") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -744,22 +1020,19 @@ ALTER TABLE "TachePlanifiee" ADD CONSTRAINT "TachePlanifiee_id_chambre_fkey" FOR
 ALTER TABLE "TachePlanifiee" ADD CONSTRAINT "TachePlanifiee_id_responsable_fkey" FOREIGN KEY ("id_responsable") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Maintenance" ADD CONSTRAINT "Maintenance_id_chambre_fkey" FOREIGN KEY ("id_chambre") REFERENCES "Chambre"("id_chambre") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "CommentaireTache" ADD CONSTRAINT "CommentaireTache_id_tache_fkey" FOREIGN KEY ("id_tache") REFERENCES "TachePlanifiee"("id_tache") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CommentaireTache" ADD CONSTRAINT "CommentaireTache_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "UtilisationFourniture" ADD CONSTRAINT "UtilisationFourniture_id_chambre_fkey" FOREIGN KEY ("id_chambre") REFERENCES "Chambre"("id_chambre") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "UtilisationFourniture" ADD CONSTRAINT "UtilisationFourniture_id_fourniture_fkey" FOREIGN KEY ("id_fourniture") REFERENCES "Fourniture"("id_fourniture") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UtilisationFourniture" ADD CONSTRAINT "UtilisationFourniture_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UtilisationFourniture" ADD CONSTRAINT "UtilisationFourniture_id_chambre_fkey" FOREIGN KEY ("id_chambre") REFERENCES "Chambre"("id_chambre") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CommandeFourniture" ADD CONSTRAINT "CommandeFourniture_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -777,7 +1050,19 @@ ALTER TABLE "Nettoyage" ADD CONSTRAINT "Nettoyage_id_chambre_fkey" FOREIGN KEY (
 ALTER TABLE "Nettoyage" ADD CONSTRAINT "Nettoyage_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "NettoyageFourniture" ADD CONSTRAINT "NettoyageFourniture_id_fourniture_fkey" FOREIGN KEY ("id_fourniture") REFERENCES "Fourniture"("id_fourniture") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "NettoyageFourniture" ADD CONSTRAINT "NettoyageFourniture_id_nettoyage_fkey" FOREIGN KEY ("id_nettoyage") REFERENCES "Nettoyage"("id_nettoyage") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "NettoyageFourniture" ADD CONSTRAINT "NettoyageFourniture_id_fourniture_fkey" FOREIGN KEY ("id_fourniture") REFERENCES "Fourniture"("id_fourniture") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ResetPassword" ADD CONSTRAINT "ResetPassword_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SecuriteLog" ADD CONSTRAINT "SecuriteLog_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StatistiquePropriete" ADD CONSTRAINT "StatistiquePropriete_id_utilisateur_fkey" FOREIGN KEY ("id_utilisateur") REFERENCES "Utilisateur"("id_utilisateur") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StatistiquePropriete" ADD CONSTRAINT "StatistiquePropriete_id_hebergement_fkey" FOREIGN KEY ("id_hebergement") REFERENCES "Chambre"("id_chambre") ON DELETE RESTRICT ON UPDATE CASCADE;
