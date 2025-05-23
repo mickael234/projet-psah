@@ -3,6 +3,29 @@ import * as AuthHelpers from '../utils/auth.helpers.js';
 
 class IncidentController {
     /**
+     * Récupère un incident par son identifiant unique.
+     *
+     * @route GET /incidents/:id
+     * @param {import('express').Request} req - L'objet de requête Express contenant l'identifiant dans `req.params.id`
+     * @param {import('express').Response} res - L'objet de réponse Express utilisé pour envoyer les données
+     * @param {import('express').NextFunction} next - Fonction middleware suivante pour la gestion des erreurs
+     */
+    static async getById(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const incident = await IncidentService.findById(id);
+
+            res.status(200).json({
+                status: 'OK',
+                data: incident
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+
+    /**
      * Déclarer un incident (chauffeur ou client)
      * @route POST /incidents
      * @param {import('express').Request} req
@@ -11,7 +34,7 @@ class IncidentController {
      */
     static async signaler(req, res, next) {
         try {
-            const utilisateurId = await AuthHelpers.getUtilisateurIdFromUser(req.user.email);
+            const utilisateurId = await AuthHelpers.getUtilisateurIdFromUser(req.utilisateur.email);
             const data = {
                 ...req.body,
                 id_utilisateur: utilisateurId
@@ -38,12 +61,12 @@ class IncidentController {
     static async getByTrajet(req, res, next) {
         try {
             const idTrajet = Number(req.params.id);
-            const incident = await IncidentService.getByTrajetId(idTrajet);
+            const incidents = await IncidentService.getByTrajetId(idTrajet);
 
             res.status(200).json({
                 status: 'OK',
-                message: 'Incident récupéré avec succès.',
-                data: incident
+                message: 'Incidents récupérés avec succès.',
+                data: incidents
             });
         } catch (error) {
             next(error);

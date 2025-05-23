@@ -59,16 +59,14 @@ import emailSupportRoutes from './routes/emailSupportRoutes.js';
 import ticketRoutes from './routes/ticketSupportRoutes.js'
 import demandeCourseRoutes from "./routes/demandeCourseRoute.js"
 import trajetRoutes from "./routes/trajetRoutes.js"
+import formationRoutes from './routes/formationRoutes.js'
+import incidentsRoutes from './routes/incidentRoutes.js'
+import documentChauffeurRoutes from './routes/documentChauffeurRoutes.js'
 
 import './utils/paiementCron.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 
-import authRouteDoc from "./docs/swagger.js"
-import profileRouteDoc from "./docs/profileRouteDoc.js"
-import hebergementRouteDoc from "./docs/hebergementRouteDoc.js"
-import reservationRouteDoc from "./docs/reservationRouteDoc.js"
-import paiementRouteDoc from "./docs/paiementRouteDoc.js"
 import statusRouteDoc from "./docs/statusRouteDoc.js"
 import permissionRouteDoc from "./docs/permissionRouteDoc.js"
 import favorisRouteDoc from "./docs/favorisRouteDoc.js"
@@ -77,6 +75,10 @@ import nettoyageRouteDoc from "./docs/nettoyageRouteDoc.js"
 import maintenanceRouteDoc from "./docs/maintenanceRouteDoc.js"
 import planningRouteDoc from "./docs/planningRouteDoc.js"
 import fournitureRouteDoc from "./docs/fournitureRouteDoc.js"
+import incidentRouteDoc from "./docs/incidentRouteDoc.js"
+import formationRouteDoc from "./docs/formationRouteDoc.js"
+import documentChauffeurRouteDoc from "./docs/documentChauffeurDoc.js"
+
 
 
 dotenv.config()
@@ -132,6 +134,9 @@ swaggerSpec.paths = {
     ...maintenanceRouteDoc,
   ...planningRouteDoc,
   ...fournitureRouteDoc,
+  ...incidentRouteDoc,
+  ...formationRouteDoc,
+  ...documentChauffeurRouteDoc
 };
 
 // Swagger route
@@ -207,6 +212,9 @@ app.use("/api/permissions", permissionRoutes)
 app.use("/api/test", testRoutes)
 app.use("/api/security", securityRoutes)
 app.use("/api/test-email", testEmailRoutes)
+app.use('/api/formations', formationRoutes)
+app.use('/api/incidents', incidentsRoutes)
+app.use('/api/documents', documentChauffeurRoutes)
 
 app.use('/api/favoris', favorisRoutes);
 app.use('/api/services', serviceRoutes);

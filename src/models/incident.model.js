@@ -2,6 +2,19 @@ import prisma from '../config/prisma.js';
 
 class IncidentModel {
     /**
+     * Trouver un incident par son ID
+     * @param {Object} id - ID de l'incident
+     * @returns {Promise<Object>}
+     */
+
+    static async findById(id){
+        return prisma.incident.findUnique({
+            where : {
+                id_incident : id
+            }
+        })
+    }
+    /**
      * Créer un signalement d'incident
      * @param {Object} data - Données de l'incident
      * @returns {Promise<Object>}
@@ -16,7 +29,7 @@ class IncidentModel {
      * @returns {Promise<Object>}
      */
     static async findByTrajetId(idTrajet){
-        return await prisma.incident.findUnique({
+        return await prisma.incident.findMany({
             where :  {
                 id_trajet : idTrajet
             }
@@ -30,9 +43,17 @@ class IncidentModel {
     static async findAll() {
         return prisma.incident.findMany({
             orderBy: { date: 'desc' },
-            include: { utilisateur: true }
+            include: {
+            utilisateur: {
+                select: {
+                nom_utilisateur: true,
+                role: true,
+                },
+            },
+            },
         });
     }
+
 
     /**
      * Marquer un incident comme résolu

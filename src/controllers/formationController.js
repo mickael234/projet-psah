@@ -1,4 +1,5 @@
 import FormationService from '../services/formation.service.js';
+import prisma from '../config/prisma.js';
 
 class FormationController {
     /**
@@ -53,7 +54,10 @@ class FormationController {
             const idFormation = Number(req.params.id);
             const idPersonnel = Number(req.params.chauffeurId);
 
-            const result = await FormationService.assigner(idPersonnel, idFormation);
+            const result = await FormationService.assigner(
+                idPersonnel,
+                idFormation
+            );
 
             res.status(200).json({
                 status: 'OK',
@@ -77,7 +81,10 @@ class FormationController {
             const idFormation = Number(req.params.id);
             const idPersonnel = Number(req.params.chauffeurId);
 
-            const result = await FormationService.completer(idPersonnel, idFormation);
+            const result = await FormationService.completer(
+                idPersonnel,
+                idFormation
+            );
 
             res.status(200).json({
                 status: 'OK',
@@ -99,7 +106,25 @@ class FormationController {
     static async getByChauffeur(req, res, next) {
         try {
             const idPersonnel = Number(req.params.id);
-            const formations = await FormationService.getByChauffeur(idPersonnel);
+
+            const utilisateurComplet = await prisma.utilisateur.findUnique({
+                where: { email: req.utilisateur.email },
+                include: { personnel: true, client: true }
+            });
+
+            if (
+                utilisateurComplet.role !== 'administrateur' &&
+                (!utilisateurComplet.personnel ||
+                    utilisateurComplet.personnel.id_personnel !== idPersonnel)
+            ) {
+                return res.status(403).json({
+                    status: 'NON AUTORISE',
+                    message: 'Accès non autorisé'
+                });
+            }
+
+            const formations =
+                await FormationService.getByChauffeur(idPersonnel);
 
             res.status(200).json({
                 status: 'OK',
@@ -121,11 +146,13 @@ class FormationController {
     static async getChauffeursParFormation(req, res, next) {
         try {
             const idFormation = Number(req.params.id);
-            const chauffeurs = await FormationService.getChauffeursParFormation(idFormation);
+            const chauffeurs =
+                await FormationService.getChauffeursParFormation(idFormation);
 
             res.status(200).json({
                 status: 'OK',
-                message: 'Chauffeurs récupérés avec succès pour cette formation.',
+                message:
+                    'Chauffeurs récupérés avec succès pour cette formation.',
                 data: chauffeurs
             });
         } catch (error) {

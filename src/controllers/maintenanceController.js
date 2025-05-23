@@ -5,7 +5,7 @@ import prisma from "../config/prisma.js"
 // Middleware de vérification des rôles
 const verifierRoleMaintenance = (req, res, next) => {
   const rolesAutorises = ["MAINTENANCE", "SUPER_ADMIN", "ADMIN_GENERAL"]
-  if (!RoleMapper.hasAuthorizedRole(req.user, rolesAutorises)) {
+  if (!RoleMapper.hasAuthorizedRole(req.utilisateur, rolesAutorises)) {
     return res.status(403).json({ message: "Accès non autorisé" })
   }
   next()

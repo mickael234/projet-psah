@@ -3,9 +3,30 @@ import { PermissionError, NotFoundError } from '../errors/apiError.js';
 import TicketSupportService from '../services/ticketSupport.service.js';
 
 /**
+ * Récupère l’ID de l'utilisateur à partir de son email.
+ *
+ * @param {string} userEmail - Email de l'utilisateur connecté (JWT)
+ * @returns {Promise<number>} - ID de l'utilisateur
+ * @throws {NotFoundError} - Si aucun utilisateur n’est trouvé
+ */
+export async function getUtilisateurIdFromUser(userEmail) {
+    const utilisateur = await prisma.utilisateur.findUnique({
+        where: { email: userEmail },
+        select: { id_utilisateur: true }
+    });
+
+    if (!utilisateur) {
+        throw new NotFoundError("Utilisateur non trouvé.");
+    }
+
+    return utilisateur.id_utilisateur;
+}
+
+
+/**
  * Récupère l’ID du client lié à un utilisateur connecté.
  *
- * @param {string} userEmail - Email du User connecté (JWT)
+ * @param {string} userEmail - Email de l'utilisateur connecté (JWT)
  * @returns {Promise<number>} - ID du client
  * @throws {ForbiddenError} - Si l’utilisateur n’est pas un client
  */
@@ -25,7 +46,7 @@ export async function getClientIdFromUser(userEmail) {
 /**
  * Récupère l’ID du personnel lié à un utilisateur connecté.
  *
- * @param {string} userEmail - Email du User connecté (JWT)
+ * @param {string} userEmail - Email de l'utilisateur connecté (JWT)
  * @returns {Promise<number>} - ID du personnel
  * @throws {ForbiddenError} - Si l’utilisateur n’est pas un personnel
  */
@@ -91,7 +112,7 @@ export async function assertChauffeurAutorise(userEmail) {
  * Vérifie qu’un ticket appartient bien au client connecté.
  *
  * @param {number} ticketId - ID du ticket
- * @param {string} userEmail - Email du user connecté
+ * @param {string} userEmail - Email de l'utilisateur connecté
  * @returns {Promise<Object>} - Le ticket autorisé
  * @throws {ForbiddenError | NotFoundError}
  */

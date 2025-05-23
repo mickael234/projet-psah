@@ -1,5 +1,6 @@
 import DocumentChauffeurModel from '../models/documentChauffer.model.js';
 import { ValidationError, NotFoundError } from '../errors/apiError.js';
+import PersonnelModel from '../models/personnel.model.js';
 
 class DocumentChauffeurService {
     /**
@@ -30,6 +31,11 @@ class DocumentChauffeurService {
     static async valider(personnelId, isValid) {
         if (!personnelId || isNaN(personnelId))
             throw new ValidationError("ID du chauffeur invalide.");
+
+        const personnel = await PersonnelModel.getWithRelations(personnelId);
+        if(!personnel){
+            throw new NotFoundError("Membre du personnel non trouvé")
+        }
 
         if (typeof isValid !== 'boolean')
             throw new ValidationError("Statut de validation invalide.");

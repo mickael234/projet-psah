@@ -16,13 +16,14 @@ class TrajetService {
      * @returns {Promise<Object>} - Le trajet trouvé
      */
     static async getById(id, idPersonnelConnecte) {
-        if (!id || isNaN(id)) throw new ValidationError("L'ID du trajet est invalide.");
+        if (!id || isNaN(id))
+            throw new ValidationError("L'ID du trajet est invalide.");
 
         const trajet = await TrajetModel.findById(id);
         if (!trajet) throw new NotFoundError('Trajet introuvable.');
 
         if (trajet.id_personnel !== idPersonnelConnecte) {
-            throw new PermissionError("Accès refusé à ce trajet.");
+            throw new PermissionError('Accès refusé à ce trajet.');
         }
 
         return trajet;
@@ -39,7 +40,10 @@ class TrajetService {
         if (!idChauffeur || isNaN(idChauffeur))
             throw new ValidationError("L'ID du chauffeur est invalide.");
 
-        const trajets = await TrajetModel.findAllByChauffeur(idChauffeur, filters);
+        const trajets = await TrajetModel.findAllByChauffeur(
+            idChauffeur,
+            filters
+        );
         if (!trajets || trajets.length <= 0) {
             throw new NotFoundError('Aucun trajet trouvé.');
         }
@@ -47,7 +51,7 @@ class TrajetService {
         return trajets;
     }
 
-   /**
+    /**
      * Récupère les trajets d'un chauffeur d'une période définie
      *
      * @param {number} idChauffeur - ID du chauffeur
@@ -59,8 +63,12 @@ class TrajetService {
         if (!idChauffeur || isNaN(idChauffeur))
             throw new ValidationError("L'ID du chauffeur est invalide.");
 
-        const trajets = await TrajetModel.getPlanningParJour(idChauffeur, dateMin, dateMax);
-        
+        const trajets = await TrajetModel.getPlanningParJour(
+            idChauffeur,
+            dateMin,
+            dateMax
+        );
+
         if (!trajets || trajets.length <= 0) {
             throw new NotFoundError('Aucun trajet trouvé.');
         }
@@ -76,12 +84,8 @@ class TrajetService {
      * @returns {Promise<Object>} - Le trajet créé
      */
     static async creerTrajet(idPersonnel, data) {
-        const {
-            id_demande_course,
-            date_prise_en_charge,
-            date_depose
-        } = data;
-    
+        const { id_demande_course, date_prise_en_charge, date_depose } = data;
+
         if (
             !idPersonnel ||
             isNaN(idPersonnel) ||
@@ -94,24 +98,36 @@ class TrajetService {
                 'Champs requis : id_demande_course, date_prise_en_charge, date_depose.'
             );
         }
-    
+
         const demande = await DemandeCourseModel.findById(id_demande_course);
         if (!demande) {
             throw new NotFoundError('Demande de course introuvable.');
         }
 
-        const existingTrajet = await TrajetModel.findByDemandeId(id_demande_course);
+        const existingTrajet =
+            await TrajetModel.findByDemandeId(id_demande_course);
         if (existingTrajet) {
-            throw new ConflictError("Un trajet a déjà été créé pour cette demande.");
+            throw new ConflictError(
+                'Un trajet a déjà été créé pour cette demande.'
+            );
         }
 
-    
         if (demande.statut !== 'acceptee') {
             throw new ConflictError(
                 'Un trajet ne peut être créé que pour une demande acceptée.'
             );
         }
-    
+
+        const now = new Date();
+        if (
+            new Date(date_prise_en_charge) < now ||
+            new Date(date_depose) < now
+        ) {
+            throw new ValidationError(
+                'La date de prise en charge et de dépose doivent être postérieures à la date actuelle.'
+            );
+        }
+
         return await TrajetModel.create({
             id_personnel: idPersonnel,
             id_demande_course,
@@ -134,20 +150,31 @@ class TrajetService {
      * @throws {ConflictError} Si le trajet n’est pas en attente
      * @throws {ValidationError} Si les dates sont manquantes
      */
-    static async modifierHoraires(id, idClient, priseEnCharge, depose) {
+    static async modifierHoraires(id, idPersonnel, priseEnCharge, depose) {
         const trajet = await TrajetModel.findById(id);
         if (!trajet) throw new NotFoundError('Trajet introuvable.');
 
-        if (trajet.demandeCourse?.id_client !== idClient) {
-            throw new PermissionError("Vous ne pouvez modifier que vos propres trajets.");
+        if (trajet.id_personnel !== idPersonnel) {
+            throw new PermissionError(
+                'Vous ne pouvez modifier que vos propres trajets.'
+            );
         }
 
         if (trajet.statut !== 'en_attente') {
-            throw new ConflictError("Seuls les trajets en attente peuvent être reprogrammés.");
+            throw new ConflictError(
+                'Seuls les trajets en attente peuvent être reprogrammés.'
+            );
         }
 
         if (!priseEnCharge || !depose) {
             throw new ValidationError('Les deux horaires sont requis.');
+        }
+
+        const now = new Date();
+        if (new Date(priseEnCharge) < now || new Date(depose) < now) {
+            throw new ValidationError(
+                'Les horaires doivent être dans le futur.'
+            );
         }
 
         return await TrajetModel.updateHoraires(id, priseEnCharge, depose);
@@ -166,7 +193,9 @@ class TrajetService {
         if (!trajet) throw new NotFoundError('Trajet introuvable.');
 
         if (trajet.id_personnel !== idPersonnelConnecte) {
-            throw new PermissionError("Vous ne pouvez modifier que vos propres trajets.");
+            throw new PermissionError(
+                'Vous ne pouvez modifier que vos propres trajets.'
+            );
         }
 
         const statutsValides = ['en_attente', 'en_cours', 'termine'];

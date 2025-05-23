@@ -88,7 +88,7 @@ class FormationModel {
                 id_formation: idFormation
             },
             data: {
-                completée: true,
+                completee: true,
                 date_completion: new Date()
             }
         });

@@ -32,7 +32,7 @@ describe('TrajetController', () => {
             params: {},
             query: {},
             body: {},
-            user: { email: 'test@example.com' }
+            utilisateur: { email: 'test@example.com' } // Utiliser 'utilisateur' au lieu de 'user'
         };
 
         res = {
@@ -42,6 +42,7 @@ describe('TrajetController', () => {
 
         next = jest.fn();
 
+        // Mock des méthodes du service
         jest.spyOn(TrajetService, 'getById').mockResolvedValue({});
         jest.spyOn(TrajetService, 'getByChauffeur').mockResolvedValue([]);
         jest.spyOn(TrajetService, 'getPlanningParJour').mockResolvedValue([]);
@@ -61,6 +62,7 @@ describe('TrajetController', () => {
 
             await TrajetController.getById(req, res, next);
 
+            expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
             expect(TrajetService.getById).toHaveBeenCalledWith(1, 2);
             expect(res.status).toHaveBeenCalledWith(200);
         });
@@ -73,6 +75,7 @@ describe('TrajetController', () => {
 
             await TrajetController.getMyTrajets(req, res, next);
 
+            expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
             expect(TrajetService.getByChauffeur).toHaveBeenCalledWith(3, {
                 statut: 'en_cours'
             });
@@ -87,6 +90,7 @@ describe('TrajetController', () => {
 
             await TrajetController.getPlanning(req, res, next);
 
+            expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
             expect(TrajetService.getPlanningParJour).toHaveBeenCalledWith(
                 4,
                 '2025-01-01',
@@ -98,21 +102,12 @@ describe('TrajetController', () => {
 
     describe('create', () => {
         it('devrait créer un nouveau trajet', async () => {
-            const req = {
-                user: { email: 'chauffeur1@example.com' },
-                body: {
-                    date_prise_en_charge: "2025-01-01T10:00",
-                    date_depose: "2025-01-01T11:00",
-                    id_demande_course: 1
-                }
+            req.utilisateur = { email: 'chauffeur1@example.com' };
+            req.body = {
+                date_prise_en_charge: "2025-01-01T10:00",
+                date_depose: "2025-01-01T11:00",
+                id_demande_course: 1
             };
-            
-            const res = {
-                status: jest.fn().mockReturnThis(),
-                json: jest.fn()
-            };
-            
-            const next = jest.fn();
             
             AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
             
@@ -124,28 +119,28 @@ describe('TrajetController', () => {
                 date_depose: new Date("2025-01-01T11:00"),
                 statut: 'en_attente'
             };
-            jest.spyOn(TrajetService, 'creerTrajet').mockResolvedValue(mockTrajet);
+            TrajetService.creerTrajet.mockResolvedValue(mockTrajet);
             
             await TrajetController.create(req, res, next);
             
-            const personnelId = 123;
-            
-            expect(TrajetService.creerTrajet).toHaveBeenCalledWith(personnelId, req.body);
+            expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('chauffeur1@example.com');
+            expect(TrajetService.creerTrajet).toHaveBeenCalledWith(123, req.body);
             expect(res.status).toHaveBeenCalledWith(201);
         });
     });
 
     describe('updateHoraires', () => {
-        it('devrait mettre à jour les horaires d’un trajet', async () => {
+        it('devrait mettre à jour les horaires d\'un trajet', async () => {
             req.params.id = '5';
             req.body = {
                 date_prise_en_charge: '2025-01-02T10:00',
                 date_depose: '2025-01-02T12:00'
             };
-            AuthHelpers.getClientIdFromUser.mockResolvedValue(6);
+            AuthHelpers.assertChauffeurAutorise.mockResolvedValue(6);
 
             await TrajetController.updateHoraires(req, res, next);
 
+            expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
             expect(TrajetService.modifierHoraires).toHaveBeenCalledWith(
                 5,
                 6,
@@ -157,13 +152,14 @@ describe('TrajetController', () => {
     });
 
     describe('updateStatut', () => {
-        it('devrait modifier le statut d’un trajet', async () => {
+        it('devrait modifier le statut d\'un trajet', async () => {
             req.params.id = '9';
             req.body = { statut: 'termine' };
-            AuthHelpers.getPersonnelIdFromUser.mockResolvedValue(7);
+            AuthHelpers.assertChauffeurAutorise.mockResolvedValue(7);
 
             await TrajetController.updateStatut(req, res, next);
 
+            expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
             expect(TrajetService.changerStatut).toHaveBeenCalledWith(
                 9,
                 'termine',

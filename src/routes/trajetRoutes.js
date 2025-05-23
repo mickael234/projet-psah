@@ -13,11 +13,10 @@ router.get('/planning', authenticateJWT, TrajetController.getPlanning);
 // Récupérer un trajet par ID
 router.get('/:id', authenticateJWT, TrajetController.getById);
 
-// Modifier les horaires d'un trajet (par le client)
+// Modifier les horaires d'un trajet (par le chauffeur)
 router.patch(
     '/:id/horaires',
     authenticateJWT,
-    isClient,
     TrajetController.updateHoraires
 );
 

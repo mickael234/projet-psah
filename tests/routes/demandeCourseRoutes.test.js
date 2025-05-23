@@ -32,11 +32,11 @@ jest.unstable_mockModule('../../src/services/demandeCourse.service.js', () => ({
 
 jest.unstable_mockModule('../../src/middleware/auth.js', () => ({
     authenticateJWT: (req, res, next) => {
-        req.user = { email: 'test@example.com', role: 'CHAUFFEUR' };
+        req.utilisateur = { email: 'test@example.com', role: 'CHAUFFEUR' };
         next();
     },
     isClient: (req, res, next) => {
-        req.user = { email: 'test@example.com', role: 'CLIENT' };
+        req.utilisateur = { email: 'test@example.com', role: 'CLIENT' };
         next();
     },
     checkRole:

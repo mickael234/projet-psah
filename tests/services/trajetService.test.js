@@ -71,27 +71,33 @@ describe('TrajetService', () => {
          */
         it('crée un trajet pour une demande acceptée', async () => {
             const idPersonnel = 1;
-            
+
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            const dayAfterTomorrow = new Date();
+            dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+
             const data = {
                 id_demande_course: 2,
-                date_prise_en_charge: '2024-05-10T09:00:00Z',
-                date_depose: '2024-05-10T10:00:00Z'
+                date_prise_en_charge: tomorrow.toISOString(),
+                date_depose: dayAfterTomorrow.toISOString()
             };
-            
+
             jest.spyOn(DemandeCourseModel, 'findById').mockResolvedValue({
                 statut: 'acceptee'
             });
-            
+
             jest.spyOn(TrajetModel, 'findByDemandeId').mockResolvedValue(null); // Aucun trajet existant
-            
+
             jest.spyOn(TrajetModel, 'create').mockResolvedValue({
                 id_trajet: 1,
                 id_personnel: idPersonnel,
                 ...data
             });
-    
+
             const result = await TrajetService.creerTrajet(idPersonnel, data);
-            
+
             expect(result).toMatchObject({ id_personnel: 1 });
         });
 
@@ -100,18 +106,25 @@ describe('TrajetService', () => {
          */
         it("rejette les trajets si la demande n'est pas acceptée", async () => {
             const idPersonnel = 1;
+
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            const dayAfterTomorrow = new Date();
+            dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+
             const data = {
                 id_demande_course: 2,
-                date_prise_en_charge: '2024-05-10T09:00:00Z',
-                date_depose: '2024-05-10T10:00:00Z'
+                date_prise_en_charge: tomorrow.toISOString(),
+                date_depose: dayAfterTomorrow.toISOString()
             };
-            
+
             jest.spyOn(DemandeCourseModel, 'findById').mockResolvedValue({
                 statut: 'refusee'
             });
-            
-            jest.spyOn(TrajetModel, 'findByDemandeId').mockResolvedValue(null); 
-            
+
+            jest.spyOn(TrajetModel, 'findByDemandeId').mockResolvedValue(null);
+
             await expect(
                 TrajetService.creerTrajet(idPersonnel, data)
             ).rejects.toThrow(ConflictError);

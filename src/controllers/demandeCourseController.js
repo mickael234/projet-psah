@@ -37,7 +37,7 @@ class DemandeCourseController {
      */
     static async getMesDemandes(req, res, next) {
         try {
-            const clientId = await AuthHelpers.getClientIdFromUser(req.user.email);
+            const clientId = await AuthHelpers.getClientIdFromUser(req.utilisateur.email);
 
             const filters = {
                 ...(req.query.statut && { statut: req.query.statut }),
@@ -99,7 +99,7 @@ class DemandeCourseController {
      */
     static async create(req, res, next) {
         try {
-            const clientId = await AuthHelpers.getClientIdFromUser(req.user.email);
+            const clientId = await AuthHelpers.getClientIdFromUser(req.utilisateur.email);
             const data = {
                 ...req.body,
                 id_client: clientId

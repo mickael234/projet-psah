@@ -81,7 +81,7 @@ class AuthController {
 
       if (utilisateur) {
         // Récupérer les permissions
-        console.log(`Récupération des permissions pour l'utilisateur ${utilisateur.id_utilisateur}`)
+        //console.log(`Récupération des permissions pour l'utilisateur ${utilisateur.id_utilisateur}`)
 
         // Log des données utilisateur pour le débogage
         console.log("Données utilisateur pour les permissions:", {

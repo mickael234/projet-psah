@@ -55,7 +55,7 @@ class PersonnelModel {
 
     /**
      * Désactive un chauffeur qui a un permis invalide
-     * @returns 
+     * @returns {Promise<Array>}
      */
     static async desactiverChauffeursAvecPermisExpire() {
     return prisma.personnel.updateMany({

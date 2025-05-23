@@ -6,7 +6,8 @@ import request from 'supertest';
  */
 jest.unstable_mockModule('../../src/utils/auth.helpers.js', () => ({
     getPersonnelIdFromUser: jest.fn().mockResolvedValue(123),
-    getClientIdFromUser: jest.fn().mockResolvedValue(456)
+    getClientIdFromUser: jest.fn().mockResolvedValue(456),
+    assertChauffeurAutorise: jest.fn().mockResolvedValue(123) // Fonction utilisée dans le contrôleur
 }));
 
 /**
@@ -28,20 +29,19 @@ jest.unstable_mockModule('../../src/services/trajet.service.js', () => ({
  */
 jest.unstable_mockModule('../../src/middleware/auth.js', () => ({
     authenticateJWT: (req, res, next) => {
-        req.user = { email: 'test@example.com', role: 'CHAUFFEUR' };
+        req.utilisateur = { email: 'test@example.com', role: 'CHAUFFEUR' }; // Utiliser 'utilisateur'
         next();
     },
     isClient: (req, res, next) => {
-        // Changement du rôle mais conservation de l'email pour que les tests restent cohérents
-        req.user = { email: 'test@example.com', role: 'CLIENT' };
+        req.utilisateur = { email: 'test@example.com', role: 'CLIENT' };
         next();
     },
     isPersonnel: (req, res, next) => {
-        req.user = { email: 'test@example.com', role: 'CHAUFFEUR' };
+        req.utilisateur = { email: 'test@example.com', role: 'CHAUFFEUR' };
         next();
     },
     isAdmin: (req, res, next) => {
-        req.user = { email: 'test@example.com', role: 'ADMIN' };
+        req.utilisateur = { email: 'test@example.com', role: 'ADMIN' };
         next();
     }
 }));
@@ -51,24 +51,21 @@ let app, TrajetService, AuthHelpers;
 /**
  * Configuration de l'application Express avant chaque test
  */
-
 beforeEach(async () => {
     jest.resetModules();
 
     const express = (await import('express')).default;
-
-    const trajetRoutes = (await import('../../src/routes/trajetRoutes.js'))
-        .default;
-
-    TrajetService = (await import('../../src/services/trajet.service.js'))
-        .default;
-		
+    const trajetRoutes = (await import('../../src/routes/trajetRoutes.js')).default;
+    TrajetService = (await import('../../src/services/trajet.service.js')).default;
     AuthHelpers = await import('../../src/utils/auth.helpers.js');
 
     // Configurer l'application Express
     app = express();
     app.use(express.json());
     app.use('/trajets', trajetRoutes);
+    
+    // Reset tous les mocks avant chaque test
+    jest.clearAllMocks();
 });
 
 describe('Trajet Routes', () => {
@@ -79,6 +76,7 @@ describe('Trajet Routes', () => {
         // Préparation du mock
         const mockTrajets = [{ id_trajet: 1 }, { id_trajet: 2 }];
         TrajetService.getByChauffeur.mockResolvedValue(mockTrajets);
+        AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
 
         // Exécution du test
         const response = await request(app)
@@ -87,9 +85,7 @@ describe('Trajet Routes', () => {
 
         // Vérifications
         expect(response.status).toBe(200);
-        expect(AuthHelpers.getPersonnelIdFromUser).toHaveBeenCalledWith(
-            'test@example.com'
-        );
+        expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
         expect(TrajetService.getByChauffeur).toHaveBeenCalledWith(123, {});
         expect(response.body.data).toEqual(mockTrajets);
     });
@@ -97,11 +93,11 @@ describe('Trajet Routes', () => {
     /**
      * Vérifie que le planning peut être récupéré par un chauffeur
      */
-
     it('GET /trajets/planning - devrait retourner le planning', async () => {
         // Préparation du mock
         const mockPlanning = [{ date: '2025-01-01', trajets: [] }];
         TrajetService.getPlanningParJour.mockResolvedValue(mockPlanning);
+        AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
 
         // Exécution du test
         const response = await request(app)
@@ -111,9 +107,7 @@ describe('Trajet Routes', () => {
 
         // Vérifications
         expect(response.status).toBe(200);
-        expect(AuthHelpers.getPersonnelIdFromUser).toHaveBeenCalledWith(
-            'test@example.com'
-        );
+        expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
         expect(TrajetService.getPlanningParJour).toHaveBeenCalledWith(
             123,
             '2025-01-01',
@@ -125,11 +119,11 @@ describe('Trajet Routes', () => {
     /**
      * Vérifie que l'on peut récupérer un trajet par ID
      */
-
     it('GET /trajets/:id - devrait retourner un trajet', async () => {
         // Préparation du mock
         const mockTrajet = { id_trajet: 1, statut: 'en_cours' };
         TrajetService.getById.mockResolvedValue(mockTrajet);
+        AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
 
         // Exécution du test
         const response = await request(app)
@@ -138,9 +132,7 @@ describe('Trajet Routes', () => {
 
         // Vérifications
         expect(response.status).toBe(200);
-        expect(AuthHelpers.getPersonnelIdFromUser).toHaveBeenCalledWith(
-            'test@example.com'
-        );
+        expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
         expect(TrajetService.getById).toHaveBeenCalledWith(1, 123);
         expect(response.body.data).toEqual(mockTrajet);
     });
@@ -148,7 +140,6 @@ describe('Trajet Routes', () => {
     /**
      * Vérifie que l'on peut créer un trajet
      */
-
     it('POST /trajets - devrait créer un trajet', async () => {
         // Préparation du mock
         const mockTrajetData = {
@@ -159,7 +150,8 @@ describe('Trajet Routes', () => {
         };
         const mockTrajetCreated = { ...mockTrajetData, id_trajet: 42 };
         TrajetService.creerTrajet.mockResolvedValue(mockTrajetCreated);
-        const personnelId = 123;
+        AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
+
         // Exécution du test
         const response = await request(app)
             .post('/trajets')
@@ -168,15 +160,15 @@ describe('Trajet Routes', () => {
 
         // Vérifications
         expect(response.status).toBe(201);
-        expect(TrajetService.creerTrajet).toHaveBeenCalledWith(personnelId, mockTrajetData);
+        expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
+        expect(TrajetService.creerTrajet).toHaveBeenCalledWith(123, mockTrajetData);
         expect(response.body.data).toEqual(mockTrajetCreated);
     });
 
     /**
-     * Vérifie que le client peut modifier les horaires d’un trajet
+     * Vérifie que le chauffeur peut modifier les horaires d'un trajet
      */
-
-    it('PATCH /trajets/:id/horaires - client peut modifier horaires', async () => {
+    it('PATCH /trajets/:id/horaires - chauffeur peut modifier horaires', async () => {
         // Préparation du mock
         const horairesData = {
             date_prise_en_charge: '2025-01-02T10:00',
@@ -184,6 +176,7 @@ describe('Trajet Routes', () => {
         };
         const mockTrajetModified = { id_trajet: 5, ...horairesData };
         TrajetService.modifierHoraires.mockResolvedValue(mockTrajetModified);
+        AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
 
         // Exécution du test
         const response = await request(app)
@@ -193,12 +186,10 @@ describe('Trajet Routes', () => {
 
         // Vérifications
         expect(response.status).toBe(200);
-        expect(AuthHelpers.getClientIdFromUser).toHaveBeenCalledWith(
-            'test@example.com'
-        );
+        expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
         expect(TrajetService.modifierHoraires).toHaveBeenCalledWith(
             5,
-            456,
+            123,
             horairesData.date_prise_en_charge,
             horairesData.date_depose
         );
@@ -206,9 +197,8 @@ describe('Trajet Routes', () => {
     });
 
     /**
-     * Vérifie que le chauffeur peut modifier le statut d’un trajet
+     * Vérifie que le chauffeur peut modifier le statut d'un trajet
      */
-
     it('PATCH /trajets/:id/statut - chauffeur peut modifier le statut', async () => {
         // Préparation du mock
         const mockTrajetModified = {
@@ -216,6 +206,7 @@ describe('Trajet Routes', () => {
             statut: 'termine'
         };
         TrajetService.changerStatut.mockResolvedValue(mockTrajetModified);
+        AuthHelpers.assertChauffeurAutorise.mockResolvedValue(123);
 
         // Exécution du test
         const response = await request(app)
@@ -225,9 +216,7 @@ describe('Trajet Routes', () => {
 
         // Vérifications
         expect(response.status).toBe(200);
-        expect(AuthHelpers.getPersonnelIdFromUser).toHaveBeenCalledWith(
-            'test@example.com'
-        );
+        expect(AuthHelpers.assertChauffeurAutorise).toHaveBeenCalledWith('test@example.com');
         expect(TrajetService.changerStatut).toHaveBeenCalledWith(
             9,
             'termine',

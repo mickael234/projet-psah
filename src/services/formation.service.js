@@ -1,5 +1,6 @@
 import FormationModel from '../models/formation.model.js';
 import { NotFoundError, ValidationError } from '../errors/apiError.js';
+import PersonnelModel from "../models/personnel.model.js"
 
 class FormationService {
 
@@ -35,7 +36,12 @@ class FormationService {
         if (!idFormation || isNaN(idFormation))
             throw new ValidationError("ID de la formation invalide.");
 
-        const formation = FormationModel.findById(idFormation);
+        const personnel = await PersonnelModel.getWithRelations(idPersonnel);
+        if(!personnel){
+            throw new NotFoundError("Membre du personnel non trouvé")
+        }
+
+        const formation = await FormationModel.findById(idFormation);
 
         if(!formation){
             throw new NotFoundError("Formation non trouvée.")
@@ -55,6 +61,11 @@ class FormationService {
     static async getByChauffeur(idPersonnel) {
         if (!idPersonnel || isNaN(idPersonnel))
             throw new ValidationError("ID du chauffeur invalide.");
+
+        const personnel = await PersonnelModel.getWithRelations(idPersonnel);
+        if(!personnel){
+            throw new NotFoundError("Membre du personnel non trouvé")
+        }
 
         const formations = await FormationModel.findByChauffeur(idPersonnel);
 
@@ -77,7 +88,7 @@ class FormationService {
             throw new ValidationError("ID de la formation invalide.");
         }
 
-        const formation = FormationModel.findById(idFormation);
+        const formation = await FormationModel.findById(idFormation);
 
         if(!formation){
             throw new NotFoundError("Formation non trouvée.")
@@ -105,7 +116,7 @@ class FormationService {
         if (!idFormation || isNaN(idFormation))
             throw new ValidationError("ID de la formation invalide.");
 
-        const formation = FormationModel.findById(idFormation);
+        const formation = await FormationModel.findById(idFormation);
 
         if(!formation){
             throw new NotFoundError("Formation non trouvée.")
@@ -125,6 +136,11 @@ class FormationService {
         if (!data || !data.titre) {
             throw new ValidationError("Titre de la formation requis.");
         }
+
+        if (data.obligatoire === undefined || typeof data.obligatoire !== "boolean") {
+            throw new ValidationError("Le champ 'obligatoire' est requis et doit être un booléen.");
+        }
+
         return await FormationModel.create(data);
     }
 
@@ -139,7 +155,7 @@ class FormationService {
             throw new ValidationError("ID de la formation invalide.");
         }
 
-        const formation = FormationModel.findById(id);
+        const formation = await FormationModel.findById(id);
 
         if(!formation){
             throw new NotFoundError("Formation non trouvée.")
@@ -158,7 +174,7 @@ class FormationService {
             throw new ValidationError("ID de la formation invalide.");
         }
 
-        const formation = FormationModel.findById(id);
+        const formation = await FormationModel.findById(id);
 
         if(!formation){
             throw new NotFoundError("Formation non trouvée.")

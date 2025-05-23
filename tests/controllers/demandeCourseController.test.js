@@ -31,7 +31,7 @@ describe('DemandeCourseController', () => {
             params: {},
             query: {},
             body: {},
-            user: { email: 'client@example.com' }
+            utilisateur: { email: 'client@example.com' }
         };
 
         res = {

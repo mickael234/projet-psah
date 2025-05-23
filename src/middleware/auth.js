@@ -1,16 +1,9 @@
 import jwt from "jsonwebtoken"
 import { RoleMapper } from "../utils/roleMapper.js"
 import PermissionModel from "../models/permission.model.js"
-import prisma from "../config/prisma.js";
+import prisma from "../config/prisma.js"
 
-// SUPPRIMEZ CETTE LIGNE - Elle ne devrait pas être ici
-// const permissions = await PermissionModel.getUserPermissions(utilisateur.id_utilisateur)
-
-
-const permissionModel = PermissionModel;
-
-
-// Dans middleware/auth.js - ne modifiez que la fonction authenticateJWT
+const permissionModel = PermissionModel
 
 /**
  * Middleware d'authentification JWT
@@ -18,28 +11,23 @@ const permissionModel = PermissionModel;
 export const authenticateJWT = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
-    
-    // Log pour débogage
-    console.log("Headers reçus:", req.headers)
-    console.log("Auth Header:", authHeader)
-    
+
     if (!authHeader) {
       return res.status(401).json({
         status: "ERROR",
         message: "En-tête d'autorisation manquant"
       })
     }
-    
-    if (!authHeader.startsWith('Bearer ')) {
+
+    if (!authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         status: "ERROR",
         message: "Format d'en-tête d'autorisation invalide. Doit commencer par 'Bearer '"
       })
     }
-    
-    const token = authHeader.split(' ')[1]
-    console.log("Token extrait:", token ? token.substring(0, 20) + "..." : "null")
-    
+
+    const token = authHeader.split(" ")[1]
+
     if (!process.env.JWT_SECRET) {
       console.error("JWT_SECRET non défini")
       return res.status(500).json({
@@ -47,8 +35,8 @@ export const authenticateJWT = (req, res, next) => {
         message: "Erreur de configuration du serveur"
       })
     }
-    
-    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] }, (err, decodedUser) => {
+
+    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] }, (err, decodedUtilisateur) => {
       if (err) {
         console.error("Erreur JWT:", err.name, err.message)
         return res.status(403).json({
@@ -57,9 +45,8 @@ export const authenticateJWT = (req, res, next) => {
           error: err.message
         })
       }
-      
-      req.user = decodedUser
-      console.log("Utilisateur décodé:", decodedUser)
+
+      req.utilisateur = decodedUtilisateur
       next()
     })
   } catch (error) {
@@ -72,19 +59,21 @@ export const authenticateJWT = (req, res, next) => {
   }
 }
 
-// Gardez toutes les autres fonctions telles quelles
 /**
  * Middleware pour vérifier si l'utilisateur est un client
  */
 export const isClient = (req, res, next) => {
-  if (!req.user) {
+  if (!req.utilisateur) {
     return res.status(401).json({
       status: "ERROR",
       message: "Authentification requise"
     })
   }
 
-  if (req.user.role === "CLIENT" || RoleMapper.toBaseRole(req.user.role) === "client") {
+  if (
+    req.utilisateur.role === "CLIENT" ||
+    RoleMapper.toBaseRole(req.utilisateur.role) === "client"
+  ) {
     next()
   } else {
     return res.status(403).json({
@@ -99,7 +88,7 @@ export const isClient = (req, res, next) => {
  * Permet l'accès si l'utilisateur est le client lui-même ou un administrateur
  */
 export const checkClientAccess = (req, res, next) => {
-  if (!req.user) {
+  if (!req.utilisateur) {
     return res.status(401).json({
       status: "ERROR",
       message: "Authentification requise"
@@ -108,21 +97,18 @@ export const checkClientAccess = (req, res, next) => {
 
   const clientId = Number.parseInt(req.params.clientId)
 
-  // Si l'utilisateur est un administrateur, autoriser l'accès
   if (
-    req.user.role === "SUPER_ADMIN" ||
-    req.user.role === "ADMIN_GENERAL" ||
-    RoleMapper.toBaseRole(req.user.role) === "administrateur"
+    req.utilisateur.role === "SUPER_ADMIN" ||
+    req.utilisateur.role === "ADMIN_GENERAL" ||
+    RoleMapper.toBaseRole(req.utilisateur.role) === "administrateur"
   ) {
     return next()
   }
 
-  // Si l'utilisateur est le client lui-même, autoriser l'accès
-  if (req.user.clientId === clientId) {
+  if (req.utilisateur.clientId === clientId) {
     return next()
   }
 
-  // Sinon, refuser l'accès
   return res.status(403).json({
     status: "ERROR",
     message: "Vous n'êtes pas autorisé à accéder aux données de ce client"
@@ -134,7 +120,7 @@ export const checkClientAccess = (req, res, next) => {
  * Permet l'accès si l'utilisateur est le client associé à la réservation ou un administrateur
  */
 export const verifyClientAccessToReservation = async (req, res, next) => {
-  if (!req.user) {
+  if (!req.utilisateur) {
     return res.status(401).json({
       status: "ERROR",
       message: "Authentification requise"
@@ -144,22 +130,20 @@ export const verifyClientAccessToReservation = async (req, res, next) => {
   try {
     const idReservation = Number.parseInt(req.params.idReservation)
 
-    // Si l'utilisateur est un administrateur, autoriser l'accès
     if (
-      req.user.role === "SUPER_ADMIN" ||
-      req.user.role === "ADMIN_GENERAL" ||
-      req.user.role === "RESPONSABLE_HEBERGEMENT" ||
-      req.user.role === "RECEPTIONNISTE" ||
-      RoleMapper.toBaseRole(req.user.role) === "administrateur" ||
-      RoleMapper.toBaseRole(req.user.role) === "personnel"
+      req.utilisateur.role === "SUPER_ADMIN" ||
+      req.utilisateur.role === "ADMIN_GENERAL" ||
+      req.utilisateur.role === "RESPONSABLE_HEBERGEMENT" ||
+      req.utilisateur.role === "RECEPTIONNISTE" ||
+      RoleMapper.toBaseRole(req.utilisateur.role) === "administrateur" ||
+      RoleMapper.toBaseRole(req.utilisateur.role) === "personnel"
     ) {
       return next()
     }
 
-    // Récupérer la réservation pour vérifier le client associé
     const reservation = await prisma.reservation.findUnique({
       where: { id_reservation: idReservation },
-      select: { id_client: true },
+      select: { id_client: true }
     })
 
     if (!reservation) {
@@ -169,12 +153,10 @@ export const verifyClientAccessToReservation = async (req, res, next) => {
       })
     }
 
-    // Si l'utilisateur est le client associé à la réservation, autoriser l'accès
-    if (req.user.clientId === reservation.id_client) {
+    if (req.utilisateur.clientId === reservation.id_client) {
       return next()
     }
 
-    // Sinon, refuser l'accès
     return res.status(403).json({
       status: "ERROR",
       message: "Vous n'êtes pas autorisé à accéder à cette réservation"
@@ -194,34 +176,27 @@ export const verifyClientAccessToReservation = async (req, res, next) => {
  */
 export const checkRole = (roles) => {
   return (req, res, next) => {
-    if (!req.user) {
+    if (!req.utilisateur) {
       return res.status(401).json({
         status: "ERROR",
         message: "Authentification requise"
       })
     }
 
-    console.log("Vérification des rôles:", {
-      userRole: req.user.role,
-      requiredRoles: roles,
-    })
-
-    // Vérifier si le rôle de l'utilisateur est dans la liste des rôles autorisés
-    if (roles.includes(req.user.role)) {
+    if (roles.includes(req.utilisateur.role)) {
       return next()
     }
 
-    // Sinon, utiliser RoleMapper
-    if (RoleMapper.hasAuthorizedRole(req.user, roles)) {
+    if (RoleMapper.hasAuthorizedRole(req.utilisateur, roles)) {
       next()
     } else {
       res.status(403).json({
         status: "ERROR",
         message: "Accès non autorisé",
         debug: {
-          userRole: req.user.role,
-          requiredRoles: roles,
-        },
+          userRole: req.utilisateur.role,
+          requiredRoles: roles
+        }
       })
     }
   }
@@ -234,8 +209,7 @@ export const checkRole = (roles) => {
  */
 export const checkPermission = (permissionCode) => {
   return async (req, res, next) => {
-    // Vérifier si l'utilisateur est authentifié
-    if (!req.user) {
+    if (!req.utilisateur) {
       return res.status(401).json({
         status: "ERROR",
         message: "Authentification requise"
@@ -243,15 +217,18 @@ export const checkPermission = (permissionCode) => {
     }
 
     try {
-      // Vérifier si l'utilisateur a la permission requise dans le token JWT
-      if (req.user.permissions && Array.isArray(req.user.permissions)) {
-        if (req.user.permissions.includes(permissionCode)) {
-          return next()
-        }
+      if (
+        req.utilisateur.permissions &&
+        Array.isArray(req.utilisateur.permissions) &&
+        req.utilisateur.permissions.includes(permissionCode)
+      ) {
+        return next()
       }
 
-      // Sinon, vérifier dans la base de données
-      const hasPermission = await permissionModel.userHasPermission(req.user.userId, permissionCode)
+      const hasPermission = await permissionModel.userHasPermission(
+        req.utilisateur.id_utilisateur,
+        permissionCode
+      )
 
       if (!hasPermission) {
         return res.status(403).json({
@@ -260,7 +237,6 @@ export const checkPermission = (permissionCode) => {
         })
       }
 
-      // Si l'utilisateur a la permission, continuer
       next()
     } catch (error) {
       console.error(error)
@@ -277,20 +253,21 @@ export const checkPermission = (permissionCode) => {
  * Middleware pour vérifier si l'utilisateur est un administrateur
  */
 export const isAdmin = (req, res, next) => {
-  if (!req.user) {
+  if (!req.utilisateur) {
     return res.status(401).json({
       status: "ERROR",
       message: "Authentification requise"
     })
   }
 
-  // Vérifier directement le rôle
-  if (req.user.role === "SUPER_ADMIN" || req.user.role === "ADMIN_GENERAL") {
+  if (
+    req.utilisateur.role === "SUPER_ADMIN" ||
+    req.utilisateur.role === "ADMIN_GENERAL"
+  ) {
     return next()
   }
 
-  // Sinon, utiliser RoleMapper
-  if (RoleMapper.toBaseRole(req.user.role) === "administrateur") {
+  if (RoleMapper.toBaseRole(req.utilisateur.role) === "administrateur") {
     next()
   } else {
     return res.status(403).json({
@@ -304,20 +281,20 @@ export const isAdmin = (req, res, next) => {
  * Middleware pour vérifier si l'utilisateur est personnel (admin ou réceptionniste)
  */
 export const isPersonnel = (req, res, next) => {
-  if (!req.user) {
+  console.log("Role" + req.utilisateur.role);
+  
+  if (!req.utilisateur) {
     return res.status(401).json({
       status: "ERROR",
       message: "Authentification requise"
     })
   }
 
-  // Vérifier directement le rôle
-  if (["SUPER_ADMIN", "ADMIN_GENERAL", "RECEPTIONNISTE"].includes(req.user.role)) {
+  if (["SUPER_ADMIN", "ADMIN_GENERAL", "RECEPTIONNISTE"].includes(req.utilisateur.role)) {
     return next()
   }
 
-  // Sinon, utiliser RoleMapper
-  const baseRole = RoleMapper.toBaseRole(req.user.role)
+  const baseRole = RoleMapper.toBaseRole(req.utilisateur.role)
   if (baseRole === "personnel" || baseRole === "administrateur") {
     next()
   } else {
@@ -332,22 +309,25 @@ export const isPersonnel = (req, res, next) => {
  * Middleware pour vérifier si l'utilisateur a les rôles autorisés pour la maintenance
  */
 export const verifierRoleMaintenance = (req, res, next) => {
-  if (!req.user) {
+  if (!req.utilisateur) {
     return res.status(401).json({
       status: "ERROR",
       message: "Authentification requise"
     })
   }
 
-  const authorizedRoles = ["MAINTENANCE", "RESPONSABLE_HEBERGEMENT", "ADMIN_GENERAL", "SUPER_ADMIN"]
+  const authorizedRoles = [
+    "MAINTENANCE",
+    "RESPONSABLE_HEBERGEMENT",
+    "ADMIN_GENERAL",
+    "SUPER_ADMIN"
+  ]
 
-  // Vérifier directement le rôle
-  if (authorizedRoles.includes(req.user.role)) {
+  if (authorizedRoles.includes(req.utilisateur.role)) {
     return next()
   }
 
-  // Sinon, utiliser RoleMapper
-  if (RoleMapper.hasAuthorizedRole(req.user, authorizedRoles)) {
+  if (RoleMapper.hasAuthorizedRole(req.utilisateur, authorizedRoles)) {
     next()
   } else {
     return res.status(403).json({
