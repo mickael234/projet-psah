@@ -2,7 +2,7 @@ import prisma from "../config/prisma.js";
 
 
 
-// ✅ Ajouter un favori
+// Ajouter un favori
 export const ajouterFavori = async (req, res) => {
   const { id_utilisateur, id_chambre } = req.body;
 
@@ -27,7 +27,7 @@ export const ajouterFavori = async (req, res) => {
   }
 };
 
-// ✅ Supprimer un favori
+//  Supprimer un favori
 export const supprimerFavori = async (req, res) => {
   const { id_utilisateur, id_chambre } = req.body;
 
@@ -50,7 +50,7 @@ export const supprimerFavori = async (req, res) => {
   }
 };
 
-// ✅ Lister les favoris
+//  Lister les favoris
 export const listerFavorisUtilisateur = async (req, res) => {
   const { id_utilisateur } = req.params;
 
