@@ -7,7 +7,7 @@ export const validatePhoneNumber = (phoneNumber) => {
     // Regex pour valider un numéro de téléphone international
     // Format: +[code pays][numéro]
     // Exemple: +33612345678
-    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    const phoneRegex = /^\+[1-9]\d{1,11}$/;
     return phoneRegex.test(phoneNumber);
 };
 
